@@ -1,0 +1,67 @@
+<!doctype html>
+<html lang="cs">
+<head>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Clubroom — Pro Clubs Tracker</title>
+<link rel="stylesheet" href="/style.css">
+</head>
+<body>
+<div class="noise"></div>
+<header>
+  <a class="brand" href="#"><span class="mark">C</span><span>CLUBROOM</span></a>
+  <nav><a href="#overview">Přehled</a><a href="#squad">Hráči</a><a href="#matches">Zápasy</a></nav>
+  <span class="live"><i></i> EA LIVE DATA</span>
+</header>
+
+<main>
+<section class="hero">
+  <div class="eyebrow">EA SPORTS FC PRO CLUBS · TRACKER</div>
+  <h1>Váš klub.<br><span>Bez keců, jen čísla.</span></h1>
+  <p>Vyhledej Pro Clubs tým a dostaň výsledky, formu, hráče a poslední zápasy do jednoho dashboardu.</p>
+  <form id="searchForm" class="search">
+    <input id="clubInput" placeholder="Název klubu…" autocomplete="off" required>
+    <select id="platform"><option value="common-gen5">PS5 / Xbox Series / PC</option><option value="common-gen4">PS4 / Xbox One</option><option value="nx">Switch</option></select>
+    <button>Najít klub</button>
+  </form>
+  <div id="searchResults" class="results"></div>
+</section>
+
+<section id="dashboard" class="dashboard hidden">
+  <div class="club-head">
+    <div><div class="eyebrow">CLUB PROFILE</div><h2 id="clubName">—</h2><p id="clubMeta">—</p></div>
+    <div class="form" id="formDots"></div>
+  </div>
+
+  <div id="overview" class="statgrid">
+    <article><label>Skill rating</label><strong id="skill">—</strong><small>aktuální</small></article>
+    <article><label>Bilance</label><strong id="record">—</strong><small id="games">—</small></article>
+    <article><label>Win rate</label><strong id="winrate">—</strong><small>v sezóně</small></article>
+    <article><label>Gólový rozdíl</label><strong id="gd">—</strong><small id="gfga">—</small></article>
+  </div>
+
+  <div class="twocol">
+    <section class="panel" id="squad">
+      <div class="panel-title"><div><span>01</span><h3>Squad leaderboard</h3></div><b id="playerCount">0 hráčů</b></div>
+      <div class="tablewrap"><table><thead><tr><th>#</th><th>Hráč</th><th>Z</th><th>G</th><th>A</th><th>G+A</th><th>Rating</th></tr></thead><tbody id="players"></tbody></table></div>
+    </section>
+
+    <aside class="panel accent">
+      <div class="panel-title"><div><span>02</span><h3>Top performer</h3></div></div>
+      <div id="mvp" class="mvp"><div class="avatar">10</div><h4>—</h4><p>Načti klub a tady se objeví člověk, který ostatní táhne.</p></div>
+    </aside>
+  </div>
+
+  <section class="panel" id="matches">
+    <div class="panel-title"><div><span>03</span><h3>Poslední zápasy</h3></div><b>LIVE HISTORY</b></div>
+    <div id="matchList" class="matchlist"></div>
+  </section>
+</section>
+
+<section id="emptyState" class="empty">
+  <div class="pitch"></div><div><span>TRACK · COMPARE · SUFFER</span><h2>Statistiky, které kabina raději nevidí.</h2><p>Vyhledej klub nahoře. Dashboard se naplní daty přímo z EA.</p></div>
+</section>
+</main>
+
+<footer><span>CLUBROOM / FC PRO CLUBS</span><span>Neoficiální komunitní projekt · data poskytuje EA endpoint</span></footer>
+<script src="/app.js"></script>
+</body></html>
