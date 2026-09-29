@@ -67,6 +67,8 @@ app.get("/api/club/:id", async (req,res) => {
 });
 
 app.get("/api/health", (_,res)=>res.json({ok:true, time:new Date().toISOString()}));
-app.get("*", (_,res)=>res.sendFile(path.join(__dirname,"public","index.html")));
+app.get("/{*splat}", (_, res) => {
+  res.sendFile(path.join(__dirname, "public", "index.html"));
+});
 
 app.listen(PORT, ()=>console.log(`Pro Clubs Tracker běží na http://localhost:${PORT}`));
