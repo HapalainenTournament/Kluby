@@ -1,74 +1,12 @@
-
 import express from "express";
 import path from "node:path";
-import { fileURLToPath } from "node:url";
-
-const app = express();
-const __dirname = path.dirname(fileURLToPath(import.meta.url));
-const PORT = process.env.PORT || 3000;
-const EA = "https://proclubs.ea.com/api/fc";
-const cache = new Map();
-
-app.use(express.static(path.join(__dirname, "public")));
-
-function allowedPlatform(p) {
-  return ["common-gen5", "common-gen4", "nx"].includes(p) ? p : "common-gen5";
-}
-async function eaFetch(route, params, ttl = 60000) {
-  const url = new URL(EA + route);
-  Object.entries(params).forEach(([k,v]) => v != null && url.searchParams.set(k, String(v)));
-  const key = url.toString();
-  const hit = cache.get(key);
-  if (hit && hit.expires > Date.now()) return hit.data;
-
-  const controller = new AbortController();
-  const timer = setTimeout(() => controller.abort(), 12000);
-  try {
-    const res = await fetch(url, {
-      signal: controller.signal,
-      headers: {
-        "accept": "application/json",
-        "user-agent": "ProClubsTracker/1.0"
-      }
-    });
-    if (!res.ok) throw new Error(`EA API ${res.status}`);
-    const data = await res.json();
-    cache.set(key, { data, expires: Date.now() + ttl });
-    return data;
-  } finally { clearTimeout(timer); }
-}
-
-app.get("/api/search", async (req,res) => {
-  try {
-    const platform = allowedPlatform(req.query.platform);
-    const clubName = String(req.query.q || "").trim().slice(0, 40);
-    if (!clubName) return res.status(400).json({error:"Zadej název klubu."});
-    const data = await eaFetch("/currentSeasonLeaderboard/search",
-      {platform, clubName, maxResultCount: 20}, 30000);
-    res.json(data);
-  } catch(e) { res.status(502).json({error:"EA data se nepodařilo načíst.", detail:e.message}); }
-});
-
-app.get("/api/club/:id", async (req,res) => {
-  const platform = allowedPlatform(req.query.platform);
-  const clubIds = String(req.params.id).replace(/[^\d]/g,"");
-  if (!clubIds) return res.status(400).json({error:"Neplatné club ID."});
-  try {
-    const [info, overall, members, league, playoff] = await Promise.allSettled([
-      eaFetch("/clubs/info", {platform, clubIds}, 180000),
-      eaFetch("/clubs/overallStats", {platform, clubIds}, 60000),
-      eaFetch("/members/careerStats", {platform, clubIds}, 60000),
-      eaFetch("/clubs/matches", {platform, clubIds, matchType:"leagueMatch", maxResultCount: 20}, 45000),
-      eaFetch("/clubs/matches", {platform, clubIds, matchType:"playoffMatch", maxResultCount: 10}, 45000)
-    ]);
-    const val = x => x.status === "fulfilled" ? x.value : null;
-    res.json({info:val(info), overall:val(overall), members:val(members), matches:[...(val(league)||[]), ...(val(playoff)||[])]});
-  } catch(e) { res.status(502).json({error:"Klub se nepodařilo načíst.", detail:e.message}); }
-});
-
-app.get("/api/health", (_,res)=>res.json({ok:true, time:new Date().toISOString()}));
-app.get("/{*splat}", (_, res) => {
-  res.sendFile(path.join(__dirname, "public", "index.html"));
-});
-
-app.listen(PORT, ()=>console.log(`Pro Clubs Tracker běží na http://localhost:${PORT}`));
+import {fileURLToPath} from "node:url";
+const app=express(), __dirname=path.dirname(fileURLToPath(import.meta.url)), PORT=process.env.PORT||3000, EA="https://proclubs.ea.com/api/fc", cache=new Map();
+app.use(express.static(path.join(__dirname,"public")));
+const plat=p=>["common-gen5","common-gen4","nx"].includes(p)?p:"common-gen5";
+async function ea(route,params,ttl=60000){const u=new URL(EA+route);Object.entries(params).forEach(([k,v])=>v!=null&&u.searchParams.set(k,String(v)));const k=u.toString(),h=cache.get(k);if(h&&h.exp>Date.now())return h.data;const c=new AbortController(),t=setTimeout(()=>c.abort(),15000);try{const r=await fetch(u,{signal:c.signal,headers:{accept:"application/json","user-agent":"Clubroom/2.0"}});if(!r.ok)throw Error(`EA ${r.status} ${route}`);const d=await r.json();cache.set(k,{data:d,exp:Date.now()+ttl});return d}finally{clearTimeout(t)}}
+app.get("/api/search",async(req,res)=>{try{const q=String(req.query.q||"").trim();if(!q)return res.status(400).json({error:"Zadej název klubu."});res.json(await ea("/currentSeasonLeaderboard/search",{platform:plat(req.query.platform),clubName:q,maxResultCount:20},30000))}catch(e){res.status(502).json({error:"EA search selhal.",detail:e.message})}});
+app.get("/api/club/:id",async(req,res)=>{const id=String(req.params.id).replace(/[^\d]/g,""),p=plat(req.query.platform);if(!id)return res.status(400).json({error:"Neplatné ID"});const defs={info:["/clubs/info",{platform:p,clubIds:id}],overall:["/clubs/overallStats",{platform:p,clubIds:id}],career:["/members/career/stats",{platform:p,clubId:id}],members:["/members/stats",{platform:p,clubId:id}],achievements:["/club/playoffAchievements",{platform:p,clubId:id}],league:["/clubs/matches",{platform:p,clubIds:id,matchType:"leagueMatch",maxResultCount:10}],playoff:["/clubs/matches",{platform:p,clubIds:id,matchType:"playoffMatch",maxResultCount:10}],friendly:["/clubs/matches",{platform:p,clubIds:id,matchType:"friendlyMatch",maxResultCount:10}]},ks=Object.keys(defs),rr=await Promise.allSettled(ks.map(k=>ea(...defs[k]))),d={},errors={};rr.forEach((x,i)=>x.status==="fulfilled"?d[ks[i]]=x.value:(d[ks[i]]=null,errors[ks[i]]=x.reason?.message));const tag=(x,t)=>Array.isArray(x)?x.map(m=>({...m,_matchType:t})):[];d.matches=[...tag(d.league,"league"),...tag(d.playoff,"playoff"),...tag(d.friendly,"friendly")].sort((a,b)=>Number(b.timestamp||0)-Number(a.timestamp||0));delete d.league;delete d.playoff;delete d.friendly;d.errors=errors;d.clubId=id;d.platform=p;res.json(d)});
+app.get("/api/health",(_,res)=>res.json({ok:true,time:new Date().toISOString()}));
+app.get("/{*splat}",(_,res)=>res.sendFile(path.join(__dirname,"public","index.html")));
+app.listen(PORT,()=>console.log(`Clubroom běží na portu ${PORT}`));

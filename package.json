@@ -1,11 +1,11 @@
 {
-  "name": "pro-clubs-tracker",
-  "version": "1.0.0",
+  "name": "clubroom",
+  "version": "2.0.0",
   "private": true,
   "type": "module",
   "scripts": {
-    "dev": "node --watch server.js",
-    "start": "node server.js"
+    "start": "node server.js",
+    "dev": "node --watch server.js"
   },
   "engines": {
     "node": ">=20"
