@@ -1,6 +1,6 @@
 {
-  "name": "clubroom-v4",
-  "version": "4.0.0",
+  "name": "clubroom-fc27-v7",
+  "version": "7.0.0",
   "private": true,
   "type": "module",
   "scripts": {
@@ -11,6 +11,7 @@
     "node": ">=20"
   },
   "dependencies": {
-    "express": "^5.1.0"
+    "express": "^5.1.0",
+    "pg": "^8.13.1"
   }
 }

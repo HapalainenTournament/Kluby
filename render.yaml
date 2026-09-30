@@ -1,0 +1,15 @@
+services:
+  - type: web
+    name: clubroom-fc27
+    runtime: node
+    plan: free
+    buildCommand: npm install
+    startCommand: npm start
+    envVars:
+      - key: DATABASE_URL
+        fromDatabase:
+          name: clubroom-db
+          property: connectionString
+databases:
+  - name: clubroom-db
+    plan: free

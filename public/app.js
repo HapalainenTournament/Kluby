@@ -104,7 +104,7 @@ function render(id,d){
  $("#matchList").innerHTML=ms.length?ms.map((m,i)=>`<div class="match" data-m="${i}"><span>${m.date?m.date.toLocaleDateString("cs-CZ"):"—"}</span><span>${m.type}</span><span class="home">${m.ours}</span><span class="score">${m.og}:${m.tg}</span><b>${m.opp}</b><b class="${m.result.toLowerCase()}">${m.result}</b></div>`).join(""):'<div class="msg">EA neposlalo historii zápasů.</div>';
  document.querySelectorAll("[data-m]").forEach(x=>x.onclick=()=>showMatch(+x.dataset.m));
  let er=d.errors||{};$("#status").innerHTML=["info","overall","career","members","achievements","league","playoff","friendly"].map(k=>`<div class="endpoint"><span>${k}</span><b class="${er[k]?"bad":"ok"}">${er[k]?"CHYBA":"OK"}</b></div>`).join("");
- fillCompare();$("#dash").hidden=false;$("#dash").scrollIntoView({behavior:"smooth"})
+ fillCompare();$("#dash").hidden=false;$("#dash").scrollIntoView({behavior:"smooth"});loadHistory(id)
 }
 function stat(k,v){return`<div class="stat"><small>${k}</small><b>${v}</b></div>`}
 function showPlayer(id){
@@ -136,3 +136,24 @@ function advancedFor(p){
 function compare(){let aa=S.players.find(x=>x.id===$("#cmpA").value),bb=S.players.find(x=>x.id===$("#cmpB").value);if(!aa||!bb)return;let a=advancedFor(aa),b=advancedFor(bb);let rows=[["Matches","games"],["Goals","goals"],["Assists","assists"],["2nd assists (recent)*","secondAssists"],["G+A","ga"],["Avg rating","rating"],["MOTM","motm"],["Shots*","shots"],["Passes*","passes"],["Pass %*","passRate"],["Tackles*","tackles"],["Tackle %*","tackleRate"],["Dribbles*","dribbles"],["Saves*","saves"]];$("#compareBody").innerHTML=`<div class="compareGrid">${rows.map(([label,k])=>{let av=a[k],bv=b[k],fmt=k.includes("Rate")?pct:(v=>k==="rating"&&v?Number(v).toFixed(2):v??"—");return`<div class="cmpCell ${Number(av)>Number(bv)?"better":""}">${fmt(av)}</div><div class="cmpCell">${label}</div><div class="cmpCell ${Number(bv)>Number(av)?"better":""}">${fmt(bv)}</div>`}).join("")}</div><p class="note">* Z aktuálně dostupné historie zápasů EA.</p>`}
 $("#cmpA").onchange=compare;$("#cmpB").onchange=compare;document.querySelectorAll("[data-close]").forEach(b=>b.onclick=()=>$("#"+b.dataset.close).hidden=true);
 function escapeHtml(s){return s.replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#039;"}[c]))}
+
+async function loadHistory(id){
+ try{
+  const [hr,ar]=await Promise.all([fetch(`/api/history/${id}`),fetch(`/api/analytics/${id}`)]);
+  const h=await hr.json(),a=await ar.json();
+  $("#dbState").textContent=h.enabled?"DATABASE ON":"LIVE ONLY";
+  if(!h.enabled){
+    $("#historyStats").innerHTML=stat("DATABASE","OFF")+stat("HISTORY","LIVE ONLY");
+    $("#chemistry").innerHTML='<div class="msg">Nastav DATABASE_URL na Renderu. Pak se každý nalezený zápas začne archivovat.</div>';
+    return;
+  }
+  const games=h.matches.length,w=h.matches.filter(x=>x.result==="W").length;
+  const goals=h.matches.reduce((s,x)=>s+N(x.goals),0);
+  const sa=h.players.reduce((s,x)=>s+N(x.second_assists),0);
+  $("#historyStats").innerHTML=stat("STORED MATCHES",games)+stat("DB WIN RATE",games?Math.round(w/games*100)+"%":"—")+stat("STORED GOALS",goals)+stat("2ND ASSISTS",sa);
+  const snaps=[...h.snapshots].reverse().filter(x=>x.skill_rating!=null);
+  $("#skillHistory").innerHTML=snaps.length>1?`<div class="title"><h3>SKILL HISTORY</h3></div><div class="chart">${snaps.slice(-60).map(x=>{let vals=snaps.slice(-60).map(y=>N(y.skill_rating)),mn=Math.min(...vals),mx=Math.max(...vals),height=mx===mn?50:10+(N(x.skill_rating)-mn)/(mx-mn)*90;return `<div class="bar" style="height:${height}%"><span>${Math.round(N(x.skill_rating))}</span></div>`}).join("")}</div>`:'';
+  const chem=a.chemistry||[];
+  $("#chemistry").innerHTML=chem.length?chem.map((x,i)=>`<div class="endpoint"><span>#${i+1} ${x.a_name} + ${x.b_name}</span><b>${x.matches} záp. · ${x.matches?Math.round(N(x.wins)/N(x.matches)*100):0}% WR</b></div>`).join(""):'<div class="msg">Chemistry se objeví po uložení více společných zápasů.</div>';
+ }catch(e){$("#dbState").textContent="DB ERROR";$("#chemistry").innerHTML=`<div class="msg">${e.message}</div>`}
+}

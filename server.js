@@ -1,6 +1,8 @@
 import express from "express";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
+import {migrate,enabled as dbEnabled} from "./db.js";
+import {persistClubPayload,history,analytics} from "./storage.js";
 
 const app = express();
 const DIR = path.dirname(fileURLToPath(import.meta.url));
@@ -62,9 +64,13 @@ app.get("/api/club/:id", async (req,res)=>{
     .sort((a,b)=>Number(b.timestamp||b.matchTimestamp||0)-Number(a.timestamp||a.matchTimestamp||0));
   delete d.league; delete d.playoff; delete d.friendly;
   d.clubId=id; d.platform=p; d.errors=errors;
+  try{ d.storage=await persistClubPayload(id,p,d); }catch(e){ d.storage={enabled:dbEnabled,error:e.message}; }
   res.json(d);
 });
 
-app.get("/api/health",(_,res)=>res.json({ok:true,version:"6.0.0",time:new Date().toISOString()}));
+app.get("/api/history/:id",async(req,res)=>{try{res.json(await history(String(req.params.id).replace(/[^\d]/g,"")))}catch(e){res.status(500).json({error:e.message})}});
+app.get("/api/analytics/:id",async(req,res)=>{try{res.json(await analytics(String(req.params.id).replace(/[^\d]/g,"")))}catch(e){res.status(500).json({error:e.message})}});
+app.get("/api/health",(_,res)=>res.json({ok:true,version:"7.0.0",database:dbEnabled,time:new Date().toISOString()}));
 app.get("/{*splat}",(_,res)=>res.sendFile(path.join(DIR,"public","index.html")));
-app.listen(PORT,()=>console.log(`Clubroom FC27 v6 běží na ${PORT}`));
+await migrate();
+app.listen(PORT,()=>console.log(`Clubroom FC27 v7 běží na ${PORT} · DB ${dbEnabled?"ON":"OFF"}`));
