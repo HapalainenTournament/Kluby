@@ -1,15 +1,12 @@
-# Clubroom FC27 v10
+# Clubroom FC27 v11
 
-Nový club-first frontend: homepage search -> club profile -> Stats / Players / Matches / Analytics / Fun / Club+.
+Datová oprava v10.
 
-- logo/monogram klubu, divize, SR, record a recent form
-- tabová navigace místo nekonečného dashboardu
-- Stats: club totals + performance
-- Players: squad, leaders, compare a player profiles
-- Matches: detail zápasů a player match stats
-- Analytics: základní týmové metriky + chemistry z DB
-- Fun: awards
-- Club+: persistent history, advanced archive a připravené session/records moduly
-- databáze a FC27 backend z v9 zůstávají zachované
-
-Pozn.: Club+ obsahuje funkční archivní data tam, kde už je DB nasbíraná. Sessions a další moduly jsou UI připravené pro další ingest, nejsou vyplněné vymyšlenými čísly.
+- division se bere primárně z výsledku leaderboard search (`currentDivision`), kde ji FC27 skutečně vrací
+- ties jsou správně mapované jako remízy
+- gamesPlayed se používá jako League Apps
+- doplněny best division, streaks, promotions/relegations, clean sheets a úplný W/D/L blok
+- squad tabulka používá season member stats: shot success, passes, pass %, tackles, tackle %, clean sheets, cards
+- odstraněn neověřený `/clubs/match-player-stats`; player rows se čtou přímo z `/clubs/matches`
+- crestAssetId se bere z `clubs/info.customKit`; pokud asset CDN nevrátí obrázek, UI bezpečně spadne na monogram
+- backend DB/history zůstává zachovaný
