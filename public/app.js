@@ -4,7 +4,7 @@ const pct=v=>{let n=Number(v);return !Number.isFinite(n)||n<0?"—":(n>0&&n<=1?n
 let S={raw:null,club:null,players:[],matches:[]};
 
 $("#search").onsubmit=async e=>{e.preventDefault();$("#results").innerHTML='<div class="msg">Hledám…</div>';try{let r=await fetch(`/api/search?q=${encodeURIComponent($("#q").value)}&platform=${$("#platform").value}`),d=await r.json();if(!r.ok)throw Error(d.error);let a=A(d).flatMap(x=>Array.isArray(x)?x:[x]).filter(x=>x.clubId||x.clubid||x.id);$("#results").innerHTML=a.length?a.slice(0,15).map(c=>`<div class="result" data-id="${c.clubId||c.clubid||c.id}"><b>${c.clubName||c.name||"Klub"}</b><span>ID ${c.clubId||c.clubid||c.id}</span></div>`).join(""):'<div class="msg">Nic nenalezeno.</div>';document.querySelectorAll(".result").forEach(x=>x.onclick=()=>load(x.dataset.id))}catch(e){$("#results").innerHTML=`<div class="msg">${e.message}</div>`}};
-async function load(id){$("#results").innerHTML='<div class="msg">Načítám kompletní data…</div>';let r=await fetch(`/api/club/${id}?platform=${$("#platform").value}`),d=await r.json();if(!r.ok)return $("#results").innerHTML=`<div class="msg">${d.error}</div>`;render(id,d);$("#results").innerHTML=""}
+async function load(id){$("#results").innerHTML='<div class="msg">Načítám kompletní data…</div>';let r=await fetch(`/api/club/${id}?platform=${$("#platform").value}`),d=await r.json();if(!r.ok)return $("#results").innerHTML=`<div class="msg">${d.error}</div>`;render(id,d);$("#results").innerHTML="";history.replaceState(null,"",`/club/${id}`)}
 
 function first(...vals){for(const v of vals)if(v!=null&&v!=="")return v;return 0}
 function playerArray(d){let candidates=[d?.career?.members,d?.career?.players,d?.career,d?.members?.members,d?.members?.players,d?.members];for(const c of candidates){let a=A(c);if(a.length&&a.some(x=>P(x,["name","playerName","personaName","proName"],null)))return a}return[]}
@@ -92,20 +92,27 @@ function matchPlayer(x){
  }
 }
 
+function metric(k,v,cls=""){return `<div class="metric ${cls}"><small>${k}</small><b>${v}</b></div>`}
 function render(id,d){
  let info=(d.info&&(d.info[id]||A(d.info)[0]))||{},o=(d.overall&&(d.overall[id]||A(d.overall)[0]))||d.overall||{},name=info.name||o.clubName||`Club ${id}`;
  let w=N(P(o,["wins","gamesWon"])),dr=N(P(o,["draws","gamesDrawn"])),l=N(P(o,["losses","gamesLost"])),g=w+dr+l,gf=N(P(o,["goals","goalsFor","goalsScored"])),ga=N(P(o,["goalsAgainst","goalsConceded"]));
  let ps=playerArray(d).map(normalizePlayer).sort((a,b)=>b.ga-a.ga),ms=(d.matches||[]).map(m=>normalizeMatch(m,name,id));
  S={raw:d,club:{id,name},players:ps,matches:ms};
- $("#clubName").textContent=name;$("#clubMeta").textContent=`Club ID ${id} · ${d.platform}`;$("#skill").textContent=P(o,["skillRating","skill","clubSkillRating"],"—");$("#record").textContent=`${w}-${dr}-${l}`;$("#wr").textContent=g?Math.round(w/g*100)+"%":"—";$("#gd").textContent=gf||ga?`${gf-ga>=0?"+":""}${gf-ga}`:"—";
- $("#playerCount").textContent=`${ps.length} hráčů`;$("#players").innerHTML=ps.length?ps.map((p,i)=>{let x=advancedFor(p);return `<tr><td>${i+1}</td><td data-p="${p.id}">${p.name}</td><td>${p.games}</td><td>${p.goals}</td><td>${p.assists}</td><td><b>${p.ga}</b></td><td>${p.rating?p.rating.toFixed(1):"—"}</td><td>${p.motm}</td><td>${x.shots||"—"}</td><td>—</td><td>${x.passes||"—"}</td><td>${x.passAttempts?pct(x.passRate):"—"}</td><td>${x.tackles||"—"}</td><td>${x.tackleAttempts?pct(x.tackleRate):"—"}</td></tr>`}).join(""):'<tr><td colspan="14">EA neposlalo career hráče.</td></tr>';
+ let skill=P(o,["skillRating","skill","clubSkillRating"],"—"),division=P(o,["currentDivision","division","divisionNumber","div"],P(info,["division","currentDivision"],"—"));
+ $("#clubName").textContent=name;$("#clubLogo").textContent=(name.match(/[A-Z0-9]/ig)||["C"]).slice(0,2).join("").toUpperCase();$("#divisionBadge").textContent=`DIV ${division}`;$("#skillBadge").textContent=`SR ${skill}`;$("#clubIdBadge").textContent=`ID ${id}`;$("#recW").textContent=`${w}W`;$("#recD").textContent=`${dr}D`;$("#recL").textContent=`${l}L`;
+ let form=ms.slice(0,10).map(m=>m.result);$("#formPills").innerHTML=form.map(x=>`<span class="formPill ${x.toLowerCase()}">${x}</span>`).join("");let fw=form.filter(x=>x==="W").length,fd=form.filter(x=>x==="D").length,fl=form.filter(x=>x==="L").length;$("#formSummary").textContent=form.length?`${fw}W · ${fd}D · ${fl}L`:"—";
+ let wr=g?(w/g*100):0,gd=gf-ga;$("#clubStats").innerHTML=metric("League Apps",g)+metric("Win Rate",g?wr.toFixed(1)+"%":"—")+metric("Goals",gf||"—")+metric("Conceded",ga||"—")+metric("Goal Diff",(gf||ga)?`${gd>=0?"+":""}${gd}`:"—")+metric("Goals / Game",g?(gf/g).toFixed(2):"—")+metric("Conceded / Game",g?(ga/g).toFixed(2):"—")+metric("Skill Rating",skill);
+ $("#performanceStats").innerHTML=metric("Recent W",fw)+metric("Recent D",fd)+metric("Recent L",fl)+metric("Recent Goals",ms.slice(0,10).reduce((a,m)=>a+m.og,0))+metric("Recent Conceded",ms.slice(0,10).reduce((a,m)=>a+m.tg,0))+metric("Squad",ps.length);
+ $("#playerCount").textContent=`${ps.length} hráčů`;$("#players").innerHTML=ps.length?ps.map((p,i)=>{let x=advancedFor(p);return `<tr><td>${i+1}</td><td data-p="${p.id}"><b>${p.name}</b>${p.accountName&&p.accountName!==p.name?`<small style="display:block;opacity:.55">${p.accountName}</small>`:""}</td><td>${p.games}</td><td>${p.goals}</td><td>${p.assists}</td><td><b>${p.ga}</b></td><td>${p.rating?p.rating.toFixed(1):"—"}</td><td>${p.motm}</td><td>${x.shots||"—"}</td><td>${x.passAttempts?pct(x.passRate):"—"}</td></tr>`}).join(""):'<tr><td colspan="10">EA neposlalo career hráče.</td></tr>';
  document.querySelectorAll("[data-p]").forEach(x=>x.onclick=()=>showPlayer(x.dataset.p));
  let scorer=[...ps].sort((a,b)=>b.goals-a.goals)[0],assist=[...ps].sort((a,b)=>b.assists-a.assists)[0],rating=[...ps].sort((a,b)=>b.rating-a.rating)[0];
- $("#leaders").innerHTML=ps.length?[[scorer,"TOP SCORER",`${scorer.goals} G`],[assist,"PLAYMAKER",`${assist.assists} A`],[rating,"RATING KING",rating.rating?rating.rating.toFixed(2):"—"]].map(([p,t,s])=>`<div class="leader"><small>${t}</small><b>${p.name}</b><span>${s}</span></div>`).join(""):"";
- $("#matchList").innerHTML=ms.length?ms.map((m,i)=>`<div class="match" data-m="${i}"><span>${m.date?m.date.toLocaleDateString("cs-CZ"):"—"}</span><span>${m.type}</span><span class="home">${m.ours}</span><span class="score">${m.og}:${m.tg}</span><b>${m.opp}</b><b class="${m.result.toLowerCase()}">${m.result}</b></div>`).join(""):'<div class="msg">EA neposlalo historii zápasů.</div>';
+ $("#leaders").innerHTML=ps.length?[[scorer,"TOP SCORER",`${scorer.goals} G`],[assist,"PLAYMAKER",`${assist.assists} A`],[rating,"RATING KING",rating.rating?rating.rating.toFixed(2):"—"]].map(([p,t,z])=>`<div class="leader"><small>${t}</small><b>${p.name}</b><span>${z}</span></div>`).join(""):"";
+ $("#funAwards").innerHTML=ps.length?[[scorer,"GOLDEN BOOT",`${scorer.goals} gólů`],[assist,"ASSIST KING",`${assist.assists} asistencí`],[rating,"MR. CONSISTENT",`${rating.rating?rating.rating.toFixed(2):"—"} rating`]].map(([p,t,z])=>`<article class="award"><span>${t}</span><b>${p.name}</b><p>${z}</p></article>`).join(""):"<div class=msg>Zatím bez dat.</div>";
+ $("#analyticsCards").innerHTML=metric("Win Rate",g?wr.toFixed(1)+"%":"—")+metric("Goals/Game",g?(gf/g).toFixed(2):"—")+metric("Goal Diff",(gf||ga)?`${gd>=0?"+":""}${gd}`:"—")+metric("Top G+A",ps[0]?`${ps[0].name} · ${ps[0].ga}`:"—");
+ $("#matchList").innerHTML=ms.length?ms.map((m,i)=>`<div class="match" data-m="${i}"><span>${m.date?m.date.toLocaleDateString("cs-CZ"):"—"}</span><span>${m.type}</span><span class="home">${m.ours}</span><span class="score">${m.og}:${m.tg}</span><b>${m.opp}</b><b class="${m.result.toLowerCase()}">${m.result}</b></div>`).join(""):'<div class="msg" style="padding:20px">EA neposlalo historii zápasů.</div>';
  document.querySelectorAll("[data-m]").forEach(x=>x.onclick=()=>showMatch(+x.dataset.m));
- let er=d.errors||{};$("#status").innerHTML=["info","overall","career","members","achievements","league","playoff","friendly"].map(k=>`<div class="endpoint"><span>${k}</span><b class="${er[k]?"bad":"ok"}">${er[k]?"CHYBA":"OK"}</b></div>`).join("");
- fillCompare();$("#dash").hidden=false;$("#dash").scrollIntoView({behavior:"smooth"});loadHistory(id)
+ let er=d.errors||{};$("#status").innerHTML=["info","overall","career","members","achievements","league","playoff","friendly"].map(k=>`<div class="endpoint"><span>${k}</span><b>${er[k]?"CHYBA":"OK"}</b></div>`).join("");
+ fillCompare();$("#home").hidden=true;$("#dash").hidden=false;window.scrollTo({top:0,behavior:"smooth"});loadHistory(id)
 }
 function stat(k,v){return`<div class="stat"><small>${k}</small><b>${v}</b></div>`}
 function showPlayer(id){
@@ -144,7 +151,7 @@ async function loadHistory(id){
   const h=await hr.json(),a=await ar.json();
   $("#dbState").textContent=h.enabled?"DATABASE ON":"LIVE ONLY";
   if(!h.enabled){
-    $("#historyStats").innerHTML=stat("DATABASE","OFF")+stat("HISTORY","LIVE ONLY");
+    $("#historyStats").innerHTML=metric("DATABASE","OFF")+metric("HISTORY","LIVE ONLY");
     $("#chemistry").innerHTML='<div class="msg">Nastav DATABASE_URL na Renderu. Pak se každý nalezený zápas začne archivovat.</div>';
     return;
   }
@@ -164,10 +171,14 @@ async function loadHistory(id){
   const games=h.matches.length,w=h.matches.filter(x=>x.result==="W").length;
   const goals=h.matches.reduce((s,x)=>s+N(x.goals),0);
   const sa=h.players.reduce((s,x)=>s+N(x.second_assists),0);
-  $("#historyStats").innerHTML=stat("STORED MATCHES",games)+stat("DB WIN RATE",games?Math.round(w/games*100)+"%":"—")+stat("STORED GOALS",goals)+stat("2ND ASSISTS",sa);
+  $("#historyStats").innerHTML=metric("STORED MATCHES",games)+metric("DB WIN RATE",games?Math.round(w/games*100)+"%":"—")+metric("STORED GOALS",goals)+metric("2ND ASSISTS",sa);
   const snaps=[...h.snapshots].reverse().filter(x=>x.skill_rating!=null);
   $("#skillHistory").innerHTML=snaps.length>1?`<div class="title"><h3>SKILL HISTORY</h3></div><div class="chart">${snaps.slice(-60).map(x=>{let vals=snaps.slice(-60).map(y=>N(y.skill_rating)),mn=Math.min(...vals),mx=Math.max(...vals),height=mx===mn?50:10+(N(x.skill_rating)-mn)/(mx-mn)*90;return `<div class="bar" style="height:${height}%"><span>${Math.round(N(x.skill_rating))}</span></div>`}).join("")}</div>`:'';
   const chem=a.chemistry||[];
   $("#chemistry").innerHTML=chem.length?chem.map((x,i)=>`<div class="endpoint"><span>#${i+1} ${x.a_name} + ${x.b_name}</span><b>${x.matches} záp. · ${x.matches?Math.round(N(x.wins)/N(x.matches)*100):0}% WR</b></div>`).join(""):'<div class="msg">Chemistry se objeví po uložení více společných zápasů.</div>';
  }catch(e){$("#dbState").textContent="DB ERROR";$("#chemistry").innerHTML=`<div class="msg">${e.message}</div>`}
 }
+
+function openTab(tab,push=true){document.querySelectorAll("[data-tab]").forEach(b=>b.classList.toggle("active",b.dataset.tab===tab));document.querySelectorAll("[data-pane]").forEach(p=>p.classList.toggle("active",p.dataset.pane===tab));if(push&&S.club)history.replaceState(null,"",`/club/${S.club.id}/${tab==="stats"?"":tab}`.replace(/\/$/,""))}
+document.querySelectorAll("[data-tab]").forEach(b=>b.onclick=()=>openTab(b.dataset.tab));
+$("#openSearch").onclick=()=>{history.replaceState(null,"","/");$("#dash").hidden=true;$("#home").hidden=false;$("#q").focus()};
