@@ -1,21 +1,15 @@
-# Clubroom v4
+# Clubroom v4.1
 
-## Nové
-- detailní career stats: střely, přihrávky, tackly, úspěšnosti, saves, clean sheets, karty
-- detail zápasu s player match stats
-- hráčské profily
-- rating trend z dostupné historie
-- Player Compare
-- RAW JSON diagnostika přímo ve webu
-- league / playoff / friendly
-- Express 5 Render fix
+Oprava podle skutečného EA match payloadu:
+- playername -> skutečné jméno hráče
+- passesmade / passattempts
+- tacklesmade / tackleattempts
+- shots, saves, mom, redcards, pos, secondsPlayed
+- hráči se filtrují podle club ID
+- názvy klubů se čtou z clubs[clubId].details.name
+- player ID se zachová z klíče objektu players[clubId][playerId]
+- pass % a tackle % se dopočítávají z made/attempts
 
-## Render
-Build command: `npm install`
-Start command: `npm start`
-
-Nahraj obsah ZIPu přímo do kořene repository.
-
-### Důležité
-EA Pro Clubs endpointy jsou neoficiální. Pokud některá statistika zůstane prázdná, otevři na webu
-`EA diagnostika / RAW data`. v4 zobrazuje skutečný payload, takže lze parser opravit podle dat místo hádání názvů polí.
+Render:
+Build: npm install
+Start: npm start
