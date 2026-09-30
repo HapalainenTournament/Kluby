@@ -1,10 +1,11 @@
 {
-  "name": "clubroom-v3",
-  "version": "3.0.0",
+  "name": "clubroom-v4",
+  "version": "4.0.0",
   "private": true,
   "type": "module",
   "scripts": {
-    "start": "node server.js"
+    "start": "node server.js",
+    "dev": "node --watch server.js"
   },
   "engines": {
     "node": ">=20"

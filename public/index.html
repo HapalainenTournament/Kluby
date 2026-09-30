@@ -1,1 +1,26 @@
-<!doctype html><html lang="cs"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Clubroom v3</title><link rel="stylesheet" href="/style.css"></head><body><header><b>CLUBROOM</b><span>EA LIVE</span></header><main><section class="hero"><small>FC PRO CLUBS ANALYTICS</small><h1>YOUR CLUB.<br><i>EXPOSED.</i></h1><form id="search"><input id="q" placeholder="Název klubu…" required><select id="platform"><option value="common-gen5">PS5 / Xbox Series / PC</option><option value="common-gen4">PS4 / Xbox One</option><option value="nx">Switch</option></select><button>NAJÍT KLUB</button></form><div id="results"></div></section><section id="dash" hidden><h2 id="clubName"></h2><p id="clubMeta"></p><div class="cards"><article>SKILL<b id="skill">—</b></article><article>RECORD<b id="record">—</b></article><article>WIN RATE<b id="wr">—</b></article><article>GOAL DIFF<b id="gd">—</b></article></div><section class="panel"><h3>SQUAD <span id="playerCount"></span></h3><div class="table"><table><thead><tr><th>#</th><th>Hráč</th><th>Z</th><th>G</th><th>A</th><th>G+A</th><th>G/Z</th><th>A/Z</th><th>Rating</th><th>MOTM</th><th>Pass%</th><th>Shot%</th></tr></thead><tbody id="players"></tbody></table></div></section><section class="panel"><h3>POSLEDNÍ ZÁPASY · KLIKNI PRO DETAIL</h3><div id="matches"></div></section><section class="panel"><details><summary>EA diagnostika</summary><div id="status"></div></details></section></section><section id="playerView" class="overlay" hidden><button data-close="playerView">×</button><div id="playerContent"></div></section><section id="matchView" class="overlay" hidden><button data-close="matchView">×</button><div id="matchContent"></div></section></main><script src="/app.js"></script></body></html>
+<!doctype html><html lang="cs"><head>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Clubroom v4</title><link rel="stylesheet" href="/style.css"></head><body>
+<header><b>CLUBROOM</b><nav><a href="#squad">Squad</a><a href="#matches">Matches</a><a href="#compare">Compare</a></nav><span>● EA LIVE · v4</span></header>
+<main>
+<section class="hero"><small>FC PRO CLUBS ANALYTICS</small><h1>YOUR CLUB.<br><i>EXPOSED.</i></h1>
+<p>Career stats, match stats, hráčské profily, trendy a porovnání.</p>
+<form id="search"><input id="q" placeholder="Název klubu…" required><select id="platform"><option value="common-gen5">PS5 / Xbox Series / PC</option><option value="common-gen4">PS4 / Xbox One</option><option value="nx">Switch</option></select><button>NAJÍT KLUB</button></form><div id="results"></div></section>
+
+<section id="dash" hidden>
+<div class="clubHead"><div><small>CLUB PROFILE</small><h2 id="clubName"></h2><p id="clubMeta"></p></div></div>
+<div class="cards"><article>SKILL<b id="skill">—</b></article><article>RECORD<b id="record">—</b></article><article>WIN RATE<b id="wr">—</b></article><article>GOAL DIFF<b id="gd">—</b></article></div>
+<section id="leaders" class="leaders"></section>
+
+<section class="panel" id="squad"><div class="title"><h3>SQUAD</h3><span id="playerCount"></span></div><div class="table"><table>
+<thead><tr><th>#</th><th>Hráč</th><th>Z</th><th>G</th><th>A</th><th>G+A</th><th>Rating</th><th>MOTM</th><th>Shots</th><th>Shot%</th><th>Passes</th><th>Pass%</th><th>Tackles</th><th>Tackle%</th></tr></thead><tbody id="players"></tbody></table></div></section>
+
+<section class="panel" id="compare"><div class="title"><h3>PLAYER COMPARE</h3></div><div class="compareControls"><select id="cmpA"></select><b>VS</b><select id="cmpB"></select></div><div id="compareBody"></div></section>
+
+<section class="panel" id="matches"><div class="title"><h3>POSLEDNÍ ZÁPASY</h3><span>Klikni pro kompletní match stats</span></div><div id="matchList"></div></section>
+<section class="panel debug"><details><summary>EA diagnostika / RAW data</summary><div id="status"></div><button id="rawBtn">ZOBRAZIT RAW JSON</button><pre id="raw" hidden></pre></details></section>
+</section>
+
+<section id="playerView" class="overlay" hidden><button class="close" data-close="playerView">×</button><div id="playerContent"></div></section>
+<section id="matchView" class="overlay" hidden><button class="close" data-close="matchView">×</button><div id="matchContent"></div></section>
+</main><footer>CLUBROOM v4 · komunitní EA FC Pro Clubs tracker</footer><script src="/app.js"></script></body></html>
