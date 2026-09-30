@@ -51,6 +51,18 @@ function normalizeMatch(m,clubName,clubId){
   date:ts?new Date(String(ts).length<13?N(ts)*1000:ts):null,
   players:ourPlayers.length?ourPlayers:allPlayers,oursRaw:ours,oppRaw:opp}
 }
+
+function eventCount(x,eventId){
+ let total=0;
+ for(const [k,v] of Object.entries(x||{})){
+  if(!k.startsWith("match_event_aggregate_")||typeof v!=="string")continue;
+  for(const token of v.split(/[;,| ]+/)){
+   const m=token.match(/^(\d+):(-?\d+(?:\.\d+)?)$/);
+   if(m&&Number(m[1])===Number(eventId)) total+=Number(m[2])||0;
+  }
+ }
+ return total
+}
 function matchPlayer(x){
  const passAttempts=N(P(x,["passattempts","passAttempts","passesAttempted"],0));
  const passes=N(P(x,["passesmade","passesMade","passes"],0));
@@ -71,7 +83,7 @@ function matchPlayer(x){
   saves:N(P(x,["saves"],0)),
   motm:N(P(x,["mom","manOfTheMatch","motm"],0)),
   reds:N(P(x,["redcards","redCards","redCard"],0)),
-  seconds:N(P(x,["secondsPlayed","gameTime","seconds"],0)),
+  seconds:N(P(x,["secondsPlayed","gameTime","seconds"],0)),secondAssists:eventCount(x,115),dribbles:eventCount(x,174),
   conceded:N(P(x,["goalsconceded","goalsConceded"],0)),
   cleanAny:N(P(x,["cleansheetsany"],0)),
   cleanDef:N(P(x,["cleansheetsdef"],0)),
@@ -92,21 +104,35 @@ function render(id,d){
  $("#matchList").innerHTML=ms.length?ms.map((m,i)=>`<div class="match" data-m="${i}"><span>${m.date?m.date.toLocaleDateString("cs-CZ"):"—"}</span><span>${m.type}</span><span class="home">${m.ours}</span><span class="score">${m.og}:${m.tg}</span><b>${m.opp}</b><b class="${m.result.toLowerCase()}">${m.result}</b></div>`).join(""):'<div class="msg">EA neposlalo historii zápasů.</div>';
  document.querySelectorAll("[data-m]").forEach(x=>x.onclick=()=>showMatch(+x.dataset.m));
  let er=d.errors||{};$("#status").innerHTML=["info","overall","career","members","achievements","league","playoff","friendly"].map(k=>`<div class="endpoint"><span>${k}</span><b class="${er[k]?"bad":"ok"}">${er[k]?"CHYBA":"OK"}</b></div>`).join("");
- fillCompare();$("#raw").textContent=JSON.stringify(d,null,2);$("#dash").hidden=false;$("#dash").scrollIntoView({behavior:"smooth"})
+ fillCompare();$("#dash").hidden=false;$("#dash").scrollIntoView({behavior:"smooth"})
 }
 function stat(k,v){return`<div class="stat"><small>${k}</small><b>${v}</b></div>`}
 function showPlayer(id){
  let p=S.players.find(x=>x.id===id);if(!p)return;
- let recent=S.matches.map(m=>{let s=m.players.map(matchPlayer).find(x=>x.id===id||String(x.name).toLowerCase()===String(p.name).toLowerCase());return s?{m,s}:null}).filter(Boolean).slice(0,10);
- let ratings=recent.map(x=>x.s.rating).filter(Boolean).reverse(),max=Math.max(10,...ratings);
- $("#playerContent").innerHTML=`<div class="profile"><small>PLAYER PROFILE · ${S.club.name}</small><h2>${p.name}</h2><div class="stats">${stat("MATCHES",p.games)}${stat("GOALS",p.goals)}${stat("ASSISTS",p.assists)}${stat("G+A",p.ga)}${stat("AVG RATING",p.rating?p.rating.toFixed(2):"—")}${stat("MOTM",p.motm)}${stat("SHOTS",p.shots||"—")}${stat("SHOT %",pct(p.shotRate))}${stat("PASSES",p.passes||"—")}${stat("PASS %",pct(p.passRate))}${stat("TACKLES",p.tackles||"—")}${stat("TACKLE %",pct(p.tackleRate))}${stat("SAVES",p.saves||"—")}${stat("CLEAN SHEETS",p.clean||"—")}${stat("RED CARDS",p.reds||"—")}${stat("POSITION",p.position)}</div><h3 class="sectionTitle">RATING TREND · LAST ${ratings.length}</h3>${ratings.length?`<div class="chart">${ratings.map(r=>`<div class="bar" style="height:${Math.max(5,r/max*100)}%"><span>${r.toFixed(1)}</span></div>`).join("")}</div>`:'<div class="msg">Pro graf zatím nejsou match ratings.</div>'}<h3 class="sectionTitle">RECENT MATCHES</h3>${recent.length?matchStatsTable(recent.map(x=>x.s),recent.map(x=>x.m.opp)):'<div class="msg">EA u načtených zápasů nespárovalo hráče.</div>'}</div>`;$("#playerView").hidden=false
+ let recent=S.matches.map(m=>{let s=m.players.map(matchPlayer).find(x=>x.id===id||String(x.name).toLowerCase()===String(p.name).toLowerCase());return s?{m,s}:null}).filter(Boolean);
+ let ms=recent.map(x=>x.s),sum=k=>ms.reduce((a,x)=>a+N(x[k]),0);
+ let passAttempts=sum("passAttempts"),passes=sum("passes"),tackleAttempts=sum("tackleAttempts"),tackles=sum("tackles");
+ let derived={
+  shots:sum("shots"),passes,passAttempts,passRate:passAttempts?passes/passAttempts*100:0,
+  tackles,tackleAttempts,tackleRate:tackleAttempts?tackles/tackleAttempts*100:0,
+  saves:sum("saves"),reds:sum("reds"),secondAssists:sum("secondAssists"),dribbles:sum("dribbles"),
+  pos:ms.find(x=>x.pos&&x.pos!=="—")?.pos||"—"
+ };
+ let ratings=recent.slice(0,10).map(x=>x.s.rating).filter(Boolean).reverse(),max=Math.max(10,...ratings);
+ $("#playerContent").innerHTML=`<div class="profile"><small>PLAYER PROFILE · ${S.club.name}</small><h2>${p.name}</h2><p class="identity">EA / PSN ID · ${p.name}${derived.pos!=="—"?` · POS ${derived.pos}`:""}</p><div class="stats">${stat("MATCHES",p.games)}${stat("GOALS",p.goals)}${stat("ASSISTS",p.assists)}${stat("2ND ASSISTS*",derived.secondAssists)}${stat("G+A",p.ga)}${stat("AVG RATING",p.rating?p.rating.toFixed(2):"—")}${stat("MOTM",p.motm)}${stat("SHOTS*",derived.shots||"—")}${stat("PASSES*",derived.passes||"—")}${stat("PASS %*",derived.passAttempts?pct(derived.passRate):"—")}${stat("TACKLES*",derived.tackles||"—")}${stat("TACKLE %*",derived.tackleAttempts?pct(derived.tackleRate):"—")}${stat("SAVES*",derived.saves||"—")}${stat("DRIBBLES*",derived.dribbles||"—")}${stat("RED CARDS*",derived.reds||"—")}${stat("POSITION",derived.pos)}</div><p class="note">* Z dostupné historie zápasů EA, ne z celoživotního career součtu.</p><h3 class="sectionTitle">RATING TREND · LAST ${ratings.length}</h3>${ratings.length?`<div class="chart">${ratings.map(r=>`<div class="bar" style="height:${Math.max(5,r/max*100)}%"><span>${r.toFixed(1)}</span></div>`).join("")}</div>`:'<div class="msg">Pro graf zatím nejsou match ratings.</div>'}<h3 class="sectionTitle">RECENT MATCHES</h3>${recent.length?matchStatsTable(recent.slice(0,10).map(x=>x.s),recent.slice(0,10).map(x=>x.m.opp)):'<div class="msg">EA u načtených zápasů nespárovalo hráče.</div>'}</div>`;
+ $("#playerView").hidden=false
 }
-function matchStatsTable(ps,opps=[]){return`<div class="table"><table><thead><tr><th>Hráč</th><th>Pos</th><th>Rating</th><th>G</th><th>A</th><th>Shots</th><th>Passes</th><th>Pass Att.</th><th>Pass%</th><th>Tackles</th><th>Tackle Att.</th><th>Tackle%</th><th>Saves</th><th>MOTM</th><th>RC</th></tr></thead><tbody>${ps.map((p,i)=>`<tr><td>${opps[i]||p.name}</td><td>${p.pos||"—"}</td><td>${p.rating?p.rating.toFixed(1):"—"}</td><td>${p.goals}</td><td>${p.assists}</td><td>${p.shots}</td><td>${p.passes}</td><td>${p.passAttempts}</td><td>${pct(p.passRate)}</td><td>${p.tackles}</td><td>${p.tackleAttempts}</td><td>${pct(p.tackleRate)}</td><td>${p.saves}</td><td>${p.motm}</td><td>${p.reds}</td></tr>`).join("")}</tbody></table></div>`}
+function matchStatsTable(ps,opps=[]){return`<div class="table"><table><thead><tr><th>Hráč</th><th>Pos</th><th>Rating</th><th>G</th><th>A</th><th>2A</th><th>Shots</th><th>Passes</th><th>Pass Att.</th><th>Pass%</th><th>Tackles</th><th>Tackle Att.</th><th>Tackle%</th><th>Dribbles</th><th>Saves</th><th>MOTM</th><th>RC</th></tr></thead><tbody>${ps.map((p,i)=>`<tr><td>${opps[i]||p.name}</td><td>${p.pos||"—"}</td><td>${p.rating?p.rating.toFixed(1):"—"}</td><td>${p.goals}</td><td>${p.assists}</td><td>${p.secondAssists||0}</td><td>${p.shots}</td><td>${p.passes}</td><td>${p.passAttempts}</td><td>${p.passAttempts?pct(p.passRate):"—"}</td><td>${p.tackles}</td><td>${p.tackleAttempts}</td><td>${p.tackleAttempts?pct(p.tackleRate):"—"}</td><td>${p.dribbles||0}</td><td>${p.saves}</td><td>${p.motm}</td><td>${p.reds}</td></tr>`).join("")}</tbody></table></div>`}
 function showMatch(i){
  let m=S.matches[i],ps=m.players.map(matchPlayer);
- $("#matchContent").innerHTML=`<div class="profile"><small>${m.type.toUpperCase()} · ${m.date?m.date.toLocaleDateString("cs-CZ"):""}</small><h2>${m.ours} ${m.og}:${m.tg} ${m.opp}</h2><div class="stats">${stat("RESULT",m.result)}${stat("OUR GOALS",m.og)}${stat("OPP GOALS",m.tg)}${stat("PLAYERS",ps.length)}</div><h3 class="sectionTitle">PLAYER MATCH STATS</h3>${ps.length?matchStatsTable(ps):'<div class="msg">EA v tomto match payloadu neposlalo player stats. Otevři RAW JSON dole na dashboardu pro kontrolu struktury.</div>'}<h3 class="sectionTitle">RAW MATCH DATA</h3><pre class="debug">${escapeHtml(JSON.stringify(m.raw,null,2))}</pre></div>`;$("#matchView").hidden=false
+ $("#matchContent").innerHTML=`<div class="profile"><small>${m.type.toUpperCase()} · ${m.date?m.date.toLocaleDateString("cs-CZ"):""}</small><h2>${m.ours} ${m.og}:${m.tg} ${m.opp}</h2><div class="stats">${stat("RESULT",m.result)}${stat("OUR GOALS",m.og)}${stat("OPP GOALS",m.tg)}${stat("PLAYERS",ps.length)}</div><h3 class="sectionTitle">PLAYER MATCH STATS</h3>${ps.length?matchStatsTable(ps):'<div class="msg">EA v tomto zápase neposlalo hráčské statistiky.</div>'}</div>`;$("#matchView").hidden=false
 }
 function fillCompare(){let opts=S.players.map(p=>`<option value="${p.id}">${p.name}</option>`).join("");$("#cmpA").innerHTML=opts;$("#cmpB").innerHTML=opts;if(S.players[1])$("#cmpB").value=S.players[1].id;compare()}
-function compare(){let a=S.players.find(x=>x.id===$("#cmpA").value),b=S.players.find(x=>x.id===$("#cmpB").value);if(!a||!b)return;let rows=[["Matches","games"],["Goals","goals"],["Assists","assists"],["G+A","ga"],["Avg rating","rating"],["MOTM","motm"],["Shots","shots"],["Shot %","shotRate"],["Passes","passes"],["Pass %","passRate"],["Tackles","tackles"],["Tackle %","tackleRate"],["Clean sheets","clean"],["Red cards","reds"]];$("#compareBody").innerHTML=`<div class="compareGrid">${rows.map(([label,k])=>{let av=a[k],bv=b[k],fmt=k.includes("Rate")?pct:(v=>k==="rating"&&v?Number(v).toFixed(2):v||"—");return`<div class="cmpCell ${Number(av)>Number(bv)&&k!=="reds"?"better":""}">${fmt(av)}</div><div class="cmpCell">${label}</div><div class="cmpCell ${Number(bv)>Number(av)&&k!=="reds"?"better":""}">${fmt(bv)}</div>`}).join("")}</div>`}
-$("#cmpA").onchange=compare;$("#cmpB").onchange=compare;$("#rawBtn").onclick=()=>{$("#raw").hidden=!$("#raw").hidden};document.querySelectorAll("[data-close]").forEach(b=>b.onclick=()=>$("#"+b.dataset.close).hidden=true);
+function advancedFor(p){
+ let ms=S.matches.map(m=>m.players.map(matchPlayer).find(x=>x.id===p.id||String(x.name).toLowerCase()===String(p.name).toLowerCase())).filter(Boolean);
+ let sum=k=>ms.reduce((a,x)=>a+N(x[k]),0),pa=sum("passAttempts"),pm=sum("passes"),ta=sum("tackleAttempts"),tm=sum("tackles");
+ return {...p,shots:sum("shots"),passes:pm,passRate:pa?pm/pa*100:0,tackles:tm,tackleRate:ta?tm/ta*100:0,saves:sum("saves"),secondAssists:sum("secondAssists"),dribbles:sum("dribbles")}
+}
+function compare(){let aa=S.players.find(x=>x.id===$("#cmpA").value),bb=S.players.find(x=>x.id===$("#cmpB").value);if(!aa||!bb)return;let a=advancedFor(aa),b=advancedFor(bb);let rows=[["Matches","games"],["Goals","goals"],["Assists","assists"],["2nd assists*","secondAssists"],["G+A","ga"],["Avg rating","rating"],["MOTM","motm"],["Shots*","shots"],["Passes*","passes"],["Pass %*","passRate"],["Tackles*","tackles"],["Tackle %*","tackleRate"],["Dribbles*","dribbles"],["Saves*","saves"]];$("#compareBody").innerHTML=`<div class="compareGrid">${rows.map(([label,k])=>{let av=a[k],bv=b[k],fmt=k.includes("Rate")?pct:(v=>k==="rating"&&v?Number(v).toFixed(2):v??"—");return`<div class="cmpCell ${Number(av)>Number(bv)?"better":""}">${fmt(av)}</div><div class="cmpCell">${label}</div><div class="cmpCell ${Number(bv)>Number(av)?"better":""}">${fmt(bv)}</div>`}).join("")}</div><p class="note">* Z aktuálně dostupné historie zápasů EA.</p>`}
+$("#cmpA").onchange=compare;$("#cmpB").onchange=compare;document.querySelectorAll("[data-close]").forEach(b=>b.onclick=()=>$("#"+b.dataset.close).hidden=true);
 function escapeHtml(s){return s.replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#039;"}[c]))}
