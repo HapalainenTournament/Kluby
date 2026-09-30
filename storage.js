@@ -1,6 +1,25 @@
 import {enabled,query} from "./db.js";
 const N=v=>Number(v??0);
 const P=(o,ks,d=0)=>{for(const k of ks)if(o&&o[k]!=null)return o[k];return d};
+
+function virtualName(o){
+ if(!o||typeof o!=="object")return null;
+ const exact=["proName","proname","virtualProName","virtualproname","virtualPro","vpName","pro_name","virtual_pro_name"];
+ for(const k of exact){
+   const v=o[k];
+   if(typeof v==="string"&&v.trim()&&!/^\d+$/.test(v.trim())) return v.trim();
+   if(v&&typeof v==="object"){
+     const z=v.name||v.proName||v.playerName;
+     if(typeof z==="string"&&z.trim())return z.trim();
+   }
+ }
+ const first=P(o,["firstName","firstname","proFirstName","virtualProFirstName"],"");
+ const last=P(o,["lastName","lastname","proLastName","virtualProLastName"],"");
+ const both=`${first||""} ${last||""}`.trim();
+ return both||null;
+}
+function accountName(o){return P(o,["playername","personaName","name","playerName","gamertag","displayName"],null)}
+
 function eventMap(x){
  const map=new Map();
  for(const [k,v] of Object.entries(x||{})){
@@ -61,9 +80,9 @@ export async function persistClubPayload(clubId,platform,d){
    for(const x of flatPlayers(m.players||m.playerStats||m.members||{})){
      const pid=String(x._playerId||P(x,["personaId","playerId","id"],""));
      if(!pid)continue;
-     const cid=String(x._clubId||clubId), pn=P(x,["playername","name","playerName","personaName"],pid);
-     await query(`INSERT INTO players(player_id,ea_name,last_seen) VALUES($1,$2,now())
-       ON CONFLICT(player_id) DO UPDATE SET ea_name=EXCLUDED.ea_name,last_seen=now()`,[pid,pn]);
+     const cid=String(x._clubId||clubId), pn=accountName(x)||pid, pro=virtualName(x);
+     await query(`INSERT INTO players(player_id,ea_name,pro_name,last_seen) VALUES($1,$2,$3,now())
+       ON CONFLICT(player_id) DO UPDATE SET ea_name=COALESCE(EXCLUDED.ea_name,players.ea_name),pro_name=COALESCE(EXCLUDED.pro_name,players.pro_name),last_seen=now()`,[pid,pn,pro]);
      await query(`INSERT INTO club_memberships(club_id,platform,player_id,last_seen) VALUES($1,$2,$3,now())
        ON CONFLICT(club_id,platform,player_id) DO UPDATE SET last_seen=now()`,[cid,platform,pid]);
      const ev=eventMap(x), pm=N(P(x,["passesmade","passesMade","passes"])), pa=N(P(x,["passattempts","passAttempts","passesAttempted"])), tm=N(P(x,["tacklesmade","tacklesMade","tackles"])), ta=N(P(x,["tackleattempts","tackleAttempts","tacklesAttempted"]));
@@ -80,13 +99,13 @@ export async function persistClubPayload(clubId,platform,d){
 
 export async function history(clubId){
  if(!enabled)return {enabled:false,players:[],matches:[],snapshots:[]};
- const players=(await query(`SELECT player_id,MAX(player_name) player_name,COUNT(*)::int matches,
+ const players=(await query(`SELECT s.player_id,MAX(s.player_name) player_name,MAX(p.pro_name) pro_name,COUNT(*)::int matches,
  SUM(goals)::int goals,SUM(assists)::int assists,SUM(second_assists)::int second_assists,
  SUM(shots)::int shots,SUM(passes_made)::int passes_made,SUM(pass_attempts)::int pass_attempts,
  SUM(tackles_made)::int tackles_made,SUM(tackle_attempts)::int tackle_attempts,SUM(interceptions)::int interceptions,
  SUM(standing_tackles_won+sliding_tackles_won)::int tackles_won,SUM(dribbles)::int dribbles,SUM(through_balls)::int through_balls,
  SUM(saves)::int saves,SUM(motm)::int motm,SUM(red_cards)::int red_cards,AVG(rating)::real rating
- FROM player_match_stats WHERE club_id=$1 GROUP BY player_id ORDER BY goals+assists DESC`,[clubId])).rows;
+ FROM player_match_stats s LEFT JOIN players p ON p.player_id=s.player_id WHERE s.club_id=$1 GROUP BY s.player_id ORDER BY SUM(s.goals)+SUM(s.assists) DESC`,[clubId])).rows;
  const matches=(await query(`SELECT m.match_id,m.played_at,m.match_type,mc.goals,mc.result,
    (SELECT club_name FROM match_clubs o WHERE o.match_id=m.match_id AND o.club_id<>$1 LIMIT 1) opponent,
    (SELECT goals FROM match_clubs o WHERE o.match_id=m.match_id AND o.club_id<>$1 LIMIT 1) opponent_goals

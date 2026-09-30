@@ -10,7 +10,8 @@ function first(...vals){for(const v of vals)if(v!=null&&v!=="")return v;return 0
 function playerArray(d){let candidates=[d?.career?.members,d?.career?.players,d?.career,d?.members?.members,d?.members?.players,d?.members];for(const c of candidates){let a=A(c);if(a.length&&a.some(x=>P(x,["name","playerName","personaName","proName"],null)))return a}return[]}
 function normalizePlayer(x){
  const games=N(P(x,["gamesPlayed","games","appearances"],0)),goals=N(P(x,["goals","goalsScored"],0)),assists=N(P(x,["assists"],0));
- return {raw:x,id:String(P(x,["personaId","playerId","id","name","personaName"],Math.random())),name:P(x,["name","playerName","personaName","proName"],"Neznámý"),
+ return {raw:x,id:String(P(x,["personaId","playerId","id","name","personaName"],Math.random())),name:P(x,["proName","virtualProName","virtualproname","vpName","name","playerName","personaName"],"Neznámý"),
+ accountName:P(x,["personaName","playername","gamertag","displayName","name","playerName"],""),
  games,goals,assists,ga:goals+assists,rating:Number(P(x,["ratingAve","averageRating","rating"],0)),motm:N(P(x,["manOfTheMatch","motm","mom"],0)),
  shots:N(P(x,["shots","shotsTaken","totalShots"],0)),shotRate:Number(P(x,["shotSuccessRate","shootingSuccessRate"],0)),
  passes:N(P(x,["passesMade","passes","totalPasses"],0)),passAttempts:N(P(x,["passAttempts","passesAttempted"],0)),passRate:Number(P(x,["passSuccessRate","passingSuccessRate"],0)),
@@ -146,6 +147,19 @@ async function loadHistory(id){
     $("#historyStats").innerHTML=stat("DATABASE","OFF")+stat("HISTORY","LIVE ONLY");
     $("#chemistry").innerHTML='<div class="msg">Nastav DATABASE_URL na Renderu. Pak se každý nalezený zápas začne archivovat.</div>';
     return;
+  }
+  // DB may have discovered a Virtual Pro name from raw match-player fields.
+  const byId=new Map((h.players||[]).map(p=>[String(p.player_id),p]));
+  let changed=false;
+  for(const p of S.players){
+    const dbp=byId.get(String(p.id));
+    if(dbp?.pro_name && p.name!==dbp.pro_name){p.accountName=p.accountName||p.name;p.name=dbp.pro_name;changed=true;}
+  }
+  if(changed){
+    $("#players").querySelectorAll("[data-p]").forEach(el=>{
+      const p=S.players.find(q=>String(q.id)===String(el.dataset.p));
+      if(p)el.innerHTML=`<b>${p.name}</b>${p.accountName&&p.accountName!==p.name?`<small style="display:block;opacity:.55">${p.accountName}</small>`:""}`;
+    });
   }
   const games=h.matches.length,w=h.matches.filter(x=>x.result==="W").length;
   const goals=h.matches.reduce((s,x)=>s+N(x.goals),0);
