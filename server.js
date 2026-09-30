@@ -65,6 +65,6 @@ app.get("/api/club/:id", async (req,res)=>{
   res.json(d);
 });
 
-app.get("/api/health",(_,res)=>res.json({ok:true,version:"5.0.0",time:new Date().toISOString()}));
+app.get("/api/health",(_,res)=>res.json({ok:true,version:"6.0.0",time:new Date().toISOString()}));
 app.get("/{*splat}",(_,res)=>res.sendFile(path.join(DIR,"public","index.html")));
-app.listen(PORT,()=>console.log(`Clubroom v5 běží na ${PORT}`));
+app.listen(PORT,()=>console.log(`Clubroom FC27 v6 běží na ${PORT}`));

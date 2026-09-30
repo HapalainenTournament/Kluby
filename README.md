@@ -1,20 +1,21 @@
-# Clubroom v5
+# Clubroom FC27 v6
 
-Novinky:
-- hráčský profil doplňuje střely, přihrávky, tackly, saves a pozici z dostupných match dat
-- second assists z EA match_event_aggregate eventu 115
-- completed dribbles z eventu 174
-- second assists a dribbles v detailu zápasu i Compare
-- žádné falešné 0.0 % při chybějících datech
-- RAW JSON z UI zůstává odstraněný
-- EA/PSN jméno je zobrazené; číselné ID se uživateli necpe
+Opravy:
+- Squad advanced stats se agregují z dostupných FC27 match player dat.
+- žádné falešné 0.0 % bez attempts
+- 2nd assists event 115 jsou výslovně označené jako RECENT WINDOW, ne season total
+- další high-confidence FC27 eventy: interceptions 6, standing tackle won 229,
+  sliding tackle won 230, completed dribble 174, successful through ball 152
+- match detail a profil používají stejné normalizované hodnoty
 
-Pro Name:
-Ve veřejně ověřených současných FC endpoint datech nebylo nalezeno spolehlivé samostatné pole pro jméno vytvořeného Virtual Pro.
-v5 ho proto nevymýšlí. Pokud EA začne/už vrací takové pole v některém payloadu, parser lze doplnit.
+Key Passes:
+Současný veřejný FC27 výzkum nemá spolehlivě potvrzený event ID pro Key Passes.
+v6 proto Key Passes NEVYMÝŠLÍ a nezobrazuje falešné číslo.
 
-Poznámka:
-Statistiky označené * jsou součty pouze z historie zápasů, kterou EA aktuálně vrátí, nikoli celoživotní career totals.
+Důležité:
+EA match endpoint poskytuje omezenou historii (typicky posledních 10 pro daný match type).
+Pro skutečné season totals advanced statistik je potřeba perzistentně ukládat matchId + player stats
+do databáze při každém načtení / pravidelném sběru.
 
 Render:
 Build: npm install
