@@ -109,7 +109,18 @@ function render(id,d,searchClub=null){
  if(crestId){ crest.src=`https://eafc24.content.easports.com/fifa/fltOnlineAssets/24B23FDE-7835-41C2-87A2-F453DFDB2E82/2024/fcweb/crests/256x256/l${crestId}.png`; crest.onload=()=>{crest.hidden=false;$("#clubFallback").hidden=true}; crest.onerror=()=>{crest.hidden=true;$("#clubFallback").hidden=false}; }$("#divisionBadge").textContent=`DIV ${division}`;$("#skillBadge").textContent=`SR ${skill}`;$("#clubIdBadge").textContent=`ID ${id}`;$("#recW").textContent=`${w}W`;$("#recD").textContent=`${dr}D`;$("#recL").textContent=`${l}L`;
  let form=ms.slice(0,10).map(m=>m.result);$("#formPills").innerHTML=form.map(x=>`<span class="formPill ${x.toLowerCase()}">${x}</span>`).join("");let fw=form.filter(x=>x==="W").length,fd=form.filter(x=>x==="D").length,fl=form.filter(x=>x==="L").length;$("#formSummary").textContent=form.length?`${fw}W · ${fd}D · ${fl}L`:"—";
  let wr=g?(w/g*100):0,gd=gf-ga,winStreak=N(P(o,["wstreak","winStreak"],0)),unbeaten=N(P(o,["unbeatenstreak","unbeatenStreak"],0)),promotions=N(P(o,["promotions"],0)),relegations=N(P(o,["relegations"],0)),cleanSheets=N(P(searchClub||{},["cleanSheets"],P(o,["cleanSheets"],0)));
- $("#clubStats").innerHTML=metric("Current Division",division!=="—"?`Division ${division}`:"—")+metric("Best Division",bestDivision!=="—"?`Division ${bestDivision}`:"—")+metric("League Apps",g||"—")+metric("Win Rate",g?wr.toFixed(1)+"%":"—")+metric("Wins",w)+metric("Draws",dr)+metric("Losses",l)+metric("Goals",gf||"—")+metric("Conceded",ga||"—")+metric("Goal Diff",(gf||ga)?`${gd>=0?"+":""}${gd}`:"—")+metric("Goals / Game",g?(gf/g).toFixed(2):"—")+metric("Conceded / Game",g?(ga/g).toFixed(2):"—")+metric("Skill Rating",skill)+metric("Win Streak",winStreak)+metric("Unbeaten Streak",unbeaten)+metric("Promotions",promotions)+metric("Relegations",relegations)+metric("Clean Sheets",cleanSheets||"—");
+ $("#clubStats").innerHTML=`
+ <div class="clubStatHighlights">
+  <div class="heroStat"><small>DIVIZE</small><b>${division!=="—"?division:"—"}</b><span>best ${bestDivision!=="—"?bestDivision:"—"}</span></div>
+  <div class="heroStat"><small>SKILL RATING</small><b>${skill}</b><span>${g||0} league matches</span></div>
+  <div class="heroStat"><small>WIN RATE</small><b>${g?wr.toFixed(1)+"%":"—"}</b><span>${w}W · ${dr}D · ${l}L</span></div>
+  <div class="heroStat accent"><small>GOAL DIFFERENCE</small><b>${(gf||ga)?`${gd>=0?"+":""}${gd}`:"—"}</b><span>${gf} : ${ga}</span></div>
+ </div>
+ <div class="statGroups">
+  <div class="statGroup"><h4>Výsledky</h4><div class="statLine"><span>Výhry</span><b>${w}</b></div><div class="statLine"><span>Remízy</span><b>${dr}</b></div><div class="statLine"><span>Prohry</span><b>${l}</b></div><div class="statLine"><span>Clean sheets</span><b>${cleanSheets||"—"}</b></div></div>
+  <div class="statGroup"><h4>Góly</h4><div class="statLine"><span>Vstřelené</span><b>${gf||"—"}</b></div><div class="statLine"><span>Obdržené</span><b>${ga||"—"}</b></div><div class="statLine"><span>Góly / zápas</span><b>${g?(gf/g).toFixed(2):"—"}</b></div><div class="statLine"><span>Obdržené / zápas</span><b>${g?(ga/g).toFixed(2):"—"}</b></div></div>
+  <div class="statGroup"><h4>Postup</h4><div class="statLine"><span>Win streak</span><b>${winStreak}</b></div><div class="statLine"><span>Unbeaten</span><b>${unbeaten}</b></div><div class="statLine"><span>Promotions</span><b>${promotions}</b></div><div class="statLine"><span>Relegations</span><b>${relegations}</b></div></div>
+ </div>`;
  $("#performanceStats").innerHTML=metric("Recent W",fw)+metric("Recent D",fd)+metric("Recent L",fl)+metric("Recent Goals",ms.slice(0,10).reduce((a,m)=>a+m.og,0))+metric("Recent Conceded",ms.slice(0,10).reduce((a,m)=>a+m.tg,0))+metric("Recent GD",ms.slice(0,10).reduce((a,m)=>a+m.og-m.tg,0))+metric("Squad",ps.length)+metric("League matches loaded",ms.filter(m=>m.type==="league").length)+metric("Playoff loaded",ms.filter(m=>m.type==="playoff").length)+metric("Friendly loaded",ms.filter(m=>m.type==="friendly").length);
  $("#playerCount").textContent=`${ps.length} hráčů`; setupPlayerFilters(); renderPlayerTable();
  let scorer=[...ps].sort((a,b)=>b.goals-a.goals)[0],assist=[...ps].sort((a,b)=>b.assists-a.assists)[0],rating=[...ps].sort((a,b)=>b.rating-a.rating)[0];
@@ -145,18 +156,11 @@ function updateSortHeaders(){
  });
 }
 function setupPlayerFilters(){
- const pos=$("#playerPosition"); if(!pos)return;
- const positions=[...new Set(S.players.map(p=>String(p.position||"—").toUpperCase()).filter(x=>x!=="—"))].sort();
- pos.innerHTML='<option value="all">Všechny</option>'+positions.map(x=>`<option value="${x}">${x}</option>`).join("");
- pos.value=playerSortState.position;$("#playerMinGames").value=String(playerSortState.minGames);
- pos.onchange=e=>{playerSortState.position=e.target.value;renderPlayerTable()};
- $("#playerMinGames").onchange=e=>{playerSortState.minGames=N(e.target.value);renderPlayerTable()};
  document.querySelectorAll("th.sortable").forEach(th=>th.onclick=()=>{
   const key=th.dataset.sort;
   if(playerSortState.key===key)playerSortState.dir*=-1;else{playerSortState.key=key;playerSortState.dir=key==="name"?1:-1}
-  renderPlayerTable();updateSortHeaders();
+  renderPlayerTable();
  });
- $("#clearPlayerFilters").onclick=()=>{playerSortState={key:"rating",dir:-1,position:"all",minGames:0};setupPlayerFilters();renderPlayerTable()};
  updateSortHeaders();
 }
 function stat(k,v){return`<div class="stat"><small>${k}</small><b>${v}</b></div>`}
@@ -319,7 +323,7 @@ function openTab(tab,push=true){document.querySelectorAll("[data-tab]").forEach(
 document.querySelectorAll("[data-tab]").forEach(b=>b.onclick=()=>openTab(b.dataset.tab));
 $("#openSearch").onclick=()=>{history.replaceState(null,"","/");$("#dash").hidden=true;$("#home").hidden=false;$("#q").focus()};
 // v13 match detail: three explicit views. Formation is shown only when EA actually provides it.
-function showMatch(i){
+function showMatchV20(i){
  const m=S.matches[i],ps=m.players.map(matchPlayer),r=m.oursRaw||{},o=m.oppRaw||{};
  const teamRows=[["Goals",m.og,m.tg],["Possession",P(r,["possession","possessionPct"],"—"),P(o,["possession","possessionPct"],"—")],["Shots",P(r,["shots","shotsTaken"],"—"),P(o,["shots","shotsTaken"],"—")],["Passes",P(r,["passes","passesMade"],"—"),P(o,["passes","passesMade"],"—")],["Tackles",P(r,["tackles","tacklesMade"],"—"),P(o,["tackles","tacklesMade"],"—")]];
  const formO=P(r,["formation","formationId"],null),formT=P(o,["formation","formationId"],null);
@@ -328,3 +332,74 @@ function showMatch(i){
 
 // v19 quick navigation from overview cards
 document.addEventListener("click",e=>{const b=e.target.closest("[data-goto]");if(!b)return;const t=document.querySelector(`#clubTabs [data-tab="${b.dataset.goto}"]`);if(t)t.click()});
+
+// v21: inline match accordion + Fun blocks matching the requested reference structure.
+function findGoalTimeline(raw){
+ const out=[]; const seen=new Set();
+ function walk(v,depth=0){
+  if(depth>7||v==null)return;
+  if(Array.isArray(v)){v.forEach(x=>walk(x,depth+1));return}
+  if(typeof v!=="object")return;
+  const type=String(P(v,["type","eventType","eventName","name","event"],"")).toLowerCase();
+  const minute=first(P(v,["minute","gameMinute","time","matchTime"],null),null);
+  const player=P(v,["playerName","player","scorerName","name"],null);
+  const isGoal=type.includes("goal")||N(P(v,["isGoal","goal"],0))===1;
+  if(isGoal&&(player||minute!=null)){
+   const key=`${player||"?"}-${minute||"?"}`; if(!seen.has(key)){seen.add(key);out.push({player:typeof player==="object"?P(player,["name","playerName"],"Hráč"):player||"Hráč",minute})}
+  }
+  Object.values(v).forEach(x=>walk(x,depth+1));
+ }
+ walk(raw); return out.sort((a,b)=>N(a.minute)-N(b.minute));
+}
+function goalRowsForLive(m,ps){
+ const timed=findGoalTimeline(m.raw);
+ if(timed.length)return timed.map(g=>`<div class="goalEvent"><span>⚽</span><b>${escapeHtml(String(g.player))}</b><em>${g.minute!=null?escapeHtml(String(g.minute))+"′":"čas EA neposlalo"}</em></div>`).join("");
+ const scorers=ps.filter(p=>p.goals>0);
+ if(scorers.length)return scorers.map(p=>`<div class="goalEvent"><span>⚽</span><b>${escapeHtml(p.name)}</b><em>${p.goals>1?p.goals+" góly":"1 gól"} · minuta v EA payloadu není</em></div>`).join("");
+ return '<div class="inlineEmpty">EA neposlalo střelce ani časovou osu gólů.</div>';
+}
+function teamVal(raw,names,players,key){const direct=P(raw,names,null);if(direct!=null&&direct!=="")return direct;return players.reduce((s,p)=>s+N(p[key]),0)||"—"}
+function liveMatchDetail(i){
+ const m=S.matches[i],ps=m.players.map(matchPlayer),r=m.oursRaw||{},o=m.oppRaw||{};
+ const all=m.raw?flattenPlayers(m.raw.players||m.raw.playerStats||m.raw.members||[]).map(matchPlayer):[];
+ const oppPs=all.filter(p=>!ps.some(x=>x.id&&x.id===p.id));
+ const rows=[
+  ["Goals",m.og,m.tg],
+  ["Shots",teamVal(r,["shots","shotsTaken"],ps,"shots"),teamVal(o,["shots","shotsTaken"],oppPs,"shots")],
+  ["Passes",teamVal(r,["passes","passesMade"],ps,"passes"),teamVal(o,["passes","passesMade"],oppPs,"passes")],
+  ["Pass %",P(r,["passAccuracy","passPct","passPercentage"],ps.reduce((s,p)=>s+p.passAttempts,0)?pct(ps.reduce((s,p)=>s+p.passes,0)/ps.reduce((s,p)=>s+p.passAttempts,0)*100):"—"),P(o,["passAccuracy","passPct","passPercentage"],"—")],
+  ["Tackles",teamVal(r,["tackles","tacklesMade"],ps,"tackles"),teamVal(o,["tackles","tacklesMade"],oppPs,"tackles")],
+  ["Saves",teamVal(r,["saves"],ps,"saves"),teamVal(o,["saves"],oppPs,"saves")]
+ ];
+ return `<div class="inlineMatchInner"><div class="inlineTabs"><b>Match Stats</b><span>Player Stats</span><span>Goals</span><span>Formation</span></div><div class="matchDetailGrid"><div><h4>TEAM STATS</h4>${rows.map(([k,a,b])=>`<div class="teamStat"><strong>${a}</strong><span>${k}</span><strong>${b}</strong></div>`).join("")}</div><div><h4>GOALS</h4><div class="goalTimeline">${goalRowsForLive(m,ps)}</div><h4>FORMATION</h4><div class="formationLine"><span>${escapeHtml(m.ours)}</span><b>${P(r,["formation","formationId"],"—")}</b><span>${escapeHtml(m.opp)}</span><b>${P(o,["formation","formationId"],"—")}</b></div></div></div><h4>PLAYER STATS</h4>${ps.length?matchStatsTable(ps):'<div class="inlineEmpty">EA neposlalo hráčské statistiky.</div>'}</div>`;
+}
+function showMatch(i){
+ const row=document.querySelector(`.match[data-m="${i}"]`); if(!row)return;
+ const old=row.nextElementSibling;if(old&&old.classList.contains("matchInlineDetail")){old.remove();row.classList.remove("open");return}
+ document.querySelectorAll(".matchInlineDetail").forEach(x=>x.remove());document.querySelectorAll(".match.open").forEach(x=>x.classList.remove("open"));
+ row.classList.add("open");row.insertAdjacentHTML("afterend",`<div class="matchInlineDetail">${liveMatchDetail(i)}</div>`);
+}
+function archiveDetail(matchId){
+ const m=(S.history?.matches||[]).find(x=>String(x.match_id)===String(matchId)); if(!m)return '<div class="inlineEmpty">Archivní zápas nenalezen.</div>';
+ const ps=(S.history?.playerMatches||[]).filter(x=>String(x.match_id)===String(matchId));
+ const goals=ps.filter(x=>N(x.goals)>0).map(x=>`<div class="goalEvent"><span>⚽</span><b>${escapeHtml(x.player_name)}</b><em>${N(x.goals)>1?N(x.goals)+" góly":"1 gól"} · archiv nemá minutu</em></div>`).join("")||'<div class="inlineEmpty">Bez uložené časové osy gólů.</div>';
+ return `<div class="inlineMatchInner"><div class="matchDetailGrid"><div><h4>MATCH</h4><div class="teamStat"><strong>${N(m.goals)}</strong><span>Goals</span><strong>${N(m.opponent_goals)}</strong></div><div class="teamStat"><strong>${escapeHtml(S.club.name)}</strong><span>vs</span><strong>${escapeHtml(m.opponent||"Soupeř")}</strong></div></div><div><h4>GOALS</h4>${goals}</div></div><h4>PLAYER STATS</h4>${ps.length?`<div class="table"><table><thead><tr><th>Player</th><th>Rating</th><th>G</th><th>A</th><th>2A</th><th>Shots</th><th>Passes</th><th>Pass%</th><th>Tackles</th><th>Int.</th></tr></thead><tbody>${ps.map(x=>`<tr><td>${escapeHtml(x.player_name)}</td><td>${N(x.rating)?N(x.rating).toFixed(1):"—"}</td><td>${N(x.goals)}</td><td>${N(x.assists)}</td><td>${N(x.second_assists)}</td><td>${N(x.shots)}</td><td>${N(x.passes_made)}</td><td>${N(x.pass_attempts)?(N(x.passes_made)/N(x.pass_attempts)*100).toFixed(0)+"%":"—"}</td><td>${N(x.tackles_made)}</td><td>${N(x.interceptions)}</td></tr>`).join("")}</tbody></table></div>`:'<div class="inlineEmpty">Pro tento archivní zápas nejsou player stats.</div>'}</div>`;
+}
+document.addEventListener("click",e=>{const r=e.target.closest(".match.archive[data-am]");if(!r)return;const old=r.nextElementSibling;if(old&&old.classList.contains("matchInlineDetail")){old.remove();r.classList.remove("open");return}document.querySelectorAll(".matchInlineDetail").forEach(x=>x.remove());r.classList.add("open");r.insertAdjacentHTML("afterend",`<div class="matchInlineDetail">${archiveDetail(r.dataset.am)}</div>`)});
+
+const _renderArchiveMatchesV21=renderArchiveMatches;
+renderArchiveMatches=function(matches){
+ _renderArchiveMatchesV21(matches);
+ document.querySelectorAll(".match.archive").forEach((el,idx)=>{const archive=(matches||[]).filter(x=>!new Set(S.matches.map(m=>String(P(m.raw,["matchId","matchid","id"],"")))).has(String(x.match_id))).slice(0,200);if(archive[idx])el.dataset.am=archive[idx].match_id});
+};
+
+const _renderFunV21=renderFun;
+renderFun=function(h,a){
+ _renderFunV21(h,a); const ps=a.players||[], ms=h.matches||[];
+ const n=x=>escapeHtml(x?.player_name||x?.name||"—"), by=k=>ps.slice().sort((x,y)=>N(y[k])-N(x[k]))[0];
+ const top=[by("goals"),by("assists"),by("rating"),by("motm")].filter(Boolean);
+ const front=document.querySelector("#bestFront");if(front)front.innerHTML=top.length?`<div class="pitch"><div class="pitchLine"></div>${top.map((p,i)=>`<article class="pitchPlayer p${i}"><small>${i===0?"ST":i===1?"CAM":i===2?"RAM":"LAM"}</small><strong>${N(p.rating).toFixed(1)}</strong><b>${n(p)}</b><span>${N(p.goals)} G · ${N(p.assists)} A</span></article>`).join("")}</div>`:'<div class="msg">Potřebujeme hráčská data.</div>';
+ const pass=document.querySelector("#passingInsights");if(pass){const ranked=ps.filter(x=>N(x.pass_attempts)>0).sort((x,y)=>N(y.passes_made)/N(y.pass_attempts)-N(x.passes_made)/N(x.pass_attempts));pass.innerHTML=ranked.length?`<div class="insightList"><h4>PASS ACCURACY RANKINGS</h4>${ranked.map((p,i)=>{const pc=N(p.passes_made)/N(p.pass_attempts)*100;return `<div class="insightRow"><i>${i+1}</i><b>${n(p)}</b><div><span style="width:${Math.min(100,pc)}%"></span></div><strong>${pc.toFixed(1)}%</strong></div>`}).join("")}<h4>VOLUME PASSERS / MATCH</h4>${ranked.slice().sort((x,y)=>N(y.passes_made)/Math.max(1,N(y.matches))-N(x.passes_made)/Math.max(1,N(x.matches))).map((p,i)=>`<div class="volumeRow"><b>${n(p)}</b><span>${(N(p.passes_made)/Math.max(1,N(p.matches))).toFixed(1)} / match</span></div>`).join("")}</div>`:'<div class="msg">Passing insights se objeví po uložení pass eventů.</div>'}
+ const clutch=document.querySelector("#clutchStats");if(clutch){const c=ps.slice().sort((x,y)=>(N(y.goals)+N(y.assists)+N(y.motm)*2)-(N(x.goals)+N(x.assists)+N(x.motm)*2)).slice(0,4);clutch.innerHTML=c.length?`<div class="clutchBoard">${c.map((p,i)=>`<article><small>#${i+1}</small><b>${n(p)}</b><strong>${N(p.goals)+N(p.assists)+N(p.motm)*2}</strong><span>clutch index · G+A + 2×MOTM</span></article>`).join("")}</div>`:'<div class="msg">Bez dat.</div>'}
+ const pad=document.querySelector("#statPadder");if(pad){const r=ps.map(p=>({p,score:(N(p.goals)+N(p.assists))*10-(N(p.rating)||0)*3})).sort((x,y)=>y.score-x.score);pad.innerHTML=r.length?`<div class="padderBoard">${r.slice(0,5).map((x,i)=>`<div><span>#${i+1}</span><b>${n(x.p)}</b><em>${N(x.p.goals)+N(x.p.assists)} G+A</em><strong>${N(x.p.rating).toFixed(1)} avg</strong></div>`).join("")}<p>Fun index, ne skutečný úsudek o hráči. Počítá produkci proti ratingu.</p></div>`:'<div class="msg">Bez dat.</div>'}
+};

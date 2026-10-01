@@ -13,5 +13,12 @@
 Přihlašovací údaje k PostgreSQL nejsou součástí projektu. Backend čte pouze DATABASE_URL z prostředí.
 
 
-## v19
+## v21
 Kompletní vizuální redesign club dashboardu: hero, moderní cards, dvousloupcový overview, recent matches a squad leaders sidebar, přepracované taby a squad/compare/fun surfaces.
+
+
+## v21
+- Match detail is an inline accordion under the selected match, not a separate overlay.
+- Live match detail includes team stats, player stats, scorers and goal minutes when EA actually provides a timeline.
+- Archive match rows also expand inline.
+- Fun tab rebuilt around the supplied Pro Clubs Tracker references: Squad Superlatives, Viral Rankings, Best Front 4, Form Graph, Match-by-Match, Passing Insights, Improvement Tips, Goal Partnerships, Mr. Clutch, Stat Padder Detector and Milestones.
