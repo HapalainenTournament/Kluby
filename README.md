@@ -11,3 +11,7 @@
 - verze 18.0.0
 
 Přihlašovací údaje k PostgreSQL nejsou součástí projektu. Backend čte pouze DATABASE_URL z prostředí.
+
+
+## v19
+Kompletní vizuální redesign club dashboardu: hero, moderní cards, dvousloupcový overview, recent matches a squad leaders sidebar, přepracované taby a squad/compare/fun surfaces.

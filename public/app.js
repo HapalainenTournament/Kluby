@@ -117,6 +117,8 @@ function render(id,d,searchClub=null){
  renderFunLive();
  $("#analyticsCards").innerHTML=metric("Win Rate",g?wr.toFixed(1)+"%":"—")+metric("Goals/Game",g?(gf/g).toFixed(2):"—")+metric("Goal Diff",(gf||ga)?`${gd>=0?"+":""}${gd}`:"—")+metric("Top G+A",ps[0]?`${ps[0].name} · ${ps[0].ga}`:"—");
  $("#matchList").innerHTML=ms.length?ms.map((m,i)=>`<div class="match" data-m="${i}"><span>${m.date?m.date.toLocaleDateString("cs-CZ"):"—"}</span><span>${m.type}</span><span class="home">${m.ours}</span><span class="score">${m.og}:${m.tg}</span><b>${m.opp}</b><b class="${m.result.toLowerCase()}">${m.result}</b></div>`).join(""):'<div class="msg" style="padding:20px">EA neposlalo historii zápasů.</div>';
+ const om=$("#overviewMatches"); if(om)om.innerHTML=ms.length?ms.slice(0,5).map(m=>`<div class="overviewMatch"><span class="resultBadge ${m.result.toLowerCase()}">${m.result}</span><div><strong>${escapeHtml(m.opp||"Soupeř")}</strong><small>${m.type} · ${m.date?m.date.toLocaleDateString("cs-CZ"):"—"}</small></div><b>${m.og}:${m.tg}</b></div>`).join(""):'<div class="msg">Zatím bez zápasů.</div>';
+ const ol=$("#overviewLeaders"); if(ol)ol.innerHTML=ps.slice().sort((a,b)=>b.ga-a.ga).slice(0,4).map((p,i)=>`<div class="overviewLeader"><span class="leaderRank">${i+1}</span><div><strong>${escapeHtml(p.name)}</strong><small>${p.games} zápasů · ${p.goals}G + ${p.assists}A</small></div><b>${p.rating?p.rating.toFixed(1):"—"}</b></div>`).join("");
  document.querySelectorAll("[data-m]").forEach(x=>x.onclick=()=>showMatch(+x.dataset.m));
  let er=d.errors||{};$("#status").innerHTML=["info","overall","career","members","achievements","league","playoff","friendly"].map(k=>`<div class="endpoint"><span>${k}</span><b>${er[k]?"CHYBA":"OK"}</b></div>`).join("");
  fillCompare();$("#home").hidden=true;$("#dash").hidden=false;window.scrollTo({top:0,behavior:"smooth"});loadHistory(id)
@@ -323,3 +325,6 @@ function showMatch(i){
  const formO=P(r,["formation","formationId"],null),formT=P(o,["formation","formationId"],null);
  $("#matchContent").innerHTML=`<div class="profile"><small>${m.type.toUpperCase()} · ${m.date?m.date.toLocaleString("cs-CZ"):""}</small><h2>${escapeHtml(m.ours)} ${m.og}:${m.tg} ${escapeHtml(m.opp)}</h2><div class="profileTabs"><b>Match Stats</b><span>Player Stats</span><span>Formations</span></div><h3 class="sectionTitle">MATCH STATS</h3><div class="compareGrid">${teamRows.map(([k,a,b])=>`<div class="cmpCell">${a}</div><div class="cmpCell">${k}</div><div class="cmpCell">${b}</div>`).join("")}</div><h3 class="sectionTitle">PLAYER STATS</h3>${ps.length?matchStatsTable(ps):'<div class="msg">EA v tomto zápase neposlalo hráčské statistiky.</div>'}<h3 class="sectionTitle">FORMATIONS</h3><div class="stats">${stat(m.ours,formO||"EA neposlalo")}${stat(m.opp,formT||"EA neposlalo")}</div></div>`;$("#matchView").hidden=false
 }
+
+// v19 quick navigation from overview cards
+document.addEventListener("click",e=>{const b=e.target.closest("[data-goto]");if(!b)return;const t=document.querySelector(`#clubTabs [data-tab="${b.dataset.goto}"]`);if(t)t.click()});
