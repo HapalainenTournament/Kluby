@@ -39,35 +39,30 @@ app.get("/api/search", async (req,res)=>{
   } catch(e) { res.status(502).json({error:"EA search selhal.",detail:e.message}); }
 });
 
-async function loadClub(id,p){
-  const defs={
-    info:["/clubs/info",{platform:p,clubIds:id},180000], overall:["/clubs/overallStats",{platform:p,clubIds:id},60000],
-    career:["/members/career/stats",{platform:p,clubId:id},60000], members:["/members/stats",{platform:p,clubId:id},60000], achievements:["/club/playoffAchievements",{platform:p,clubId:id},180000],
-    league:["/clubs/matches",{platform:p,clubIds:id,matchType:"leagueMatch",maxResultCount:10},30000], playoff:["/clubs/matches",{platform:p,clubIds:id,matchType:"playoffMatch",maxResultCount:10},30000], friendly:["/clubs/matches",{platform:p,clubIds:id,matchType:"friendlyMatch",maxResultCount:10},30000]
-  };
-  const keys=Object.keys(defs),rr=await Promise.allSettled(keys.map(k=>ea(...defs[k]))),d={},errors={};
-  rr.forEach((x,i)=>x.status==="fulfilled"?(d[keys[i]]=x.value):(d[keys[i]]=null,errors[keys[i]]=x.reason?.message||"unknown"));
-  const tag=(x,t)=>Array.isArray(x)?x.map(m=>({...m,_matchType:t})):[];
-  d.matches=[...tag(d.league,"league"),...tag(d.playoff,"playoff"),...tag(d.friendly,"friendly")].sort((a,b)=>Number(b.timestamp||b.matchTimestamp||0)-Number(a.timestamp||a.matchTimestamp||0));
-  delete d.league;delete d.playoff;delete d.friendly;d.clubId=id;d.platform=p;d.errors=errors;
-  try{d.storage=await persistClubPayload(id,p,d)}catch(e){d.storage={enabled:dbEnabled,error:e.message}}
-  return d;
-}
+const clubCache = new Map();
+const refreshes = new Map();
+function tagMatches(x,t){return Array.isArray(x)?x.map(m=>({...m,_matchType:t})):[]}
+function finishClub(d,id,p){d.matches=[...tagMatches(d.league,"league"),...tagMatches(d.playoff,"playoff"),...tagMatches(d.friendly,"friendly")].sort((a,b)=>Number(b.timestamp||b.matchTimestamp||0)-Number(a.timestamp||a.matchTimestamp||0));delete d.league;delete d.playoff;delete d.friendly;d.clubId=id;d.platform=p;d.errors=d.errors||{};return d}
+async function fetchSet(defs){const keys=Object.keys(defs),rr=await Promise.allSettled(keys.map(k=>ea(...defs[k]))),d={},errors={};rr.forEach((x,i)=>x.status==="fulfilled"?(d[keys[i]]=x.value):(d[keys[i]]=null,errors[keys[i]]=x.reason?.message||"unknown"));d.errors=errors;return d}
+async function loadClubFast(id,p){const d=await fetchSet({info:["/clubs/info",{platform:p,clubIds:id},180000],overall:["/clubs/overallStats",{platform:p,clubIds:id},60000],career:["/members/career/stats",{platform:p,clubId:id},60000],members:["/members/stats",{platform:p,clubId:id},60000],league:["/clubs/matches",{platform:p,clubIds:id,matchType:"leagueMatch",maxResultCount:10},30000]});d.achievements=null;d.playoff=[];d.friendly=[];return finishClub(d,id,p)}
+async function loadClubFull(id,p){const d=await fetchSet({info:["/clubs/info",{platform:p,clubIds:id},180000],overall:["/clubs/overallStats",{platform:p,clubIds:id},60000],career:["/members/career/stats",{platform:p,clubId:id},60000],members:["/members/stats",{platform:p,clubId:id},60000],achievements:["/club/playoffAchievements",{platform:p,clubId:id},180000],league:["/clubs/matches",{platform:p,clubIds:id,matchType:"leagueMatch",maxResultCount:10},30000],playoff:["/clubs/matches",{platform:p,clubIds:id,matchType:"playoffMatch",maxResultCount:10},30000],friendly:["/clubs/matches",{platform:p,clubIds:id,matchType:"friendlyMatch",maxResultCount:10},30000]});return finishClub(d,id,p)}
+function archiveInBackground(id,p,seed=null){const key=`${p}:${id}`;if(refreshes.has(key))return;const job=(async()=>{try{if(seed)await persistClubPayload(id,p,seed);const full=await loadClubFull(id,p);await persistClubPayload(id,p,full);clubCache.set(key,{data:full,at:Date.now()})}catch(e){console.warn("background archive",id,e.message)}finally{refreshes.delete(key)}})();refreshes.set(key,job)}
 
 app.get("/api/club/:id", async (req,res)=>{
  const id=String(req.params.id).replace(/[^\d]/g,"");const p=validPlatform(req.query.platform);if(!id)return res.status(400).json({error:"Neplatné club ID."});
- try{res.json(await loadClub(id,p))}catch(e){res.status(502).json({error:"EA club load selhal.",detail:e.message})}
+ const key=`${p}:${id}`,hit=clubCache.get(key),age=hit?Date.now()-hit.at:Infinity;
+ try{if(hit&&age<30000)return res.json({...hit.data,_cache:"fresh"});if(hit&&age<300000){archiveInBackground(id,p);return res.json({...hit.data,_cache:"stale"})}const d=await loadClubFast(id,p);clubCache.set(key,{data:d,at:Date.now()});res.json({...d,_cache:"miss"});archiveInBackground(id,p,d)}catch(e){if(hit)return res.json({...hit.data,_cache:"fallback",_refreshError:e.message});res.status(502).json({error:"EA club load selhal.",detail:e.message})}
 });
 
 app.get("/api/history/:id",async(req,res)=>{try{res.json(await history(String(req.params.id).replace(/[^\d]/g,"")))}catch(e){res.status(500).json({error:e.message})}});
 app.get("/api/analytics/:id",async(req,res)=>{try{res.json(await analytics(String(req.params.id).replace(/[^\d]/g,"")))}catch(e){res.status(500).json({error:e.message})}});
-app.get("/api/health",(_,res)=>res.json({ok:true,version:"18.0.0",database:dbEnabled,time:new Date().toISOString()}));
+app.get("/api/health",(_,res)=>res.json({ok:true,version:"23.0.0",database:dbEnabled,time:new Date().toISOString()}));
 app.get("/{*splat}",(_,res)=>res.sendFile(path.join(DIR,"public","index.html")));
 await migrate();
 // Background archive: clubs are discovered by real searches/visits, then refreshed in batches.
 // This scales better than trying to enumerate every EA club on Earth, which would be both expensive and rather optimistic.
 if(dbEnabled && process.env.COLLECTOR_ENABLED!=="false"){
- const runCollector=async()=>{try{for(const c of await dueClubs(Number(process.env.COLLECTOR_BATCH||20))){try{const d=await loadClub(String(c.club_id),validPlatform(c.platform));await rescheduleClub(String(c.club_id),validPlatform(c.platform),Number(d.storage?.newMatches||0));}catch(e){console.warn("collector",c.club_id,e.message)}}}catch(e){console.warn("collector batch",e.message)}};
+ const runCollector=async()=>{try{for(const c of await dueClubs(Number(process.env.COLLECTOR_BATCH||20))){try{const d=await loadClubFull(String(c.club_id),validPlatform(c.platform));const saved=await persistClubPayload(String(c.club_id),validPlatform(c.platform),d);await rescheduleClub(String(c.club_id),validPlatform(c.platform),Number(saved?.newMatches||0));}catch(e){console.warn("collector",c.club_id,e.message)}}}catch(e){console.warn("collector batch",e.message)}};
  setTimeout(runCollector,15000);setInterval(runCollector,Number(process.env.COLLECTOR_INTERVAL_MS||900000));
 }
-app.listen(PORT,()=>console.log(`Clubroom FC27 v18 běží na ${PORT} · DB ${dbEnabled?"ON":"OFF"}`));
+app.listen(PORT,()=>console.log(`Clubroom FC27 v23 běží na ${PORT} · DB ${dbEnabled?"ON":"OFF"}`));
