@@ -122,7 +122,7 @@ function render(id,d,searchClub=null){
  fillCompare();$("#home").hidden=true;$("#dash").hidden=false;window.scrollTo({top:0,behavior:"smooth"});loadHistory(id)
 }
 function stat(k,v){return`<div class="stat"><small>${k}</small><b>${v}</b></div>`}
-function showPlayer(id){
+function showPlayerLegacy(id){
  let p=S.players.find(x=>x.id===id);if(!p)return;
  let recent=S.matches.map(m=>{let s=m.players.map(matchPlayer).find(x=>x.id===id||String(x.name).toLowerCase()===String(p.name).toLowerCase());return s?{m,s}:null}).filter(Boolean);
  let ms=recent.map(x=>x.s),sum=k=>ms.reduce((a,x)=>a+N(x[k]),0);
@@ -138,7 +138,7 @@ function showPlayer(id){
  $("#playerView").hidden=false
 }
 function matchStatsTable(ps,opps=[]){return`<div class="table"><table><thead><tr><th>Hráč</th><th>Pos</th><th>Rating</th><th>G</th><th>A</th><th>2A</th><th>Shots</th><th>Passes</th><th>Pass Att.</th><th>Pass%</th><th>Tackles</th><th>Tackle Att.</th><th>Tackle%</th><th>Int.</th><th>Tkl Won</th><th>Dribbles</th><th>Through</th><th>Saves</th><th>MOTM</th><th>RC</th></tr></thead><tbody>${ps.map((p,i)=>`<tr><td>${opps[i]||p.name}</td><td>${p.pos||"—"}</td><td>${p.rating?p.rating.toFixed(1):"—"}</td><td>${p.goals}</td><td>${p.assists}</td><td>${p.secondAssists||0}</td><td>${p.shots}</td><td>${p.passes}</td><td>${p.passAttempts}</td><td>${p.passAttempts?pct(p.passRate):"—"}</td><td>${p.tackles}</td><td>${p.tackleAttempts}</td><td>${p.tackleAttempts?pct(p.tackleRate):"—"}</td><td>${p.interceptions||0}</td><td>${(p.standingWon||0)+(p.slidingWon||0)}</td><td>${p.dribbles||0}</td><td>${p.throughBalls||0}</td><td>${p.saves}</td><td>${p.motm}</td><td>${p.reds}</td></tr>`).join("")}</tbody></table></div>`}
-function showMatch(i){
+function showMatchLegacy(i){
  let m=S.matches[i],ps=m.players.map(matchPlayer);
  $("#matchContent").innerHTML=`<div class="profile"><small>${m.type.toUpperCase()} · ${m.date?m.date.toLocaleDateString("cs-CZ"):""}</small><h2>${m.ours} ${m.og}:${m.tg} ${m.opp}</h2><div class="stats">${stat("RESULT",m.result)}${stat("OUR GOALS",m.og)}${stat("OPP GOALS",m.tg)}${stat("PLAYERS",ps.length)}</div><h3 class="sectionTitle">PLAYER MATCH STATS</h3>${ps.length?matchStatsTable(ps):'<div class="msg">EA v tomto zápase neposlalo hráčské statistiky.</div>'}</div>`;$("#matchView").hidden=false
 }
@@ -154,38 +154,56 @@ function escapeHtml(s){return s.replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;","
 
 async function loadHistory(id){
  try{
-  const [hr,ar]=await Promise.all([fetch(`/api/history/${id}`),fetch(`/api/analytics/${id}`)]);
-  const h=await hr.json(),a=await ar.json();
-  $("#dbState").textContent=h.enabled?"DATABASE ON":"LIVE ONLY";
-  if(!h.enabled){
-    $("#historyStats").innerHTML=metric("DATABASE","OFF")+metric("HISTORY","LIVE ONLY");
-    $("#chemistry").innerHTML='<div class="msg">Nastav DATABASE_URL na Renderu. Pak se každý nalezený zápas začne archivovat.</div>';
-    return;
-  }
-  // DB may have discovered a Virtual Pro name from raw match-player fields.
+  const [hr,ar]=await Promise.all([fetch(`/api/history/${id}`),fetch(`/api/analytics/${id}`)]),h=await hr.json(),a=await ar.json();
+  S.history=h;S.analytics=a;$("#dbState").textContent=h.enabled?"DATABASE ON":"LIVE ONLY";
+  if(!h.enabled){$("#historyStats").innerHTML=metric("DATABASE","OFF")+metric("HISTORY","LIVE ONLY");$("#chemistry").innerHTML='<div class="msg">Nastav DATABASE_URL na Renderu. Potom se každý zachycený zápas trvale uloží.</div>';return}
   const byId=new Map((h.players||[]).map(p=>[String(p.player_id),p]));
-  let changed=false;
-  for(const p of S.players){
-    const dbp=byId.get(String(p.id));
-    if(dbp?.pro_name && p.name!==dbp.pro_name){p.accountName=p.accountName||p.name;p.name=dbp.pro_name;changed=true;}
-  }
-  if(changed){
-    $("#players").querySelectorAll("[data-p]").forEach(el=>{
-      const p=S.players.find(q=>String(q.id)===String(el.dataset.p));
-      if(p)el.innerHTML=`<b>${p.name}</b>${p.accountName&&p.accountName!==p.name?`<small style="display:block;opacity:.55">${p.accountName}</small>`:""}`;
-    });
-  }
-  const games=h.matches.length,w=h.matches.filter(x=>x.result==="W").length;
-  const goals=h.matches.reduce((s,x)=>s+N(x.goals),0);
-  const sa=h.players.reduce((s,x)=>s+N(x.second_assists),0);
-  $("#historyStats").innerHTML=metric("STORED MATCHES",games)+metric("DB WIN RATE",games?Math.round(w/games*100)+"%":"—")+metric("STORED GOALS",goals)+metric("2ND ASSISTS",sa);
-  const snaps=[...h.snapshots].reverse().filter(x=>x.skill_rating!=null);
-  $("#skillHistory").innerHTML=snaps.length>1?`<div class="title"><h3>SKILL HISTORY</h3></div><div class="chart">${snaps.slice(-60).map(x=>{let vals=snaps.slice(-60).map(y=>N(y.skill_rating)),mn=Math.min(...vals),mx=Math.max(...vals),height=mx===mn?50:10+(N(x.skill_rating)-mn)/(mx-mn)*90;return `<div class="bar" style="height:${height}%"><span>${Math.round(N(x.skill_rating))}</span></div>`}).join("")}</div>`:'';
-  const chem=a.chemistry||[];
-  $("#chemistry").innerHTML=chem.length?chem.map((x,i)=>`<div class="endpoint"><span>#${i+1} ${x.a_name} + ${x.b_name}</span><b>${x.matches} záp. · ${x.matches?Math.round(N(x.wins)/N(x.matches)*100):0}% WR</b></div>`).join(""):'<div class="msg">Chemistry se objeví po uložení více společných zápasů.</div>';
- }catch(e){$("#dbState").textContent="DB ERROR";$("#chemistry").innerHTML=`<div class="msg">${e.message}</div>`}
+  for(const p of S.players){const q=byId.get(String(p.id));if(q?.pro_name&&p.name!==q.pro_name){p.accountName=p.accountName||p.name;p.name=q.pro_name}}
+  const games=h.matches.length,w=h.matches.filter(x=>x.result==="W").length,d=h.matches.filter(x=>x.result==="D").length,l=games-w-d,goals=h.matches.reduce((s,x)=>s+N(x.goals),0),conceded=h.matches.reduce((s,x)=>s+N(x.opponent_goals),0),sa=h.players.reduce((s,x)=>s+N(x.second_assists),0);
+  $("#historyStats").innerHTML=metric("STORED MATCHES",games)+metric("DB WIN RATE",games?(w/games*100).toFixed(1)+"%":"—")+metric("W-D-L",`${w}-${d}-${l}`)+metric("STORED GOALS",goals)+metric("GOAL DIFF",`${goals-conceded>=0?"+":""}${goals-conceded}`)+metric("2ND ASSISTS",sa);
+  const snaps=[...h.snapshots].reverse().filter(x=>x.skill_rating!=null);$("#skillHistory").innerHTML=snaps.length>1?`<div class="panelHead"><h3>Skill Rating History</h3><span>${snaps.length} snapshots</span></div><div class="chart">${snaps.slice(-80).map(x=>{let vals=snaps.slice(-80).map(y=>N(y.skill_rating)),mn=Math.min(...vals),mx=Math.max(...vals),height=mx===mn?50:10+(N(x.skill_rating)-mn)/(mx-mn)*90;return `<div class="bar" title="${Math.round(N(x.skill_rating))}" style="height:${height}%"></div>`}).join("")}</div>`:"";
+  renderArchiveMatches(h.matches||[]);renderAnalytics(h,a);renderFun(h,a);renderDbPlayers(h);
+ }catch(e){$("#dbState").textContent="DB ERROR";$("#chemistry").innerHTML=`<div class="msg">${escapeHtml(e.message)}</div>`}
 }
-
+function renderDbPlayers(h){
+ const db=new Map((h.players||[]).map(x=>[String(x.player_id),x]));
+ document.querySelectorAll("[data-p]").forEach(el=>{const p=S.players.find(q=>String(q.id)===String(el.dataset.p)),q=db.get(String(el.dataset.p));if(p&&q?.pro_name)el.innerHTML=`<b>${escapeHtml(q.pro_name)}</b>${p.accountName&&p.accountName!==q.pro_name?`<small class="subname">${escapeHtml(p.accountName)}</small>`:""}`})
+}
+function renderArchiveMatches(matches){
+ if(!matches.length)return;
+ const liveIds=new Set(S.matches.map(m=>String(P(m.raw,["matchId","matchid","id"],""))));
+ const archive=matches.filter(x=>!liveIds.has(String(x.match_id))).slice(0,200);
+ if(!archive.length)return;
+ $("#matchList").insertAdjacentHTML("beforeend",`<div class="archiveLabel">CLUBROOM ARCHIVE · ${archive.length} starších zápasů</div>${archive.map(m=>`<div class="match archive"><span>${m.played_at?new Date(m.played_at).toLocaleDateString("cs-CZ"):"—"}</span><span>${m.match_type||"match"}</span><span class="home">${escapeHtml(S.club.name)}</span><span class="score">${N(m.goals)}:${N(m.opponent_goals)}</span><b>${escapeHtml(m.opponent||"Soupeř")}</b><b class="${String(m.result).toLowerCase()}">${m.result}</b></div>`).join("")}`)
+}
+function renderAnalytics(h,a){
+ const ms=h.matches||[],last10=ms.slice(0,10),last5=ms.slice(0,5),wr=x=>x.length?Math.round(x.filter(m=>m.result==="W").length/x.length*100):0;
+ const best=(a.players||[]).slice().sort((x,y)=>N(y.rating)-N(x.rating))[0],pass=(a.players||[]).slice().sort((x,y)=>(N(y.pass_attempts)?N(y.passes_made)/N(y.pass_attempts):0)-(N(x.pass_attempts)?N(x.passes_made)/N(x.pass_attempts):0))[0],fin=(a.players||[]).slice().sort((x,y)=>(N(y.shots)?N(y.goals)/N(y.shots):0)-(N(x.shots)?N(x.goals)/N(x.shots):0))[0];
+ $("#analyticsCards").innerHTML=metric("FORM · LAST 5",last5.map(x=>x.result).join(" ")||"—")+metric("WR · LAST 10",last10.length?wr(last10)+"%":"—")+metric("AVG GOALS · L10",last10.length?(last10.reduce((s,x)=>s+N(x.goals),0)/last10.length).toFixed(2):"—")+metric("AVG CONC. · L10",last10.length?(last10.reduce((s,x)=>s+N(x.opponent_goals),0)/last10.length).toFixed(2):"—")+metric("BEST RATING",best?`${best.player_name} · ${N(best.rating).toFixed(2)}`:"—")+metric("PASS LEADER",pass&&N(pass.pass_attempts)?`${pass.player_name} · ${(N(pass.passes_made)/N(pass.pass_attempts)*100).toFixed(1)}%`:"—")+metric("FINISHING",fin&&N(fin.shots)?`${fin.player_name} · ${(N(fin.goals)/N(fin.shots)*100).toFixed(1)}%`:"—")+metric("SESSIONS",(a.sessions||[]).length);
+ const chem=a.chemistry||[];$("#chemistry").innerHTML=chem.length?`<div class="table"><table><thead><tr><th>#</th><th>Partnership</th><th>Matches</th><th>Wins</th><th>WR</th><th>G+A combined</th></tr></thead><tbody>${chem.map((x,i)=>`<tr><td>${i+1}</td><td>${escapeHtml(x.a_name)} + ${escapeHtml(x.b_name)}</td><td>${x.matches}</td><td>${x.wins}</td><td>${Math.round(N(x.wins)/N(x.matches)*100)}%</td><td>${x.contributions}</td></tr>`).join("")}</tbody></table></div>`:'<div class="msg">Chemistry potřebuje aspoň dva společné uložené zápasy.</div>';
+ const pane=document.querySelector('[data-pane="analytics"]');let sessions=pane.querySelector("#sessionsPanel");if(!sessions){sessions=document.createElement("section");sessions.id="sessionsPanel";sessions.className="panel";pane.appendChild(sessions)}sessions.innerHTML=`<div class="panelHead"><h3>Session Reports</h3><span>pauza 2+ hodiny = nová session</span></div>${(a.sessions||[]).length?`<div class="table"><table><thead><tr><th>Start</th><th>Matches</th><th>W-D-L</th><th>Goals</th><th>Conceded</th><th>GD</th></tr></thead><tbody>${a.sessions.slice(0,20).map(x=>`<tr><td>${new Date(x.started_at).toLocaleString("cs-CZ")}</td><td>${x.matches}</td><td>${x.wins}-${x.draws}-${x.losses}</td><td>${x.goals}</td><td>${x.conceded}</td><td>${N(x.goals)-N(x.conceded)>=0?"+":""}${N(x.goals)-N(x.conceded)}</td></tr>`).join("")}</tbody></table></div>`:'<div class="msg">Zatím bez session historie.</div>'}`;
+}
+function renderFun(h,a){
+ const ps=h.players||[];if(!ps.length)return;const top=(fn)=>ps.slice().sort((x,y)=>fn(y)-fn(x))[0],sc=top(x=>N(x.goals)),as=top(x=>N(x.assists)),sa=top(x=>N(x.second_assists)),motm=top(x=>N(x.motm)),iron=top(x=>N(x.matches)),red=top(x=>N(x.red_cards)),drib=top(x=>N(x.dribbles)),def=top(x=>N(x.interceptions)+N(x.tackles_won));
+ const awards=[["GOLDEN BOOT",sc,`${sc.goals} gólů`],["ASSIST KING",as,`${as.assists} asistencí`],["THE CONNECTOR",sa,`${sa.second_assists} druhých asistencí`],["MAIN CHARACTER",motm,`${motm.motm}× MOTM`],["IRON MAN",iron,`${iron.matches} zápasů`],["BALL MAGNET",drib,`${drib.dribbles} driblinků`],["THE WALL",def,`${N(def.interceptions)+N(def.tackles_won)} def. akcí`],["CARD COLLECTOR",red,`${red.red_cards} červených`]];
+ $("#funAwards").innerHTML=awards.map(([t,p,z])=>`<article class="award"><span>${t}</span><b>${escapeHtml(p.pro_name||p.player_name)}</b><p>${z}</p></article>`).join("");
+}
+function showPlayer(id){
+ let p=S.players.find(x=>x.id===id);if(!p)return;const hist=(S.history?.playerMatches||[]).filter(x=>String(x.player_id)===String(id));
+ if(hist.length){const agg=(k)=>hist.reduce((s,x)=>s+N(x[k]),0),pa=agg("pass_attempts"),pm=agg("passes_made"),ta=agg("tackle_attempts"),tm=agg("tackles_made"),ratings=hist.slice(0,20).map(x=>N(x.rating)).filter(Boolean).reverse();$("#playerContent").innerHTML=`<div class="profile"><small>PLAYER PROFILE · CLUBROOM ARCHIVE</small><h2>${escapeHtml(p.name)}</h2><p class="identity">${escapeHtml(p.accountName||p.name)} · ${hist[0]?.position||p.position||"—"}</p><div class="profileTabs"><b>Overview</b><span>Attacking</span><span>Passing</span><span>Defending</span><span>Trends</span><span>Match Log</span></div><div class="stats">${stat("MATCHES",hist.length)}${stat("GOALS",agg("goals"))}${stat("ASSISTS",agg("assists"))}${stat("2ND ASSISTS",agg("second_assists"))}${stat("G+A",agg("goals")+agg("assists"))}${stat("AVG RATING",(hist.reduce((s,x)=>s+N(x.rating),0)/hist.length).toFixed(2))}${stat("MOTM",agg("motm"))}${stat("SHOTS",agg("shots"))}${stat("PASS %",pa?(pm/pa*100).toFixed(1)+"%":"—")}${stat("TACKLE %",ta?(tm/ta*100).toFixed(1)+"%":"—")}${stat("INTERCEPTIONS",agg("interceptions"))}${stat("TACKLES WON",agg("standing_tackles_won")+agg("sliding_tackles_won"))}${stat("DRIBBLES",agg("dribbles"))}${stat("THROUGH BALLS",agg("through_balls"))}${stat("SAVES",agg("saves"))}${stat("RED CARDS",agg("red_cards"))}</div><h3 class="sectionTitle">RATING TREND</h3>${ratings.length?`<div class="chart">${ratings.map(r=>`<div class="bar" title="${r.toFixed(1)}" style="height:${Math.max(5,r/10*100)}%"></div>`).join("")}</div>`:""}<h3 class="sectionTitle">MATCH LOG</h3><div class="table"><table><thead><tr><th>Date</th><th>Opponent</th><th>Result</th><th>Rating</th><th>G</th><th>A</th><th>2A</th><th>Shots</th><th>Pass%</th><th>Tackles</th><th>Int.</th></tr></thead><tbody>${hist.slice(0,100).map(x=>`<tr><td>${x.played_at?new Date(x.played_at).toLocaleDateString("cs-CZ"):"—"}</td><td>${escapeHtml(x.opponent||"Soupeř")}</td><td class="${String(x.result).toLowerCase()}">${x.team_goals}:${x.opponent_goals} ${x.result}</td><td>${N(x.rating)?N(x.rating).toFixed(1):"—"}</td><td>${x.goals}</td><td>${x.assists}</td><td>${x.second_assists}</td><td>${x.shots}</td><td>${N(x.pass_attempts)?(N(x.passes_made)/N(x.pass_attempts)*100).toFixed(1)+"%":"—"}</td><td>${x.tackles_made}</td><td>${x.interceptions}</td></tr>`).join("")}</tbody></table></div><p class="note">Key passes nejsou dopočítávány bez spolehlivého EA eventu. Žádné statistické věštění z kávové sedliny.</p></div>`;$("#playerView").hidden=false;return}
+ showPlayerLive(id)
+}
+function showPlayerLive(id){
+ let p=S.players.find(x=>x.id===id);if(!p)return;let recent=S.matches.map(m=>{let s=m.players.map(matchPlayer).find(x=>x.id===id||String(x.name).toLowerCase()===String(p.name).toLowerCase());return s?{m,s}:null}).filter(Boolean),ms=recent.map(x=>x.s),sum=k=>ms.reduce((a,x)=>a+N(x[k]),0),pa=sum("passAttempts"),pm=sum("passes"),ta=sum("tackleAttempts"),tm=sum("tackles");
+ $("#playerContent").innerHTML=`<div class="profile"><small>PLAYER PROFILE · LIVE WINDOW</small><h2>${escapeHtml(p.name)}</h2><div class="stats">${stat("MATCHES",p.games)}${stat("GOALS",p.goals)}${stat("ASSISTS",p.assists)}${stat("2ND ASSISTS*",sum("secondAssists"))}${stat("AVG RATING",p.rating?p.rating.toFixed(2):"—")}${stat("SHOTS*",sum("shots"))}${stat("PASS %*",pa?(pm/pa*100).toFixed(1)+"%":"—")}${stat("TACKLE %*",ta?(tm/ta*100).toFixed(1)+"%":"—")}</div><p class="note">* Pouze aktuální EA match window. Po zapnutí databáze se profil automaticky přepne na dlouhodobou historii.</p></div>`;$("#playerView").hidden=false
+}
 function openTab(tab,push=true){document.querySelectorAll("[data-tab]").forEach(b=>b.classList.toggle("active",b.dataset.tab===tab));document.querySelectorAll("[data-pane]").forEach(p=>p.classList.toggle("active",p.dataset.pane===tab));if(push&&S.club)history.replaceState(null,"",`/club/${S.club.id}/${tab==="stats"?"":tab}`.replace(/\/$/,""))}
 document.querySelectorAll("[data-tab]").forEach(b=>b.onclick=()=>openTab(b.dataset.tab));
 $("#openSearch").onclick=()=>{history.replaceState(null,"","/");$("#dash").hidden=true;$("#home").hidden=false;$("#q").focus()};
+// v13 match detail: three explicit views. Formation is shown only when EA actually provides it.
+function showMatch(i){
+ const m=S.matches[i],ps=m.players.map(matchPlayer),r=m.oursRaw||{},o=m.oppRaw||{};
+ const teamRows=[["Goals",m.og,m.tg],["Possession",P(r,["possession","possessionPct"],"—"),P(o,["possession","possessionPct"],"—")],["Shots",P(r,["shots","shotsTaken"],"—"),P(o,["shots","shotsTaken"],"—")],["Passes",P(r,["passes","passesMade"],"—"),P(o,["passes","passesMade"],"—")],["Tackles",P(r,["tackles","tacklesMade"],"—"),P(o,["tackles","tacklesMade"],"—")]];
+ const formO=P(r,["formation","formationId"],null),formT=P(o,["formation","formationId"],null);
+ $("#matchContent").innerHTML=`<div class="profile"><small>${m.type.toUpperCase()} · ${m.date?m.date.toLocaleString("cs-CZ"):""}</small><h2>${escapeHtml(m.ours)} ${m.og}:${m.tg} ${escapeHtml(m.opp)}</h2><div class="profileTabs"><b>Match Stats</b><span>Player Stats</span><span>Formations</span></div><h3 class="sectionTitle">MATCH STATS</h3><div class="compareGrid">${teamRows.map(([k,a,b])=>`<div class="cmpCell">${a}</div><div class="cmpCell">${k}</div><div class="cmpCell">${b}</div>`).join("")}</div><h3 class="sectionTitle">PLAYER STATS</h3>${ps.length?matchStatsTable(ps):'<div class="msg">EA v tomto zápase neposlalo hráčské statistiky.</div>'}<h3 class="sectionTitle">FORMATIONS</h3><div class="stats">${stat(m.ours,formO||"EA neposlalo")}${stat(m.opp,formT||"EA neposlalo")}</div></div>`;$("#matchView").hidden=false
+}

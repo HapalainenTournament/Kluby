@@ -70,7 +70,7 @@ app.get("/api/club/:id", async (req,res)=>{
 
 app.get("/api/history/:id",async(req,res)=>{try{res.json(await history(String(req.params.id).replace(/[^\d]/g,"")))}catch(e){res.status(500).json({error:e.message})}});
 app.get("/api/analytics/:id",async(req,res)=>{try{res.json(await analytics(String(req.params.id).replace(/[^\d]/g,"")))}catch(e){res.status(500).json({error:e.message})}});
-app.get("/api/health",(_,res)=>res.json({ok:true,version:"12.0.0",database:dbEnabled,time:new Date().toISOString()}));
+app.get("/api/health",(_,res)=>res.json({ok:true,version:"13.0.0",database:dbEnabled,time:new Date().toISOString()}));
 app.get("/{*splat}",(_,res)=>res.sendFile(path.join(DIR,"public","index.html")));
 await migrate();
-app.listen(PORT,()=>console.log(`Clubroom FC27 v12 běží na ${PORT} · DB ${dbEnabled?"ON":"OFF"}`));
+app.listen(PORT,()=>console.log(`Clubroom FC27 v13 běží na ${PORT} · DB ${dbEnabled?"ON":"OFF"}`));
