@@ -79,9 +79,9 @@ function matchPlayer(x){
   rating:Number(P(x,["rating","ratingAve","averageRating"],0)),
   goals:N(P(x,["goals","goalsScored"],0)),
   assists:N(P(x,["assists"],0)),
-  shots:N(P(x,["shots","shotsTaken","totalShots"],0)),
-  passes,passAttempts,passRate:passAttempts?passes/passAttempts*100:0,
-  tackles,tackleAttempts,tackleRate:tackleAttempts?tackles/tackleAttempts*100:0,
+  shots:N(P(x,["shots","shotsTaken","totalShots"],0)) || eventCount(x,217)+eventCount(x,218),
+  passes:passes || eventCount(x,215),passAttempts:passAttempts || eventCount(x,215)+eventCount(x,216),passRate:(passAttempts || eventCount(x,215)+eventCount(x,216))?((passes || eventCount(x,215))/(passAttempts || eventCount(x,215)+eventCount(x,216))*100):0,
+  tackles:tackles || eventCount(x,0),tackleAttempts:tackleAttempts || eventCount(x,0)+eventCount(x,1),tackleRate:(tackleAttempts || eventCount(x,0)+eventCount(x,1))?((tackles || eventCount(x,0))/(tackleAttempts || eventCount(x,0)+eventCount(x,1))*100):0,
   saves:N(P(x,["saves"],0)),
   motm:N(P(x,["mom","manOfTheMatch","motm"],0)),
   reds:N(P(x,["redcards","redCards","redCard"],0)),
@@ -114,7 +114,7 @@ function render(id,d,searchClub=null){
  $("#playerCount").textContent=`${ps.length} hráčů`; setupPlayerFilters(); renderPlayerTable();
  let scorer=[...ps].sort((a,b)=>b.goals-a.goals)[0],assist=[...ps].sort((a,b)=>b.assists-a.assists)[0],rating=[...ps].sort((a,b)=>b.rating-a.rating)[0];
  $("#leaders").innerHTML=ps.length?[[scorer,"TOP SCORER",`${scorer.goals} G`],[assist,"PLAYMAKER",`${assist.assists} A`],[rating,"RATING KING",rating.rating?rating.rating.toFixed(2):"—"]].map(([p,t,z])=>`<div class="leader"><small>${t}</small><b>${p.name}</b><span>${z}</span></div>`).join(""):"";
- $("#funAwards").innerHTML=ps.length?[[scorer,"GOLDEN BOOT",`${scorer.goals} gólů`],[assist,"ASSIST KING",`${assist.assists} asistencí`],[rating,"MR. CONSISTENT",`${rating.rating?rating.rating.toFixed(2):"—"} rating`]].map(([p,t,z])=>`<article class="award"><span>${t}</span><b>${p.name}</b><p>${z}</p></article>`).join(""):"<div class=msg>Zatím bez dat.</div>";
+ renderFunLive();
  $("#analyticsCards").innerHTML=metric("Win Rate",g?wr.toFixed(1)+"%":"—")+metric("Goals/Game",g?(gf/g).toFixed(2):"—")+metric("Goal Diff",(gf||ga)?`${gd>=0?"+":""}${gd}`:"—")+metric("Top G+A",ps[0]?`${ps[0].name} · ${ps[0].ga}`:"—");
  $("#matchList").innerHTML=ms.length?ms.map((m,i)=>`<div class="match" data-m="${i}"><span>${m.date?m.date.toLocaleDateString("cs-CZ"):"—"}</span><span>${m.type}</span><span class="home">${m.ours}</span><span class="score">${m.og}:${m.tg}</span><b>${m.opp}</b><b class="${m.result.toLowerCase()}">${m.result}</b></div>`).join(""):'<div class="msg" style="padding:20px">EA neposlalo historii zápasů.</div>';
  document.querySelectorAll("[data-m]").forEach(x=>x.onclick=()=>showMatch(+x.dataset.m));
@@ -123,7 +123,7 @@ function render(id,d,searchClub=null){
 }
 function playerSortValue(p,key){
  const per=(v)=>p.games?N(v)/p.games:0;
- const map={rating:p.rating,goals:p.goals,assists:p.assists,ga:p.ga,games:p.games,goalsGame:per(p.goals),assistsGame:per(p.assists),gaGame:per(p.ga),motm:p.motm,passRate:p.passRate,tackleRate:p.tackleRate,shots:p.shots,passes:p.passes,tackles:p.tackles,reds:p.reds};
+ const map={rating:p.rating,goals:p.goals,assists:p.assists,ga:p.ga,games:p.games,goalsGame:per(p.goals),assistsGame:per(p.assists),gaGame:per(p.ga),motm:p.motm,shotRate:p.shotRate,passRate:p.passRate,tackleRate:p.tackleRate,shots:p.shots,passes:p.passes,tackles:p.tackles,reds:p.reds};
  return key==="name"?String(p.name).toLocaleLowerCase("cs"):N(map[key]);
 }
 function renderPlayerTable(){
@@ -132,18 +132,30 @@ function renderPlayerTable(){
  list.sort((a,b)=>{let av=playerSortValue(a,playerSortState.key),bv=playerSortValue(b,playerSortState.key);if(typeof av==="string")return av.localeCompare(bv,"cs")*playerSortState.dir;return (av-bv)*playerSortState.dir});
  body.innerHTML=list.length?list.map((p,i)=>`<tr><td>${i+1}</td><td data-p="${p.id}"><b>${p.name}</b>${p.accountName&&p.accountName!==p.name?`<small class="subname">${p.accountName}</small>`:""}</td><td>${p.games}</td><td>${p.goals}</td><td>${p.games?(p.goals/p.games).toFixed(2):"—"}</td><td>${p.assists}</td><td>${p.games?(p.assists/p.games).toFixed(2):"—"}</td><td><b>${p.ga}</b></td><td>${p.games?(p.ga/p.games).toFixed(2):"—"}</td><td>${p.rating?p.rating.toFixed(1):"—"}</td><td>${p.motm}</td><td>${p.shotRate?pct(p.shotRate):"—"}</td><td>${p.passes||"—"}</td><td>${p.passRate?pct(p.passRate):"—"}</td><td>${p.tackles||"—"}</td><td>${p.tackleRate?pct(p.tackleRate):"—"}</td><td>${p.cleanDef||"—"}</td><td>${p.cleanGk||"—"}</td><td>${p.reds||0}</td></tr>`).join(""):'<tr><td colspan="19">Žádný hráč neodpovídá filtru.</td></tr>';
  document.querySelectorAll("[data-p]").forEach(x=>x.onclick=()=>showPlayer(x.dataset.p));
- $("#playerCount").textContent=`${list.length} / ${S.players.length} hráčů`;
+ $("#playerCount").textContent=`${list.length} / ${S.players.length} hráčů`; updateSortHeaders();
+}
+function updateSortHeaders(){
+ document.querySelectorAll("th.sortable").forEach(th=>{
+  const active=th.dataset.sort===playerSortState.key;
+  th.classList.toggle("sorted",active);
+  th.dataset.dir=active?(playerSortState.dir<0?"desc":"asc"):"";
+  th.setAttribute("aria-sort",active?(playerSortState.dir<0?"descending":"ascending"):"none");
+ });
 }
 function setupPlayerFilters(){
  const pos=$("#playerPosition"); if(!pos)return;
  const positions=[...new Set(S.players.map(p=>String(p.position||"—").toUpperCase()).filter(x=>x!=="—"))].sort();
  pos.innerHTML='<option value="all">Všechny</option>'+positions.map(x=>`<option value="${x}">${x}</option>`).join("");
- $("#playerSort").value=playerSortState.key;pos.value="all";$("#playerMinGames").value="0";$("#sortDirection").textContent=playerSortState.dir<0?"↓":"↑";
- $("#playerSort").onchange=e=>{playerSortState.key=e.target.value;renderPlayerTable()};
+ pos.value=playerSortState.position;$("#playerMinGames").value=String(playerSortState.minGames);
  pos.onchange=e=>{playerSortState.position=e.target.value;renderPlayerTable()};
  $("#playerMinGames").onchange=e=>{playerSortState.minGames=N(e.target.value);renderPlayerTable()};
- $("#sortDirection").onclick=()=>{playerSortState.dir*=-1;$("#sortDirection").textContent=playerSortState.dir<0?"↓":"↑";renderPlayerTable()};
+ document.querySelectorAll("th.sortable").forEach(th=>th.onclick=()=>{
+  const key=th.dataset.sort;
+  if(playerSortState.key===key)playerSortState.dir*=-1;else{playerSortState.key=key;playerSortState.dir=key==="name"?1:-1}
+  renderPlayerTable();updateSortHeaders();
+ });
  $("#clearPlayerFilters").onclick=()=>{playerSortState={key:"rating",dir:-1,position:"all",minGames:0};setupPlayerFilters();renderPlayerTable()};
+ updateSortHeaders();
 }
 function stat(k,v){return`<div class="stat"><small>${k}</small><b>${v}</b></div>`}
 function showPlayerLegacy(id){
@@ -231,10 +243,66 @@ function renderAnalytics(h,a){
  const chem=a.chemistry||[];$("#chemistry").innerHTML=chem.length?`<div class="table"><table><thead><tr><th>#</th><th>Partnership</th><th>Matches</th><th>Wins</th><th>WR</th><th>G+A combined</th></tr></thead><tbody>${chem.map((x,i)=>`<tr><td>${i+1}</td><td>${escapeHtml(x.a_name)} + ${escapeHtml(x.b_name)}</td><td>${x.matches}</td><td>${x.wins}</td><td>${Math.round(N(x.wins)/N(x.matches)*100)}%</td><td>${x.contributions}</td></tr>`).join("")}</tbody></table></div>`:'<div class="msg">Chemistry potřebuje aspoň dva společné uložené zápasy.</div>';
  const pane=document.querySelector('[data-pane="analytics"]');let sessions=pane.querySelector("#sessionsPanel");if(!sessions){sessions=document.createElement("section");sessions.id="sessionsPanel";sessions.className="panel";pane.appendChild(sessions)}sessions.innerHTML=`<div class="panelHead"><h3>Session Reports</h3><span>pauza 2+ hodiny = nová session</span></div>${(a.sessions||[]).length?`<div class="table"><table><thead><tr><th>Start</th><th>Matches</th><th>W-D-L</th><th>Goals</th><th>Conceded</th><th>GD</th></tr></thead><tbody>${a.sessions.slice(0,20).map(x=>`<tr><td>${new Date(x.started_at).toLocaleString("cs-CZ")}</td><td>${x.matches}</td><td>${x.wins}-${x.draws}-${x.losses}</td><td>${x.goals}</td><td>${x.conceded}</td><td>${N(x.goals)-N(x.conceded)>=0?"+":""}${N(x.goals)-N(x.conceded)}</td></tr>`).join("")}</tbody></table></div>`:'<div class="msg">Zatím bez session historie.</div>'}`;
 }
+function funName(p){return escapeHtml(p?.pro_name||p?.player_name||p?.name||"—")}
+function renderFunLive(){
+ const ps=S.players||[]; if(!ps.length)return;
+ const top=fn=>ps.slice().sort((x,y)=>fn(y)-fn(x))[0],sc=top(x=>N(x.goals)),as=top(x=>N(x.assists)),rat=top(x=>N(x.rating)),iron=top(x=>N(x.games)),motm=top(x=>N(x.motm));
+ $("#funAwards").innerHTML=[["GOLDEN BOOT",sc,`${sc.goals} gólů`],["ASSIST KING",as,`${as.assists} asistencí`],["MR. CONSISTENT",rat,`${N(rat.rating).toFixed(2)} rating`],["MAIN CHARACTER",motm,`${motm.motm}× MOTM`],["IRON MAN",iron,`${iron.games} zápasů`]].map(([t,p,z])=>`<article class="award"><span>${t}</span><b>${escapeHtml(p.name)}</b><p>${z}</p></article>`).join("");
+ const form=S.matches.slice(0,10).reverse(); $("#funForm").innerHTML=form.length?`<div class="formTimeline">${form.map(m=>`<div class="formNode ${m.result.toLowerCase()}"><b>${m.result}</b><i style="height:${18+Math.min(70,(m.og+m.tg)*8)}px"></i><small>${m.og}:${m.tg}</small></div>`).join("")}</div>`:'<div class="msg">Bez zápasů.</div>';
+ $("#viralRankings").innerHTML='<div class="msg">Detailní žebříčky se rozšíří automaticky, jakmile se uloží match-level historie.</div>';
+ $("#milestones").innerHTML=ps.slice().sort((x,y)=>y.ga-x.ga).slice(0,6).map(p=>`<article class="milestone"><small>CAREER CONTRIBUTIONS</small><b>${escapeHtml(p.name)}</b><p>${p.goals} G · ${p.assists} A · ${p.ga} G+A</p></article>`).join("");
+ $("#goalPartners").innerHTML='<div class="msg">Partnerships potřebují společné uložené zápasy.</div>';
+ $("#improvementTips").innerHTML='<div class="msg">Tipy se objeví po nasbírání detailních zápasových dat.</div>';
+ $("#funMatchByMatch").innerHTML=$("#funForm").innerHTML;
+}
 function renderFun(h,a){
- const ps=h.players||[];if(!ps.length)return;const top=(fn)=>ps.slice().sort((x,y)=>fn(y)-fn(x))[0],sc=top(x=>N(x.goals)),as=top(x=>N(x.assists)),sa=top(x=>N(x.second_assists)),motm=top(x=>N(x.motm)),iron=top(x=>N(x.matches)),red=top(x=>N(x.red_cards)),drib=top(x=>N(x.dribbles)),def=top(x=>N(x.interceptions)+N(x.tackles_won));
- const awards=[["GOLDEN BOOT",sc,`${sc.goals} gólů`],["ASSIST KING",as,`${as.assists} asistencí`],["THE CONNECTOR",sa,`${sa.second_assists} druhých asistencí`],["MAIN CHARACTER",motm,`${motm.motm}× MOTM`],["IRON MAN",iron,`${iron.matches} zápasů`],["BALL MAGNET",drib,`${drib.dribbles} driblinků`],["THE WALL",def,`${N(def.interceptions)+N(def.tackles_won)} def. akcí`],["CARD COLLECTOR",red,`${red.red_cards} červených`]];
- $("#funAwards").innerHTML=awards.map(([t,p,z])=>`<article class="award"><span>${t}</span><b>${escapeHtml(p.pro_name||p.player_name)}</b><p>${z}</p></article>`).join("");
+ const ps=h.players||[]; if(!ps.length){renderFunLive();return}
+ const top=fn=>ps.slice().sort((x,y)=>fn(y)-fn(x))[0];
+ const sc=top(x=>N(x.goals)),as=top(x=>N(x.assists)),sa=top(x=>N(x.second_assists)),motm=top(x=>N(x.motm)),iron=top(x=>N(x.matches)),red=top(x=>N(x.red_cards)),drib=top(x=>N(x.dribbles)),def=top(x=>N(x.interceptions)+N(x.tackles_won)),rating=top(x=>N(x.rating));
+ const pass=ps.filter(x=>N(x.pass_attempts)>=20).sort((x,y)=>(N(y.passes_made)/N(y.pass_attempts))-(N(x.passes_made)/N(x.pass_attempts)))[0];
+ const fin=ps.filter(x=>N(x.shots)>=5).sort((x,y)=>(N(y.goals)/N(y.shots))-(N(x.goals)/N(x.shots)))[0];
+ const awards=[["GOLDEN BOOT",sc,`${sc.goals} gólů`],["ASSIST KING",as,`${as.assists} asistencí`],["THE CONNECTOR",sa,`${sa.second_assists} druhých asistencí`],["MAIN CHARACTER",motm,`${motm.motm}× MOTM`],["IRON MAN",iron,`${iron.matches} zápasů`],["BALL MAGNET",drib,`${drib.dribbles} úspěšných driblinků`],["THE WALL",def,`${N(def.interceptions)+N(def.tackles_won)} defenzivních akcí`],["MR. CONSISTENT",rating,`${N(rating.rating).toFixed(2)} průměrný rating`],["CARD COLLECTOR",red,`${red.red_cards} červených`]];
+ $("#funAwards").innerHTML=awards.map(([t,p,z])=>`<article class="award"><span>${t}</span><b>${funName(p)}</b><p>${z}</p></article>`).join("");
+
+ const rank=[
+  ["THE FINISHER",fin,fin?`${(N(fin.goals)/N(fin.shots)*100).toFixed(1)}% conversion`:"—","good","Góly / střely"],
+  ["PASS MERCHANT",pass,pass?`${(N(pass.passes_made)/N(pass.pass_attempts)*100).toFixed(1)}%`:"—","good","Min. 20 pokusů o přihrávku"],
+  ["STAT PADDER",top(x=>N(x.goals)+N(x.assists)),`${N(top(x=>N(x.goals)+N(x.assists)).goals)+N(top(x=>N(x.goals)+N(x.assists)).assists)} G+A`,"warn","Nejvíc přímých příspěvků"],
+  ["RED FLAG",red,`${red.red_cards} RC`,"bad","Disciplína si vzala dovolenou"],
+  ["DRIBBLE MERCHANT",drib,`${drib.dribbles} dribbles`,"","Nejvíc úspěšných driblinků"],
+  ["DEFENSIVE MENACE",def,`${N(def.interceptions)+N(def.tackles_won)}`,"good","Interceptions + won tackles"]
+ ];
+ $("#viralRankings").innerHTML=rank.map(([t,p,v,c,d])=>`<article class="funRank ${c}"><small>${t}</small><b>${funName(p)}</b><strong>${v}</strong><p>${d}</p></article>`).join("");
+
+ const milestones=[];
+ for(const p of ps){
+  for(const [label,val,step] of [["Goals",N(p.goals),25],["Assists",N(p.assists),25],["Matches",N(p.matches),50],["G+A",N(p.goals)+N(p.assists),50]]){
+   const next=Math.max(step,Math.ceil((val+1)/step)*step),left=next-val;
+   if(val>0)milestones.push({p,label,val,next,left});
+  }
+ }
+ milestones.sort((x,y)=>x.left-y.left);
+ $("#milestones").innerHTML=milestones.slice(0,9).map(x=>`<article class="milestone"><small>${x.label.toUpperCase()} MILESTONE</small><b>${funName(x.p)}</b><p>${x.val} / ${x.next} · zbývá ${x.left}</p></article>`).join("")||'<div class="msg">Zatím bez milestone dat.</div>';
+
+ const matches=h.matches||[],form=matches.slice(0,20).reverse();
+ $("#funForm").innerHTML=form.length?`<div class="formTimeline">${form.map(m=>`<div class="formNode ${String(m.result).toLowerCase()}"><b>${m.result}</b><i style="height:${18+Math.min(80,(N(m.goals)+N(m.opponent_goals))*8)}px"></i><small>${N(m.goals)}:${N(m.opponent_goals)}</small></div>`).join("")}</div>`:'<div class="msg">Zatím bez historie.</div>';
+
+ const chem=(a.chemistry||[]).slice(0,8);
+ $("#goalPartners").innerHTML=chem.length?`<table class="funTable"><thead><tr><th>Duo</th><th>Spolu</th><th>Výhry</th><th>Win rate</th><th>G+A</th></tr></thead><tbody>${chem.map(x=>`<tr><td><b>${escapeHtml(x.a_name)} + ${escapeHtml(x.b_name)}</b></td><td>${x.matches}</td><td>${x.wins}</td><td>${N(x.matches)?Math.round(N(x.wins)/N(x.matches)*100):0}%</td><td>${x.contributions}</td></tr>`).join("")}</tbody></table>`:'<div class="msg">Potřebujeme aspoň dva společné uložené zápasy.</div>';
+
+ const tips=[];
+ const teamPass=ps.reduce((s,x)=>s+N(x.pass_attempts),0)?ps.reduce((s,x)=>s+N(x.passes_made),0)/ps.reduce((s,x)=>s+N(x.pass_attempts),0)*100:null;
+ const teamShots=ps.reduce((s,x)=>s+N(x.shots),0),teamGoals=ps.reduce((s,x)=>s+N(x.goals),0),conv=teamShots?teamGoals/teamShots*100:null;
+ const recent=matches.slice(0,10),conc=recent.length?recent.reduce((s,x)=>s+N(x.opponent_goals),0)/recent.length:null;
+ if(teamPass!=null)tips.push(["Passing",`${teamPass.toFixed(1)}%`,teamPass<75?"Největší prostor je v držení míče a bezpečnější rozehrávce.":"Přihrávková úspěšnost je solidní; hledejte progresivnější řešení."]);
+ if(conv!=null)tips.push(["Finishing",`${conv.toFixed(1)}%`,conv<20?"Vytváříte střely, ale konverze zaostává.":"Konverze střel v uloženém vzorku vypadá zdravě."]);
+ if(conc!=null)tips.push(["Defence",`${conc.toFixed(2)} GA/match`,conc>2?"Soupeři dávají přes dva góly na zápas; největší rezerva je bez míče.":"Defenzivní trend posledních zápasů je relativně stabilní."]);
+ $("#improvementTips").innerHTML=tips.length?tips.map(([t,v,d])=>`<article class="tipCard"><small>${t}</small><div class="tipMetric">${v}</div><b>${d}</b></article>`).join(""):'<div class="msg">Zatím není dost dat.</div>';
+
+ const pms=h.playerMatches||[],byMatch=new Map();
+ for(const x of pms){if(!byMatch.has(x.match_id))byMatch.set(x.match_id,[]);byMatch.get(x.match_id).push(x)}
+ const rows=matches.slice(0,15).map(m=>{const pp=byMatch.get(m.match_id)||[],best=pp.slice().sort((x,y)=>N(y.rating)-N(x.rating))[0];return `<tr><td>${m.played_at?new Date(m.played_at).toLocaleDateString("cs-CZ"):"—"}</td><td class="${String(m.result).toLowerCase()}"><b>${m.result}</b></td><td>${N(m.goals)}:${N(m.opponent_goals)}</td><td>${escapeHtml(m.opponent||"Soupeř")}</td><td>${best?`${escapeHtml(best.player_name)} · ${N(best.rating).toFixed(1)}`:"—"}</td></tr>`}).join("");
+ $("#funMatchByMatch").innerHTML=rows?`<table class="funTable"><thead><tr><th>Date</th><th>Result</th><th>Score</th><th>Opponent</th><th>Best player</th></tr></thead><tbody>${rows}</tbody></table>`:'<div class="msg">Bez historie zápasů.</div>';
 }
 function showPlayer(id){
  let p=S.players.find(x=>x.id===id);if(!p)return;const hist=(S.history?.playerMatches||[]).filter(x=>String(x.player_id)===String(id));

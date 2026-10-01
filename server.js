@@ -3,7 +3,7 @@ import path from "node:path";
 import { fileURLToPath } from "node:url";
 import {migrate,enabled as dbEnabled} from "./db.js";
 import {persistClubPayload,history,analytics} from "./storage.js";
-import {dueClubs} from "./collector.js";
+import {dueClubs,rescheduleClub} from "./collector.js";
 
 const app = express();
 const DIR = path.dirname(fileURLToPath(import.meta.url));
@@ -61,13 +61,13 @@ app.get("/api/club/:id", async (req,res)=>{
 
 app.get("/api/history/:id",async(req,res)=>{try{res.json(await history(String(req.params.id).replace(/[^\d]/g,"")))}catch(e){res.status(500).json({error:e.message})}});
 app.get("/api/analytics/:id",async(req,res)=>{try{res.json(await analytics(String(req.params.id).replace(/[^\d]/g,"")))}catch(e){res.status(500).json({error:e.message})}});
-app.get("/api/health",(_,res)=>res.json({ok:true,version:"16.0.0",database:dbEnabled,time:new Date().toISOString()}));
+app.get("/api/health",(_,res)=>res.json({ok:true,version:"18.0.0",database:dbEnabled,time:new Date().toISOString()}));
 app.get("/{*splat}",(_,res)=>res.sendFile(path.join(DIR,"public","index.html")));
 await migrate();
 // Background archive: clubs are discovered by real searches/visits, then refreshed in batches.
 // This scales better than trying to enumerate every EA club on Earth, which would be both expensive and rather optimistic.
 if(dbEnabled && process.env.COLLECTOR_ENABLED!=="false"){
- const runCollector=async()=>{try{for(const c of await dueClubs(Number(process.env.COLLECTOR_BATCH||20))){try{await loadClub(String(c.club_id),validPlatform(c.platform));}catch(e){console.warn("collector",c.club_id,e.message)}}}catch(e){console.warn("collector batch",e.message)}};
+ const runCollector=async()=>{try{for(const c of await dueClubs(Number(process.env.COLLECTOR_BATCH||20))){try{const d=await loadClub(String(c.club_id),validPlatform(c.platform));await rescheduleClub(String(c.club_id),validPlatform(c.platform),Number(d.storage?.newMatches||0));}catch(e){console.warn("collector",c.club_id,e.message)}}}catch(e){console.warn("collector batch",e.message)}};
  setTimeout(runCollector,15000);setInterval(runCollector,Number(process.env.COLLECTOR_INTERVAL_MS||900000));
 }
-app.listen(PORT,()=>console.log(`Clubroom FC27 v16 běží na ${PORT} · DB ${dbEnabled?"ON":"OFF"}`));
+app.listen(PORT,()=>console.log(`Clubroom FC27 v18 běží na ${PORT} · DB ${dbEnabled?"ON":"OFF"}`));

@@ -23,8 +23,15 @@ export async function migrate(){
    last_seen TIMESTAMPTZ NOT NULL DEFAULT now(),
    last_checked TIMESTAMPTZ,
    tracking BOOLEAN NOT NULL DEFAULT TRUE,
+   check_interval_minutes INTEGER NOT NULL DEFAULT 60,
+   next_check_at TIMESTAMPTZ,
+   consecutive_empty_checks INTEGER NOT NULL DEFAULT 0,
    PRIMARY KEY(club_id,platform)
  );
+ ALTER TABLE clubs ADD COLUMN IF NOT EXISTS check_interval_minutes INTEGER NOT NULL DEFAULT 60;
+ ALTER TABLE clubs ADD COLUMN IF NOT EXISTS next_check_at TIMESTAMPTZ;
+ ALTER TABLE clubs ADD COLUMN IF NOT EXISTS consecutive_empty_checks INTEGER NOT NULL DEFAULT 0;
+ CREATE INDEX IF NOT EXISTS idx_clubs_next_check ON clubs(tracking,next_check_at);
  CREATE TABLE IF NOT EXISTS players(
    player_id TEXT PRIMARY KEY,
    ea_name TEXT,

@@ -1,12 +1,13 @@
-# Clubroom FC27 Tracker v16
+# Clubroom FC27 v18
 
-- redesigned standalone Compare tab
-- no `archived` labels in metric names
-- Compare falls back to the current EA match window immediately, then merges PostgreSQL history as it grows
-- improved player identity matching (player id, pro name, EA/account name)
-- PostgreSQL remains the permanent match archive; new matches are deduplicated by matchId
+## Změny
+- kompletně rozšířený Fun: Squad Superlatives, Viral Rankings, Player Milestones, Form Graph, Goal Partnerships, Improvement Tips a Match-by-Match
+- Fun funguje i bez DB v omezeném live režimu a automaticky se rozšíří po nasbírání historie
+- Compare a archiv používají match-event fallbacky pro shots (217+218), passes (215/216), tackles (0/1), second assists (115), dribbles (174), interceptions (6)
+- žádné falešné nuly, pokud detailní data skutečně nejsou k dispozici
+- adaptivní PostgreSQL collector pro globální provoz: aktivní kluby cca 30 min, postupný backoff 90 min / 6 h / 24 h
+- existující databáze se migruje pomocí ADD COLUMN IF NOT EXISTS
+- dlouhodobý archiv je deduplikovaný přes match_id
+- verze 18.0.0
 
-## Render
-Set `DATABASE_URL` to the PostgreSQL Internal Database URL. The supplied `render.yaml` can also create/link `clubroom-db` when deploying as a Blueprint.
-
-Important: a newly created database starts empty. On the first club load the currently available EA matches are stored; future collector runs keep adding new matchIds. EA history that is no longer returned cannot be reconstructed retroactively.
+Přihlašovací údaje k PostgreSQL nejsou součástí projektu. Backend čte pouze DATABASE_URL z prostředí.
