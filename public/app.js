@@ -2,6 +2,7 @@ const $=s=>document.querySelector(s),N=v=>Number(v??0),A=x=>Array.isArray(x)?x:(
 const P=(o,ks,d=0)=>{for(const k of ks)if(o&&o[k]!=null)return o[k];return d};
 const pct=v=>{let n=Number(v);return !Number.isFinite(n)||n<0?"—":(n>0&&n<=1?n*100:n).toFixed(1)+"%"};
 let S={raw:null,club:null,players:[],matches:[],searchClub:null};
+let playerSortState={key:"rating",dir:-1,position:"all",minGames:0};
 
 $("#search").onsubmit=async e=>{e.preventDefault();$("#results").innerHTML='<div class="msg">Hledám…</div>';try{let r=await fetch(`/api/search?q=${encodeURIComponent($("#q").value)}&platform=${$("#platform").value}`),d=await r.json();if(!r.ok)throw Error(d.error);let a=A(d).flatMap(x=>Array.isArray(x)?x:[x]).filter(x=>x.clubId||x.clubid||x.id);$("#results").innerHTML=a.length?a.slice(0,15).map(c=>`<div class="result" data-id="${c.clubId||c.clubid||c.id}"><b>${c.clubName||c.name||"Klub"}</b><span>ID ${c.clubId||c.clubid||c.id}</span></div>`).join(""):'<div class="msg">Nic nenalezeno.</div>';document.querySelectorAll(".result").forEach(x=>x.onclick=()=>{const c=a.find(z=>String(z.clubId||z.clubid||z.id)===String(x.dataset.id));load(x.dataset.id,c||null)})}catch(e){$("#results").innerHTML=`<div class="msg">${e.message}</div>`}};
 async function load(id,searchClub=null){$("#results").innerHTML='<div class="msg">Načítám kompletní data…</div>';let r=await fetch(`/api/club/${id}?platform=${$("#platform").value}`),d=await r.json();if(!r.ok)return $("#results").innerHTML=`<div class="msg">${d.error}</div>`;render(id,d,searchClub);$("#results").innerHTML="";history.replaceState(null,"",`/club/${id}`)}
@@ -110,8 +111,7 @@ function render(id,d,searchClub=null){
  let wr=g?(w/g*100):0,gd=gf-ga,winStreak=N(P(o,["wstreak","winStreak"],0)),unbeaten=N(P(o,["unbeatenstreak","unbeatenStreak"],0)),promotions=N(P(o,["promotions"],0)),relegations=N(P(o,["relegations"],0)),cleanSheets=N(P(searchClub||{},["cleanSheets"],P(o,["cleanSheets"],0)));
  $("#clubStats").innerHTML=metric("Current Division",division!=="—"?`Division ${division}`:"—")+metric("Best Division",bestDivision!=="—"?`Division ${bestDivision}`:"—")+metric("League Apps",g||"—")+metric("Win Rate",g?wr.toFixed(1)+"%":"—")+metric("Wins",w)+metric("Draws",dr)+metric("Losses",l)+metric("Goals",gf||"—")+metric("Conceded",ga||"—")+metric("Goal Diff",(gf||ga)?`${gd>=0?"+":""}${gd}`:"—")+metric("Goals / Game",g?(gf/g).toFixed(2):"—")+metric("Conceded / Game",g?(ga/g).toFixed(2):"—")+metric("Skill Rating",skill)+metric("Win Streak",winStreak)+metric("Unbeaten Streak",unbeaten)+metric("Promotions",promotions)+metric("Relegations",relegations)+metric("Clean Sheets",cleanSheets||"—");
  $("#performanceStats").innerHTML=metric("Recent W",fw)+metric("Recent D",fd)+metric("Recent L",fl)+metric("Recent Goals",ms.slice(0,10).reduce((a,m)=>a+m.og,0))+metric("Recent Conceded",ms.slice(0,10).reduce((a,m)=>a+m.tg,0))+metric("Recent GD",ms.slice(0,10).reduce((a,m)=>a+m.og-m.tg,0))+metric("Squad",ps.length)+metric("League matches loaded",ms.filter(m=>m.type==="league").length)+metric("Playoff loaded",ms.filter(m=>m.type==="playoff").length)+metric("Friendly loaded",ms.filter(m=>m.type==="friendly").length);
- $("#playerCount").textContent=`${ps.length} hráčů`;$("#players").innerHTML=ps.length?ps.map((p,i)=>{let x=advancedFor(p);return `<tr><td>${i+1}</td><td data-p="${p.id}"><b>${p.name}</b>${p.accountName&&p.accountName!==p.name?`<small style="display:block;opacity:.55">${p.accountName}</small>`:""}</td><td>${p.games}</td><td>${p.goals}</td><td>${p.games?(p.goals/p.games).toFixed(2):"—"}</td><td>${p.assists}</td><td>${p.games?(p.assists/p.games).toFixed(2):"—"}</td><td><b>${p.ga}</b></td><td>${p.games?(p.ga/p.games).toFixed(2):"—"}</td><td>${p.rating?p.rating.toFixed(1):"—"}</td><td>${p.motm}</td><td>${p.shotRate?pct(p.shotRate):"—"}</td><td>${p.passes||"—"}</td><td>${p.passRate?pct(p.passRate):"—"}</td><td>${p.tackles||"—"}</td><td>${p.tackleRate?pct(p.tackleRate):"—"}</td><td>${p.cleanDef||"—"}</td><td>${p.cleanGk||"—"}</td><td>${p.reds||0}</td></tr>`}).join(""):'<tr><td colspan="16">EA neposlalo career hráče.</td></tr>';
- document.querySelectorAll("[data-p]").forEach(x=>x.onclick=()=>showPlayer(x.dataset.p));
+ $("#playerCount").textContent=`${ps.length} hráčů`; setupPlayerFilters(); renderPlayerTable();
  let scorer=[...ps].sort((a,b)=>b.goals-a.goals)[0],assist=[...ps].sort((a,b)=>b.assists-a.assists)[0],rating=[...ps].sort((a,b)=>b.rating-a.rating)[0];
  $("#leaders").innerHTML=ps.length?[[scorer,"TOP SCORER",`${scorer.goals} G`],[assist,"PLAYMAKER",`${assist.assists} A`],[rating,"RATING KING",rating.rating?rating.rating.toFixed(2):"—"]].map(([p,t,z])=>`<div class="leader"><small>${t}</small><b>${p.name}</b><span>${z}</span></div>`).join(""):"";
  $("#funAwards").innerHTML=ps.length?[[scorer,"GOLDEN BOOT",`${scorer.goals} gólů`],[assist,"ASSIST KING",`${assist.assists} asistencí`],[rating,"MR. CONSISTENT",`${rating.rating?rating.rating.toFixed(2):"—"} rating`]].map(([p,t,z])=>`<article class="award"><span>${t}</span><b>${p.name}</b><p>${z}</p></article>`).join(""):"<div class=msg>Zatím bez dat.</div>";
@@ -120,6 +120,30 @@ function render(id,d,searchClub=null){
  document.querySelectorAll("[data-m]").forEach(x=>x.onclick=()=>showMatch(+x.dataset.m));
  let er=d.errors||{};$("#status").innerHTML=["info","overall","career","members","achievements","league","playoff","friendly"].map(k=>`<div class="endpoint"><span>${k}</span><b>${er[k]?"CHYBA":"OK"}</b></div>`).join("");
  fillCompare();$("#home").hidden=true;$("#dash").hidden=false;window.scrollTo({top:0,behavior:"smooth"});loadHistory(id)
+}
+function playerSortValue(p,key){
+ const per=(v)=>p.games?N(v)/p.games:0;
+ const map={rating:p.rating,goals:p.goals,assists:p.assists,ga:p.ga,games:p.games,goalsGame:per(p.goals),assistsGame:per(p.assists),gaGame:per(p.ga),motm:p.motm,passRate:p.passRate,tackleRate:p.tackleRate,shots:p.shots,passes:p.passes,tackles:p.tackles,reds:p.reds};
+ return key==="name"?String(p.name).toLocaleLowerCase("cs"):N(map[key]);
+}
+function renderPlayerTable(){
+ const body=$("#players"); if(!body)return;
+ let list=S.players.filter(p=>p.games>=playerSortState.minGames&&(playerSortState.position==="all"||String(p.position).toUpperCase()===playerSortState.position));
+ list.sort((a,b)=>{let av=playerSortValue(a,playerSortState.key),bv=playerSortValue(b,playerSortState.key);if(typeof av==="string")return av.localeCompare(bv,"cs")*playerSortState.dir;return (av-bv)*playerSortState.dir});
+ body.innerHTML=list.length?list.map((p,i)=>`<tr><td>${i+1}</td><td data-p="${p.id}"><b>${p.name}</b>${p.accountName&&p.accountName!==p.name?`<small class="subname">${p.accountName}</small>`:""}</td><td>${p.games}</td><td>${p.goals}</td><td>${p.games?(p.goals/p.games).toFixed(2):"—"}</td><td>${p.assists}</td><td>${p.games?(p.assists/p.games).toFixed(2):"—"}</td><td><b>${p.ga}</b></td><td>${p.games?(p.ga/p.games).toFixed(2):"—"}</td><td>${p.rating?p.rating.toFixed(1):"—"}</td><td>${p.motm}</td><td>${p.shotRate?pct(p.shotRate):"—"}</td><td>${p.passes||"—"}</td><td>${p.passRate?pct(p.passRate):"—"}</td><td>${p.tackles||"—"}</td><td>${p.tackleRate?pct(p.tackleRate):"—"}</td><td>${p.cleanDef||"—"}</td><td>${p.cleanGk||"—"}</td><td>${p.reds||0}</td></tr>`).join(""):'<tr><td colspan="19">Žádný hráč neodpovídá filtru.</td></tr>';
+ document.querySelectorAll("[data-p]").forEach(x=>x.onclick=()=>showPlayer(x.dataset.p));
+ $("#playerCount").textContent=`${list.length} / ${S.players.length} hráčů`;
+}
+function setupPlayerFilters(){
+ const pos=$("#playerPosition"); if(!pos)return;
+ const positions=[...new Set(S.players.map(p=>String(p.position||"—").toUpperCase()).filter(x=>x!=="—"))].sort();
+ pos.innerHTML='<option value="all">Všechny</option>'+positions.map(x=>`<option value="${x}">${x}</option>`).join("");
+ $("#playerSort").value=playerSortState.key;pos.value="all";$("#playerMinGames").value="0";$("#sortDirection").textContent=playerSortState.dir<0?"↓":"↑";
+ $("#playerSort").onchange=e=>{playerSortState.key=e.target.value;renderPlayerTable()};
+ pos.onchange=e=>{playerSortState.position=e.target.value;renderPlayerTable()};
+ $("#playerMinGames").onchange=e=>{playerSortState.minGames=N(e.target.value);renderPlayerTable()};
+ $("#sortDirection").onclick=()=>{playerSortState.dir*=-1;$("#sortDirection").textContent=playerSortState.dir<0?"↓":"↑";renderPlayerTable()};
+ $("#clearPlayerFilters").onclick=()=>{playerSortState={key:"rating",dir:-1,position:"all",minGames:0};setupPlayerFilters();renderPlayerTable()};
 }
 function stat(k,v){return`<div class="stat"><small>${k}</small><b>${v}</b></div>`}
 function showPlayerLegacy(id){
@@ -144,11 +168,28 @@ function showMatchLegacy(i){
 }
 function fillCompare(){let opts=S.players.map(p=>`<option value="${p.id}">${p.name}</option>`).join("");$("#cmpA").innerHTML=opts;$("#cmpB").innerHTML=opts;if(S.players[1])$("#cmpB").value=S.players[1].id;compare()}
 function advancedFor(p){
+ const db=(S.history?.players||[]).find(x=>String(x.player_id)===String(p.id));
+ if(db){
+  const pa=N(db.pass_attempts),pm=N(db.passes_made),ta=N(db.tackle_attempts),tm=N(db.tackles_made),matches=N(db.matches);
+  const shotKnown=N(db.shots)>0,passKnown=pa>0,tackleKnown=ta>0;
+  return {...p,
+   games:Math.max(N(p.games),matches), goals:Math.max(N(p.goals),N(db.goals)), assists:Math.max(N(p.assists),N(db.assists)),
+   ga:Math.max(N(p.goals)+N(p.assists),N(db.goals)+N(db.assists)), rating:N(db.rating)||N(p.rating), motm:Math.max(N(p.motm),N(db.motm)),
+   secondAssists:N(db.second_assists),shots:shotKnown?N(db.shots):null,passes:passKnown?pm:null,passAttempts:passKnown?pa:null,passRate:passKnown?pm/pa*100:null,
+   tackles:tackleKnown?tm:null,tackleAttempts:tackleKnown?ta:null,tackleRate:tackleKnown?tm/ta*100:null,dribbles:N(db.dribbles)||null,saves:N(db.saves)||null,
+   archiveMatches:matches,shotKnown,passKnown,tackleKnown,source:"archive"};
+ }
  let ms=S.matches.map(m=>m.players.map(matchPlayer).find(x=>x.id===p.id||String(x.name).toLowerCase()===String(p.name).toLowerCase())).filter(Boolean);
- let sum=k=>ms.reduce((a,x)=>a+N(x[k]),0),pa=sum("passAttempts"),pm=sum("passes"),ta=sum("tackleAttempts"),tm=sum("tackles");
- return {...p,shots:sum("shots"),passes:pm,passAttempts:pa,passRate:pa?pm/pa*100:0,tackles:tm,tackleAttempts:ta,tackleRate:ta?tm/ta*100:0,saves:sum("saves"),secondAssists:sum("secondAssists"),dribbles:sum("dribbles"),interceptions:sum("interceptions"),standingWon:sum("standingWon"),slidingWon:sum("slidingWon"),throughBalls:sum("throughBalls")}
+ let sum=k=>ms.reduce((a,x)=>a+N(x[k]),0),pa=sum("passAttempts"),pm=sum("passes"),ta=sum("tackleAttempts"),tm=sum("tackles"),shots=sum("shots");
+ return {...p,shots:shots||null,passes:pa?pm:null,passAttempts:pa||null,passRate:pa?pm/pa*100:null,tackles:ta?tm:null,tackleAttempts:ta||null,tackleRate:ta?tm/ta*100:null,saves:sum("saves")||null,secondAssists:sum("secondAssists"),dribbles:sum("dribbles")||null,archiveMatches:ms.length,shotKnown:shots>0,passKnown:pa>0,tackleKnown:ta>0,source:"live"}
 }
-function compare(){let aa=S.players.find(x=>x.id===$("#cmpA").value),bb=S.players.find(x=>x.id===$("#cmpB").value);if(!aa||!bb)return;let a=advancedFor(aa),b=advancedFor(bb);let rows=[["Matches","games"],["Goals","goals"],["Assists","assists"],["2nd assists (recent)*","secondAssists"],["G+A","ga"],["Avg rating","rating"],["MOTM","motm"],["Shots*","shots"],["Passes*","passes"],["Pass %*","passRate"],["Tackles*","tackles"],["Tackle %*","tackleRate"],["Dribbles*","dribbles"],["Saves*","saves"]];$("#compareBody").innerHTML=`<div class="compareGrid">${rows.map(([label,k])=>{let av=a[k],bv=b[k],fmt=k.includes("Rate")?pct:(v=>k==="rating"&&v?Number(v).toFixed(2):v??"—");return`<div class="cmpCell ${Number(av)>Number(bv)?"better":""}">${fmt(av)}</div><div class="cmpCell">${label}</div><div class="cmpCell ${Number(bv)>Number(av)?"better":""}">${fmt(bv)}</div>`}).join("")}</div><p class="note">* Z aktuálně dostupné historie zápasů EA.</p>`}
+function compare(){
+ let aa=S.players.find(x=>x.id===$("#cmpA").value),bb=S.players.find(x=>x.id===$("#cmpB").value);if(!aa||!bb)return;let a=advancedFor(aa),b=advancedFor(bb);
+ const rows=[["Matches","games"],["Goals","goals"],["Assists","assists"],["2nd assists · archived","secondAssists"],["G+A","ga"],["Avg rating","rating"],["MOTM","motm"],["Shots · archived","shots"],["Passes · archived","passes"],["Pass % · archived","passRate"],["Tackles · archived","tackles"],["Tackle % · archived","tackleRate"],["Dribbles · archived","dribbles"],["Saves · archived","saves"]];
+ const fmt=(k,v)=>v==null?"—":k.includes("Rate")?pct(v):k==="rating"&&v?Number(v).toFixed(2):v;
+ $("#compareCoverage").innerHTML=`<span class="coveragePill"><b>${escapeHtml(a.name)}</b>: ${a.archiveMatches||0} archivovaných zápasů</span><span class="coveragePill"><b>${escapeHtml(b.name)}</b>: ${b.archiveMatches||0} archivovaných zápasů</span>`;
+ $("#compareBody").innerHTML=`<div class="compareGrid">${rows.map(([label,k])=>{let av=a[k],bv=b[k],an=av==null?NaN:Number(av),bn=bv==null?NaN:Number(bv);return`<div class="cmpCell ${Number.isFinite(an)&&Number.isFinite(bn)&&an>bn?"better":""}">${fmt(k,av)}</div><div class="cmpCell">${label}</div><div class="cmpCell ${Number.isFinite(an)&&Number.isFinite(bn)&&bn>an?"better":""}">${fmt(k,bv)}</div>`}).join("")}</div><p class="note">Career údaje bere Compare z EA career statistik. Advanced údaje bere z Clubroom archivu. „—“ znamená, že pro danou metriku zatím nemáme spolehlivá match-level data; nula už nepředstírá, že něco ví.</p>`
+}
 $("#cmpA").onchange=compare;$("#cmpB").onchange=compare;document.querySelectorAll("[data-close]").forEach(b=>b.onclick=()=>$("#"+b.dataset.close).hidden=true);
 function escapeHtml(s){return s.replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#039;"}[c]))}
 
@@ -162,7 +203,7 @@ async function loadHistory(id){
   const games=h.matches.length,w=h.matches.filter(x=>x.result==="W").length,d=h.matches.filter(x=>x.result==="D").length,l=games-w-d,goals=h.matches.reduce((s,x)=>s+N(x.goals),0),conceded=h.matches.reduce((s,x)=>s+N(x.opponent_goals),0),sa=h.players.reduce((s,x)=>s+N(x.second_assists),0);
   $("#historyStats").innerHTML=metric("STORED MATCHES",games)+metric("DB WIN RATE",games?(w/games*100).toFixed(1)+"%":"—")+metric("W-D-L",`${w}-${d}-${l}`)+metric("STORED GOALS",goals)+metric("GOAL DIFF",`${goals-conceded>=0?"+":""}${goals-conceded}`)+metric("2ND ASSISTS",sa);
   const snaps=[...h.snapshots].reverse().filter(x=>x.skill_rating!=null);$("#skillHistory").innerHTML=snaps.length>1?`<div class="panelHead"><h3>Skill Rating History</h3><span>${snaps.length} snapshots</span></div><div class="chart">${snaps.slice(-80).map(x=>{let vals=snaps.slice(-80).map(y=>N(y.skill_rating)),mn=Math.min(...vals),mx=Math.max(...vals),height=mx===mn?50:10+(N(x.skill_rating)-mn)/(mx-mn)*90;return `<div class="bar" title="${Math.round(N(x.skill_rating))}" style="height:${height}%"></div>`}).join("")}</div>`:"";
-  renderArchiveMatches(h.matches||[]);renderAnalytics(h,a);renderFun(h,a);renderDbPlayers(h);
+  renderArchiveMatches(h.matches||[]);renderAnalytics(h,a);renderFun(h,a);renderDbPlayers(h);compare();
  }catch(e){$("#dbState").textContent="DB ERROR";$("#chemistry").innerHTML=`<div class="msg">${escapeHtml(e.message)}</div>`}
 }
 function renderDbPlayers(h){
