@@ -13,11 +13,11 @@
 Přihlašovací údaje k PostgreSQL nejsou součástí projektu. Backend čte pouze DATABASE_URL z prostředí.
 
 
-## v21
+## v22
 Kompletní vizuální redesign club dashboardu: hero, moderní cards, dvousloupcový overview, recent matches a squad leaders sidebar, přepracované taby a squad/compare/fun surfaces.
 
 
-## v21
+## v22
 - Match detail is an inline accordion under the selected match, not a separate overlay.
 - Live match detail includes team stats, player stats, scorers and goal minutes when EA actually provides a timeline.
 - Archive match rows also expand inline.
