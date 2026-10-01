@@ -15,18 +15,29 @@ app.use(express.static(path.join(DIR, "public")));
 
 const validPlatform = p => ["common-gen5","common-gen4","nx"].includes(p) ? p : "common-gen5";
 
-async function ea(route, params, ttl=45000) {
+async function ea(route, params, ttl=45000, timeoutMs=6500) {
   const u = new URL(EA + route);
   Object.entries(params).forEach(([k,v]) => v != null && u.searchParams.set(k,String(v)));
   const key = u.toString(), hit = cache.get(key);
   if (hit && hit.exp > Date.now()) return hit.data;
-  const c = new AbortController(), timer = setTimeout(()=>c.abort(),15000);
+  const started=Date.now();
+  const c = new AbortController();
+  let timer;
+  const timeout = new Promise((_,reject)=>{timer=setTimeout(()=>{c.abort();reject(new Error(`EA TIMEOUT ${timeoutMs}ms: ${route}`))},timeoutMs)});
   try {
-    const r = await fetch(u,{signal:c.signal,headers:{accept:"application/json","user-agent":"Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 Chrome/140 Safari/537.36"}});
-    if(!r.ok) throw new Error(`EA ${r.status}: ${route}`);
-    const data = await r.json();
-    cache.set(key,{data,exp:Date.now()+ttl});
+    const request=(async()=>{
+      const r = await fetch(u,{signal:c.signal,headers:{accept:"application/json","user-agent":"Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 Chrome/140 Safari/537.36"}});
+      if(!r.ok) throw new Error(`EA ${r.status}: ${route}`);
+      const data = await r.json();
+      cache.set(key,{data,exp:Date.now()+ttl});
+      return data;
+    })();
+    const data=await Promise.race([request,timeout]);
+    console.log(`[EA] ${route} OK ${Date.now()-started}ms`);
     return data;
+  } catch(e) {
+    console.warn(`[EA] ${route} FAIL ${Date.now()-started}ms · ${e.message}`);
+    throw e;
   } finally { clearTimeout(timer); }
 }
 
@@ -49,14 +60,20 @@ async function loadClubFull(id,p){const d=await fetchSet({info:["/clubs/info",{p
 function archiveInBackground(id,p,seed=null){const key=`${p}:${id}`;if(refreshes.has(key))return;const job=(async()=>{try{if(seed)await persistClubPayload(id,p,seed);const full=await loadClubFull(id,p);await persistClubPayload(id,p,full);clubCache.set(key,{data:full,at:Date.now()})}catch(e){console.warn("background archive",id,e.message)}finally{refreshes.delete(key)}})();refreshes.set(key,job)}
 
 app.get("/api/club/:id", async (req,res)=>{
- const id=String(req.params.id).replace(/[^\d]/g,"");const p=validPlatform(req.query.platform);if(!id)return res.status(400).json({error:"Neplatné club ID."});
+ const started=Date.now();const id=String(req.params.id).replace(/[^\d]/g,"");const p=validPlatform(req.query.platform);if(!id)return res.status(400).json({error:"Neplatné club ID."});
  const key=`${p}:${id}`,hit=clubCache.get(key),age=hit?Date.now()-hit.at:Infinity;
- try{if(hit&&age<30000)return res.json({...hit.data,_cache:"fresh"});if(hit&&age<300000){archiveInBackground(id,p);return res.json({...hit.data,_cache:"stale"})}const d=await loadClubFast(id,p);clubCache.set(key,{data:d,at:Date.now()});res.json({...d,_cache:"miss"});archiveInBackground(id,p,d)}catch(e){if(hit)return res.json({...hit.data,_cache:"fallback",_refreshError:e.message});res.status(502).json({error:"EA club load selhal.",detail:e.message})}
+ try{
+  if(hit&&age<30000){console.log(`[CLUB] ${id} memory fresh ${Date.now()-started}ms`);return res.json({...hit.data,_cache:"fresh"})}
+  if(hit&&age<300000){console.log(`[CLUB] ${id} memory stale ${Date.now()-started}ms`);archiveInBackground(id,p);return res.json({...hit.data,_cache:"stale"})}
+  const d=await loadClubFast(id,p);clubCache.set(key,{data:d,at:Date.now()});
+  console.log(`[CLUB] ${id} response ${Date.now()-started}ms · errors=${Object.keys(d.errors||{}).join(",")||"none"}`);
+  res.json({...d,_cache:"miss"});setImmediate(()=>archiveInBackground(id,p,d));
+ }catch(e){console.warn(`[CLUB] ${id} FAIL ${Date.now()-started}ms · ${e.message}`);if(hit)return res.json({...hit.data,_cache:"fallback",_refreshError:e.message});res.status(502).json({error:"EA club load selhal.",detail:e.message})}
 });
 
 app.get("/api/history/:id",async(req,res)=>{try{res.json(await history(String(req.params.id).replace(/[^\d]/g,"")))}catch(e){res.status(500).json({error:e.message})}});
 app.get("/api/analytics/:id",async(req,res)=>{try{res.json(await analytics(String(req.params.id).replace(/[^\d]/g,"")))}catch(e){res.status(500).json({error:e.message})}});
-app.get("/api/health",(_,res)=>res.json({ok:true,version:"23.0.0",database:dbEnabled,time:new Date().toISOString()}));
+app.get("/api/health",(_,res)=>res.json({ok:true,version:"24.0.0",database:dbEnabled,time:new Date().toISOString()}));
 app.get("/{*splat}",(_,res)=>res.sendFile(path.join(DIR,"public","index.html")));
 await migrate();
 // Background archive: clubs are discovered by real searches/visits, then refreshed in batches.
@@ -65,4 +82,4 @@ if(dbEnabled && process.env.COLLECTOR_ENABLED!=="false"){
  const runCollector=async()=>{try{for(const c of await dueClubs(Number(process.env.COLLECTOR_BATCH||20))){try{const d=await loadClubFull(String(c.club_id),validPlatform(c.platform));const saved=await persistClubPayload(String(c.club_id),validPlatform(c.platform),d);await rescheduleClub(String(c.club_id),validPlatform(c.platform),Number(saved?.newMatches||0));}catch(e){console.warn("collector",c.club_id,e.message)}}}catch(e){console.warn("collector batch",e.message)}};
  setTimeout(runCollector,15000);setInterval(runCollector,Number(process.env.COLLECTOR_INTERVAL_MS||900000));
 }
-app.listen(PORT,()=>console.log(`Clubroom FC27 v23 běží na ${PORT} · DB ${dbEnabled?"ON":"OFF"}`));
+app.listen(PORT,()=>console.log(`Clubroom FC27 v24 běží na ${PORT} · DB ${dbEnabled?"ON":"OFF"}`));

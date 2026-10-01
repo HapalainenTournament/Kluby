@@ -2,10 +2,17 @@ const $=s=>document.querySelector(s),N=v=>Number(v??0),A=x=>Array.isArray(x)?x:(
 const P=(o,ks,d=0)=>{for(const k of ks)if(o&&o[k]!=null)return o[k];return d};
 const pct=v=>{let n=Number(v);return !Number.isFinite(n)||n<0?"—":(n>0&&n<=1?n*100:n).toFixed(1)+"%"};
 let S={raw:null,club:null,players:[],matches:[],searchClub:null};
+
+async function fetchJSON(url,timeoutMs=10000){
+ const c=new AbortController();const t=setTimeout(()=>c.abort(),timeoutMs);
+ try{const r=await fetch(url,{signal:c.signal,cache:"no-store"});let d;try{d=await r.json()}catch{d={error:"Server vrátil neplatnou odpověď."}};if(!r.ok)throw Error(d.detail||d.error||`HTTP ${r.status}`);return d}
+ catch(e){if(e.name==="AbortError")throw Error(`Server neodpověděl do ${Math.round(timeoutMs/1000)} s.`);throw e}
+ finally{clearTimeout(t)}
+}
 let playerSortState={key:"rating",dir:-1,position:"all",minGames:0};
 
-$("#search").onsubmit=async e=>{e.preventDefault();$("#results").innerHTML='<div class="msg">Hledám…</div>';try{let r=await fetch(`/api/search?q=${encodeURIComponent($("#q").value)}&platform=${$("#platform").value}`),d=await r.json();if(!r.ok)throw Error(d.error);let a=A(d).flatMap(x=>Array.isArray(x)?x:[x]).filter(x=>x.clubId||x.clubid||x.id);$("#results").innerHTML=a.length?a.slice(0,15).map(c=>`<div class="result" data-id="${c.clubId||c.clubid||c.id}"><b>${c.clubName||c.name||"Klub"}</b><span>ID ${c.clubId||c.clubid||c.id}</span></div>`).join(""):'<div class="msg">Nic nenalezeno.</div>';document.querySelectorAll(".result").forEach(x=>x.onclick=()=>{const c=a.find(z=>String(z.clubId||z.clubid||z.id)===String(x.dataset.id));load(x.dataset.id,c||null)})}catch(e){$("#results").innerHTML=`<div class="msg">${e.message}</div>`}};
-async function load(id,searchClub=null){$("#results").innerHTML='<div class="msg">Načítám kompletní data…</div>';let r=await fetch(`/api/club/${id}?platform=${$("#platform").value}`),d=await r.json();if(!r.ok)return $("#results").innerHTML=`<div class="msg">${d.error}</div>`;render(id,d,searchClub);$("#results").innerHTML="";history.replaceState(null,"",`/club/${id}`)}
+$("#search").onsubmit=async e=>{e.preventDefault();$("#results").innerHTML='<div class="msg">Hledám…</div>';try{let d=await fetchJSON(`/api/search?q=${encodeURIComponent($("#q").value)}&platform=${$("#platform").value}`,9000);let a=A(d).flatMap(x=>Array.isArray(x)?x:[x]).filter(x=>x.clubId||x.clubid||x.id);$("#results").innerHTML=a.length?a.slice(0,15).map(c=>`<div class="result" data-id="${c.clubId||c.clubid||c.id}"><b>${c.clubName||c.name||"Klub"}</b><span>ID ${c.clubId||c.clubid||c.id}</span></div>`).join(""):'<div class="msg">Nic nenalezeno.</div>';document.querySelectorAll(".result").forEach(x=>x.onclick=()=>{const c=a.find(z=>String(z.clubId||z.clubid||z.id)===String(x.dataset.id));load(x.dataset.id,c||null)})}catch(e){$("#results").innerHTML=`<div class="msg">${e.message}</div>`}};
+async function load(id,searchClub=null){$("#results").innerHTML='<div class="msg">Načítám klub…</div>';try{const d=await fetchJSON(`/api/club/${id}?platform=${$("#platform").value}`,12000);render(id,d,searchClub);$("#results").innerHTML="";history.replaceState(null,"",`/club/${id}`)}catch(e){$("#results").innerHTML=`<div class="msg errorMsg"><b>Klub se nepodařilo načíst.</b><br>${escapeHtml(e.message)}<br><small>Zkus hledání znovu. Stránka už nebude viset donekonečna.</small></div>`}}
 
 function first(...vals){for(const v of vals)if(v!=null&&v!=="")return v;return 0}
 function playerArray(d){let candidates=[d?.members?.members,d?.members?.players,d?.members,d?.career?.members,d?.career?.players,d?.career];for(const c of candidates){let a=A(c);if(a.length&&a.some(x=>P(x,["name","playerName","personaName","proName"],null)))return a}return[]}
