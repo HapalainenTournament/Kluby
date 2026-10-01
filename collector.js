@@ -10,12 +10,12 @@ export async function rescheduleClub(clubId,platform,newMatches=0){
  // Active clubs stay hot. Quiet clubs back off gradually up to 24h.
  await query(`UPDATE clubs SET
    consecutive_empty_checks=CASE WHEN $3>0 THEN 0 ELSE consecutive_empty_checks+1 END,
-   check_interval_minutes=CASE WHEN $3>0 THEN 30
-     WHEN consecutive_empty_checks>=7 THEN 1440
-     WHEN consecutive_empty_checks>=3 THEN 360
-     ELSE 90 END,
-   next_check_at=now() + make_interval(mins => CASE WHEN $3>0 THEN 30
-     WHEN consecutive_empty_checks>=7 THEN 1440
-     WHEN consecutive_empty_checks>=3 THEN 360 ELSE 90 END)
+   check_interval_minutes=CASE WHEN $3>0 THEN 10
+     WHEN consecutive_empty_checks>=7 THEN 720
+     WHEN consecutive_empty_checks>=3 THEN 120
+     ELSE 30 END,
+   next_check_at=now() + make_interval(mins => CASE WHEN $3>0 THEN 10
+     WHEN consecutive_empty_checks>=7 THEN 720
+     WHEN consecutive_empty_checks>=3 THEN 120 ELSE 30 END)
  WHERE club_id=$1 AND platform=$2`,[clubId,platform,newMatches]);
 }
