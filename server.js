@@ -82,4 +82,4 @@ if(dbEnabled && process.env.COLLECTOR_ENABLED!=="false"){
  const runCollector=async()=>{try{for(const c of await dueClubs(Number(process.env.COLLECTOR_BATCH||20))){try{const d=await loadClubFull(String(c.club_id),validPlatform(c.platform));const saved=await persistClubPayload(String(c.club_id),validPlatform(c.platform),d);await rescheduleClub(String(c.club_id),validPlatform(c.platform),Number(saved?.newMatches||0));}catch(e){console.warn("collector",c.club_id,e.message)}}}catch(e){console.warn("collector batch",e.message)}};
  setTimeout(runCollector,15000);setInterval(runCollector,Number(process.env.COLLECTOR_INTERVAL_MS||900000));
 }
-app.listen(PORT,()=>console.log(`Clubroom FC27 v24 běží na ${PORT} · DB ${dbEnabled?"ON":"OFF"}`));
+app.listen(PORT,()=>console.log(`Clubroom FC27 v25 běží na ${PORT} · DB ${dbEnabled?"ON":"OFF"}`));
