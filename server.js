@@ -61,7 +61,7 @@ app.get("/api/club/:id", async (req,res)=>{
 
 app.get("/api/history/:id",async(req,res)=>{try{res.json(await history(String(req.params.id).replace(/[^\d]/g,"")))}catch(e){res.status(500).json({error:e.message})}});
 app.get("/api/analytics/:id",async(req,res)=>{try{res.json(await analytics(String(req.params.id).replace(/[^\d]/g,"")))}catch(e){res.status(500).json({error:e.message})}});
-app.get("/api/health",(_,res)=>res.json({ok:true,version:"15.0.0",database:dbEnabled,time:new Date().toISOString()}));
+app.get("/api/health",(_,res)=>res.json({ok:true,version:"16.0.0",database:dbEnabled,time:new Date().toISOString()}));
 app.get("/{*splat}",(_,res)=>res.sendFile(path.join(DIR,"public","index.html")));
 await migrate();
 // Background archive: clubs are discovered by real searches/visits, then refreshed in batches.
@@ -70,4 +70,4 @@ if(dbEnabled && process.env.COLLECTOR_ENABLED!=="false"){
  const runCollector=async()=>{try{for(const c of await dueClubs(Number(process.env.COLLECTOR_BATCH||20))){try{await loadClub(String(c.club_id),validPlatform(c.platform));}catch(e){console.warn("collector",c.club_id,e.message)}}}catch(e){console.warn("collector batch",e.message)}};
  setTimeout(runCollector,15000);setInterval(runCollector,Number(process.env.COLLECTOR_INTERVAL_MS||900000));
 }
-app.listen(PORT,()=>console.log(`Clubroom FC27 v15 běží na ${PORT} · DB ${dbEnabled?"ON":"OFF"}`));
+app.listen(PORT,()=>console.log(`Clubroom FC27 v16 běží na ${PORT} · DB ${dbEnabled?"ON":"OFF"}`));

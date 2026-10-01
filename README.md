@@ -1,28 +1,12 @@
-# Clubroom FC27 v12
+# Clubroom FC27 Tracker v16
 
-Hotfix datové vrstvy proti v11.
+- redesigned standalone Compare tab
+- no `archived` labels in metric names
+- Compare falls back to the current EA match window immediately, then merges PostgreSQL history as it grows
+- improved player identity matching (player id, pro name, EA/account name)
+- PostgreSQL remains the permanent match archive; new matches are deduplicated by matchId
 
-- squad používá `/members/stats` jako primární season dataset; career je pouze fallback
-- opravené mapování přesných EA FC27 polí: passesMade, passSuccessRate, tacklesMade, tackleSuccessRate, shotSuccessRate, cleanSheetsDef/GK, redCards
-- doplněné per-game G/Z, A/Z a G+A/Z
-- crest používá skutečný EA FC web asset podle `customKit.crestAssetId`
-- backend, DB historie, match analytics a tabs zachovány
+## Render
+Set `DATABASE_URL` to the PostgreSQL Internal Database URL. The supplied `render.yaml` can also create/link `clubroom-db` when deploying as a Blueprint.
 
-## v15
-- dlouhodobé player match logy a rozšířené profily hráčů
-- historické zápasy z PostgreSQL vedle aktuálního EA okna
-- analytics: form, finishing, passing, partnerships a session reports
-- rozšířené Fun awards
-- match detail: Match Stats / Player Stats / Formations (jen pokud je EA dodá)
-- second assists archivované jako EA event 115
-- key passes se záměrně nevymýšlejí bez ověřeného EA eventu
-- Express 5 SPA fallback používá pojmenovaný wildcard `/{*splat}`
-
-
-## v15: PostgreSQL archive + Compare
-- Compare is now its own top-level tab.
-- Advanced Compare metrics prefer PostgreSQL archive data and show — when coverage is not trustworthy instead of fake zeroes.
-- Background collector revisits tracked clubs in batches (default: every 15 min, clubs due after 60 min).
-- A club becomes tracked when a user actually opens it. This demand-driven model is suitable for worldwide growth without trying to crawl every club continuously.
-- Tune with `COLLECTOR_BATCH`, `COLLECTOR_INTERVAL_MS`, or disable with `COLLECTOR_ENABLED=false`.
-- PostgreSQL remains the source of truth for match history; EA's current 10-match window is only the ingestion window.
+Important: a newly created database starts empty. On the first club load the currently available EA matches are stored; future collector runs keep adding new matchIds. EA history that is no longer returned cannot be reconstructed retroactively.
