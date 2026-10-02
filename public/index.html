@@ -1,7 +1,7 @@
-<!doctype html><html lang="cs"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Clubroom FC27 v28</title><link rel="stylesheet" href="/style.css"></head><body>
-<header class="topbar"><a class="brand" href="/" aria-label="Clubroom homepage"><span class="brandMark">C</span><b>CLUBROOM</b><em>FC27</em></a><div class="topActions"><button id="openSearch" class="iconBtn" title="Hledat klub">⌕</button></div></header>
+<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Clubroom FC27 v31</title><link rel="stylesheet" href="/style.css"></head><body>
+<header class="topbar"><a class="brand" href="/" aria-label="Clubroom homepage"><span class="brandMark">C</span><b>CLUBROOM</b><em>FC27</em></a><div class="topActions"><button id="openSearch" class="iconBtn" title="Search club">⌕</button></div></header>
 <main class="shell">
-<section id="home" class="searchPage"><div class="searchIntro"><span class="kicker">EA SPORTS FC 27 · PRO CLUBS</span><h1>Search Pro Clubs Stats</h1><p>Najdi libovolný EA FC 27 Pro Clubs tým a otevři detailní statistiky, hráče, historii zápasů, formu a analytics.</p></div><form id="search" class="searchPanel"><div class="searchInputWrap"><input id="q" placeholder="Enter club name…" required><span>⌕</span></div><div class="searchActions"><select id="platform"><option value="common-gen5">PS5 / Xbox Series / PC</option><option value="common-gen4">PS4 / Xbox One</option><option value="nx">Switch</option></select><button>Search</button></div></form><div id="results" class="results searchResults"></div></section>
+<section id="home" class="searchPage"><div class="searchIntro"><span class="kicker">EA SPORTS FC 27 · PRO CLUBS</span><h1>Search Pro Clubs Stats</h1><p>Search any EA FC 27 Pro Clubs team and open detailed stats, players, match history, form and analytics.</p></div><form id="search" class="searchPanel"><div class="searchInputWrap"><input id="q" placeholder="Enter club name…" required><span>⌕</span></div><div class="searchActions"><select id="platform"><option value="common-gen5">PS5 / Xbox Series / PC</option><option value="common-gen4">PS4 / Xbox One</option><option value="nx">Switch</option></select><button>Search</button></div></form><div id="results" class="results searchResults"></div></section>
 <section id="dash" hidden>
 <section class="clubHero"><div class="clubIdentity"><div id="clubLogo" class="clubLogo"><img id="clubCrest" alt="Klubový crest" hidden><span id="clubFallback">C</span></div><div><span class="kicker">CLUB PROFILE</span><h2 id="clubName">—</h2><div class="clubBadges"><span id="divisionBadge" class="divisionBadge">DIV —</span><span id="skillBadge" class="softBadge">SR —</span><span id="clubIdBadge" class="softBadge">ID —</span></div></div></div><div class="recordLine"><b class="win" id="recW">0W</b><b class="draw" id="recD">0D</b><b class="loss" id="recL">0L</b></div><div class="formBlock"><span>RECENT FORM</span><div id="formPills" class="formPills"></div><b id="formSummary"></b></div></section>
 <nav class="clubTabs" id="clubTabs"><button data-tab="stats" class="active">Overview</button><button data-tab="players">Players</button><button data-tab="compare">Compare</button><button data-tab="matches">Matches</button><button data-tab="analytics">Analytics <small>BETA</small></button><button data-tab="fun">Fun</button><button data-tab="plus">Club+</button></nav>
@@ -21,7 +21,7 @@
 <div class="tabPane" data-pane="compare"><section class="panel comparePanel"><div class="panelHead"><h3>Player Compare</h3><span>career + Clubroom archive</span></div><div class="compareControls"><select id="cmpA"></select><b>VS</b><select id="cmpB"></select></div><div id="compareCoverage" class="compareCoverage"></div><div id="compareBody"></div></section></div>
 <div class="tabPane" data-pane="matches"><section class="panel"><div class="panelHead"><h3>Matches</h3><span>EA + Clubroom archive</span></div><div id="matchList"></div></section></div>
 <div class="tabPane" data-pane="analytics">
-<section class="analyticsHero"><div><span class="kicker">PERFORMANCE LAB</span><h3>Analytics</h3><p>Forma, match-by-match trendy, development a passing data z Clubroom archivu.</p></div><span class="betaBadge">BETA</span></section>
+<section class="analyticsHero"><div><span class="kicker">PERFORMANCE LAB</span><h3>Analytics</h3><p>Form, match-by-match trends, player development and passing insights from the Clubroom archive.</p></div><span class="betaBadge">BETA</span></section>
 <section class="panel analyticsSection"><div class="panelHead"><h3>📈 Form Graph</h3><span>ARCHIVE</span></div><div id="analyticsForm"></div></section>
 <section class="panel analyticsSection purple"><div class="panelHead"><h3>📊 Match-by-Match</h3><span>PLAYER TRENDS</span></div><div id="analyticsMatchByMatch"></div></section>
 <section class="panel analyticsSection"><div class="panelHead"><h3>💡 Improvement Tips</h3><span>PLAYER DEVELOPMENT</span></div><div id="improvementTips" class="tipGrid"></div></section>
@@ -29,7 +29,7 @@
 <div class="legacySink" hidden><div id="analyticsCards"></div><div id="chemistry"></div></div>
 </div>
 <div class="tabPane" data-pane="fun">
-<section class="funHero funHero30"><div><span class="kicker">CLUBROOM FUN</span><h3>Fun without the endless scroll.</h3><p>Žebříčky, dua, superlativy a klubové bizarnosti. Vyber si kategorii v liště níže.</p></div></section>
+<section class="funHero funHero30"><div><span class="kicker">CLUBROOM FUN</span><h3>Fun without the endless scroll.</h3><p>Rankings, duo cards, superlatives and club chaos — organised into clean sections instead of one long wall.</p></div></section>
 <nav class="funSubnav" id="funSubnav">
 <button class="active" data-fun-tab="featured">★ Featured</button>
 <button data-fun-tab="duos">🔗 Duo Cards</button>
@@ -42,20 +42,20 @@
 <button data-fun-tab="extras">＋ Extras</button>
 </nav>
 <section class="funSubPane active" data-fun-pane="featured">
-  <div class="funSectionHeader"><div><span>★ FEATURED FUN</span><h3>To nejlepší z klubového chaosu</h3></div><small>výpočty z Clubroom archivu</small></div>
+  <div class="funSectionHeader"><div><span>★ FEATURED FUN</span><h3>Best of club chaos</h3></div><small>calculated from the Clubroom archive</small></div>
   <div id="viralRankings" class="featuredRankings"></div>
-  <div class="funSectionHeader compact"><div><span>🔗 DUO CARDS</span><h3>Nejzajímavější dvojice</h3></div><button class="textButton" data-open-fun="duos">Všechna dua →</button></div>
+  <div class="funSectionHeader compact"><div><span>🔗 DUO CARDS</span><h3>Top partnerships</h3></div><button class="textButton" data-open-fun="duos">View all duos →</button></div>
   <div id="featuredDuos" class="duoGrid compact"></div>
-  <div class="funSectionHeader compact"><div><span>🏆 SUPERLATIVES</span><h3>Reveal cards</h3></div><button class="textButton" data-open-fun="superlatives">Zobrazit všechny →</button></div>
+  <div class="funSectionHeader compact"><div><span>🏆 SUPERLATIVES</span><h3>Reveal cards</h3></div><button class="textButton" data-open-fun="superlatives">Open all →</button></div>
   <div id="featuredSuperlatives" class="featuredSuperlatives"></div>
 </section>
-<section class="funSubPane" data-fun-pane="duos"><div class="funSectionHeader"><div><span>🔗 DUO CARDS</span><h3>Best & worst partnerships</h3></div><small>společné zápasy v DB</small></div><div id="goalPartners" class="duoGrid"></div></section>
-<section class="funSubPane" data-fun-pane="superlatives"><div class="funSectionHeader"><div><span>🏆 SQUAD SUPERLATIVES</span><h3>Klikni a odhal vítěze</h3></div><button id="revealAll30" class="revealAll30">Reveal all</button></div><div id="funAwards" class="superGrid"></div></section>
+<section class="funSubPane" data-fun-pane="duos"><div class="funSectionHeader"><div><span>🔗 DUO CARDS</span><h3>Best & worst partnerships</h3></div><small>shared matches in the archive</small></div><div id="goalPartners" class="duoGrid"></div></section>
+<section class="funSubPane" data-fun-pane="superlatives"><div class="funSectionHeader"><div><span>🏆 SQUAD SUPERLATIVES</span><h3>Tap a card to reveal the winner</h3></div><button id="revealAll30" class="revealAll30">Reveal all</button></div><div id="funAwards" class="superGrid"></div></section>
 <section class="funSubPane" data-fun-pane="ghost"><div id="viralGhost" class="rankingSolo"></div></section>
 <section class="funSubPane" data-fun-pane="lmerchant"><div id="viralLmerchant" class="rankingSolo"></div></section>
 <section class="funSubPane" data-fun-pane="selfglazer"><div id="viralSelfglazer" class="rankingSolo"></div></section>
 <section class="funSubPane" data-fun-pane="maincharacter"><div id="viralMaincharacter" class="rankingSolo"></div></section>
-<section class="funSubPane" data-fun-pane="statpadder"><div class="funSectionHeader"><div><span>▥ STAT PADDER</span><h3>Produkce vs. výkon</h3></div><small>fun index, ne soudní posudek</small></div><div id="statPadder"></div></section>
+<section class="funSubPane" data-fun-pane="statpadder"><div class="funSectionHeader"><div><span>▥ STAT PADDER</span><h3>Output vs. efficiency</h3></div><small>fun index, not a serious verdict</small></div><div id="statPadder"></div></section>
 <section class="funSubPane" data-fun-pane="extras">
  <section class="panel funSection"><div class="panelHead"><h3>🔥 Best Front 4</h3><span>FORMATION</span></div><div id="bestFront" class="frontFour"></div></section>
  <section class="panel funSection clutch"><div class="panelHead"><h3>🧊 Mr. Clutch</h3><span>BIG MOMENTS</span></div><div id="clutchStats"></div></section>
@@ -63,8 +63,7 @@
 </section>
 <div class="legacySink" hidden><div id="funForm"></div></div>
 </div>
-<div class="tabPane" data-pane="plus"><section class="plusHero"><span class="kicker">CLUBROOM ARCHIVE</span><h3>Club+</h3><p>Dlouhodobá historie mimo limit aktuálních EA zápasů. Čím déle klub sledujeme, tím víc toho víme. Lidstvo konečně našlo důvod pro databázi.</p><div id="historyStats" class="metricGrid"></div><div id="dbState" class="dbState">DB</div></section><section class="panel"><div class="panelHead"><h3>Club+ Features</h3></div><div class="featureGrid"><article><b>Full History</b><p>Trvalý archiv zachycených zápasů.</p></article><article><b>Sessions</b><p>Večery seskupené do herních sessions.</p></article><article><b>Advanced Season</b><p>2nd assists, passing, tackles, shots a další eventy.</p></article><article><b>Records</b><p>Klubové a hráčské historické rekordy.</p></article></div></section></div>
-<section class="panel debug"><details><summary>EA diagnostika</summary><div id="status"></div></details></section>
+<div class="tabPane" data-pane="plus"><section class="plusHero"><span class="kicker">CLUBROOM ARCHIVE</span><h3>Club+</h3><p>Long-term history beyond EA's limited recent window. The longer the club is tracked, the richer the archive becomes.</p><div id="historyStats" class="metricGrid"></div><div id="dbState" class="dbState">DB</div></section><section class="panel"><div class="panelHead"><h3>Club+ Features</h3></div><div class="featureGrid"><article><b>Full History</b><p>Permanent archive of captured matches.</p></article><article><b>Sessions</b><p>Evenings grouped into play sessions.</p></article><article><b>Advanced Season</b><p>Second assists, passing, tackles, shots and more event-level data.</p></article><article><b>Records</b><p>Club and player records across the archive.</p></article></div></section></div>
 </section></main>
 <section id="playerView" class="overlay" hidden><button class="close" data-close="playerView">×</button><div id="playerContent"></div></section>
-<footer>CLUBROOM FC27 · v30</footer><script src="/app.js"></script></body></html>
+<footer>CLUBROOM FC27 · v31</footer><script src="/app.js"></script></body></html>

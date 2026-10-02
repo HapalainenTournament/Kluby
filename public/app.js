@@ -379,7 +379,7 @@ function goalRowsForLive(m,ps){
  return '<div class="inlineEmpty">EA neposlalo střelce ani časovou osu gólů.</div>';
 }
 function teamVal(raw,names,players,key){const direct=P(raw,names,null);if(direct!=null&&direct!=="")return direct;return players.reduce((s,p)=>s+N(p[key]),0)||"—"}
-function liveMatchDetail(i){
+liveMatchDetail = function(i){
  const m=S.matches[i],ps=m.players.map(matchPlayer),r=m.oursRaw||{},o=m.oppRaw||{};
  const all=m.raw?flattenPlayers(m.raw.players||m.raw.playerStats||m.raw.members||[]).map(matchPlayer):[];
  const oppPs=all.filter(p=>!ps.some(x=>x.id&&x.id===p.id));
@@ -399,7 +399,7 @@ function showMatch(i){
  document.querySelectorAll(".matchInlineDetail").forEach(x=>x.remove());document.querySelectorAll(".match.open").forEach(x=>x.classList.remove("open"));
  row.classList.add("open");row.insertAdjacentHTML("afterend",`<div class="matchInlineDetail">${liveMatchDetail(i)}</div>`);
 }
-function archiveDetail(matchId){
+archiveDetail = function(matchId){
  const m=(S.history?.matches||[]).find(x=>String(x.match_id)===String(matchId)); if(!m)return '<div class="inlineEmpty">Archivní zápas nenalezen.</div>';
  const ps=(S.history?.playerMatches||[]).filter(x=>String(x.match_id)===String(matchId));
  const goals=ps.filter(x=>N(x.goals)>0).map(x=>`<div class="goalEvent"><span>⚽</span><b>${escapeHtml(x.player_name)}</b><em>${N(x.goals)>1?N(x.goals)+" góly":"1 gól"} · archiv nemá minutu</em></div>`).join("")||'<div class="inlineEmpty">Bez uložené časové osy gólů.</div>';
@@ -536,7 +536,7 @@ function v30Rankings(h){
  ];
  return defs.map(d=>({...d,ranked:ps.map(p=>({p,score:d.score(p)})).sort((a,b)=>b.score-a.score)}));
 }
-function v30RankingCard(def,compact=false){
+v30RankingCard = function(def,compact=false){
  const top=def.ranked[0];if(!top)return '<div class="msg">Zatím bez dat.</div>';
  if(compact)return `<article class="featuredRankCard" style="--tone:${def.tone}"><div class="frBody"><small>FUN RANKING</small><h4>${def.icon} ${def.title}</h4><p>${def.sub}</p></div><div class="frWinner"><i>${def.icon}</i><div><b>${funName(top.p)}</b><span>${escapeHtml(def.detail(top.p))}</span></div><strong>${Math.round(top.score)}</strong></div></article>`;
  return `<article class="rankingHero30" style="--rank:${def.tone}"><div class="rankingHeroHead"><span>${def.icon}</span><h3>${def.title}</h3><p>${def.sub}</p></div><div class="rankingWinner30"><i>${def.icon}</i><div><small>${def.tag}</small><b>${funName(top.p)}</b><span>${escapeHtml(def.detail(top.p))}</span></div><strong>${Math.round(top.score)}</strong></div><div class="rankingList30">${def.ranked.slice(1,6).map((x,i)=>`<div><em>${i+2}</em><b>${funName(x.p)}</b><span><i style="width:${Math.max(3,Math.min(100,x.score))}%"></i></span><strong>${Math.round(x.score)}</strong></div>`).join('')}</div><div class="rankingDisclaimer">Fun index odvozený jen z dostupných statistik Clubroomu. Není to objektivní hodnocení člověka, což je dobře, protože software už lidem hodnotí dost věcí.</div></article>`;
@@ -549,7 +549,7 @@ function v30DuoLabel(x){
  return ['BALANCED DUO','#4b6f91'];
 }
 function v30DuoScore(x){const m=Math.max(1,N(x.matches)),wr=N(x.wins)/m*100,cpm=N(x.contributions)/m;return Math.max(0,Math.min(99,Math.round(wr*.55+Math.min(25,m*1.2)+Math.min(20,cpm*5))))}
-function v30RenderDuos(a){
+v30RenderDuos = function(a){
  const chem=(a?.chemistry||[]).slice().sort((x,y)=>v30DuoScore(y)-v30DuoScore(x));
  const html=chem.length?chem.map(x=>{const [label,tone]=v30DuoLabel(x),m=Math.max(1,N(x.matches)),wr=N(x.wins)/m*100,score=v30DuoScore(x);return `<article class="duoCard" style="--duo:${tone}"><div class="duoTop"><span class="duoLabel">${label}</span><div class="duoNames"><b>${escapeHtml(x.a_name)}</b><i>×</i><b>${escapeHtml(x.b_name)}</b></div></div><div class="duoStats"><div><b>${score}</b><span>Duo Score</span></div><div><b>${x.matches}</b><span>Matches</span></div><div><b>${wr.toFixed(0)}%</b><span>Win Rate</span></div><div><b>${x.contributions}</b><span>Combined G+A</span></div></div><div class="duoMeta">${N(x.a_goals)}G + ${N(x.a_assists)}A · ${escapeHtml(x.a_name)} &nbsp; | &nbsp; ${N(x.b_goals)}G + ${N(x.b_assists)}A · ${escapeHtml(x.b_name)}</div></article>`}).join(''):'<div class="msg">Duo Cards potřebují aspoň dva společné archivované zápasy.</div>';
  const all=$('#goalPartners');if(all)all.innerHTML=html;
@@ -573,3 +573,90 @@ function v30RenderFun(h,a){
  v30RenderDuos(a);v30FeaturedSuperlatives();
 }
 const _renderFunV30=renderFun;renderFun=function(h,a){_renderFunV30(h,a);v30RenderFun(h,a)};
+
+
+/* v31 overrides: English UI + cleaner Fun cards + redesigned Matches */
+function v31CrestByName(name){const initials=(String(name||'').match(/[A-Z0-9]/ig)||['?']).slice(0,2).join('').toUpperCase();return `<span>${initials}</span>`}
+function v31OppCrestHtml(name){const n=String(name||'').toLowerCase();let src='';if(n.includes('paris')||n.includes('psg'))src='https://upload.wikimedia.org/wikipedia/en/a/a7/Paris_Saint-Germain_F.C..svg';else if(n.includes('werder')||n.includes('schöndorf')||n.includes('schondorf'))src='https://upload.wikimedia.org/wikipedia/en/b/be/SV-Werder-Bremen-Logo.svg';return src?`<img src="${src}" alt="">`:v31CrestByName(name)}
+function v31LiveContributors(m){
+  const ps=(m.players||[]).map(matchPlayer).filter(Boolean); const out=[];
+  ps.filter(p=>N(p.goals)>0).forEach(p=>out.push({label:`${escapeHtml(p.name)} ${N(p.goals)>1?`· ${N(p.goals)}G`:'· scorer'}`,score:N(p.goals)*3+N(p.assists)}));
+  ps.filter(p=>N(p.assists)>0).forEach(p=>out.push({label:`${escapeHtml(p.name)} ${N(p.assists)>1?`· ${N(p.assists)}A`:'· assist'}`,score:N(p.assists)*2}));
+  if(!out.length){const best=ps.slice().sort((a,b)=>N(b.rating)-N(a.rating))[0];if(best&&N(best.rating))out.push({label:`${escapeHtml(best.name)} · ${N(best.rating).toFixed(1)} rating`,score:N(best.rating)});}
+  return out.slice(0,3);
+}
+function v31ArchiveContributors(matchId){
+  const rows=(S.history?.playerMatches||[]).filter(x=>String(x.match_id)===String(matchId));
+  const out=[]; rows.filter(x=>N(x.goals)>0).sort((a,b)=>N(b.goals)-N(a.goals)).slice(0,2).forEach(x=>out.push(`${escapeHtml(x.player_name)} · ${N(x.goals)}G`));
+  if(!out.length){const best=rows.slice().sort((a,b)=>N(b.rating)-N(a.rating))[0]; if(best&&N(best.rating)) out.push(`${escapeHtml(best.player_name)} · ${N(best.rating).toFixed(1)} rating`)}
+  return out;
+}
+function v31MatchCardHtml(m,i,opts={}){
+  const isArchive=!!opts.archive; const crestMine=v31CrestByName(S.club?.name||m.ours||'CL'); const crestOpp=isArchive?v31OppCrestHtml(opts.opponent||m.opp):v31OppCrestHtml(m.opp);
+  const dateTxt=isArchive?(opts.played_at?new Date(opts.played_at).toLocaleDateString('en-GB',{day:'2-digit',month:'short'}):'—'):(m.date?m.date.toLocaleDateString('en-GB',{day:'2-digit',month:'short'}):'—');
+  const rel=isArchive?'Archive':(m.type||'Match');
+  const badgeClass=(isArchive?opts.result:m.result||'D').toLowerCase();
+  const scoreLeft=isArchive?N(opts.goals):m.og, scoreRight=isArchive?N(opts.opponent_goals):m.tg;
+  const opponent=isArchive?(opts.opponent||'Opponent'):(m.opp||'Opponent');
+  const ourContrib=isArchive?v31ArchiveContributors(opts.match_id):v31LiveContributors(m);
+  return `<article class="match matchCard31 ${isArchive?'archive':''}" ${isArchive?`data-am="${opts.match_id}"`:`data-m="${i}"`}>
+    <div class="matchHead31">
+      <div class="meta31"><span>${dateTxt}</span><span class="tag31">${escapeHtml(String(rel).replace(/^./,s=>s.toUpperCase()))}</span></div>
+      <span class="status31 ${badgeClass}">${isArchive?opts.result:m.result}</span>
+    </div>
+    <div class="teams31">
+      <div class="team31">
+        <div class="clubLine31"><div class="crest31">${crestMine}</div><div class="clubText31"><b>${escapeHtml(S.club?.name||m.ours||'Our Club')}</b><small>${isArchive?'Clubroom archive':'EA live window'}</small></div></div>
+      </div>
+      <div class="scoreBox31"><div class="score31">${scoreLeft} <span style="opacity:.45">–</span> ${scoreRight}</div><small>Tap for details</small></div>
+      <div class="team31 right">
+        <div class="clubLine31"><div class="clubText31"><b>${escapeHtml(opponent)}</b><small>${isArchive?'archived opponent':'opponent'}</small></div><div class="crest31">${crestOpp}</div></div>
+      </div>
+    </div>
+    <div class="contributors31">${ourContrib.length?ourContrib.map(x=>`<span><b>★</b>${typeof x==='string'?x:x.label}</span>`).join(''):'<span><b>★</b>No scorer / rating data available</span>'}</div>
+    <div class="expandHint31">Open match details, team stats and player stats</div>
+  </article>`
+}
+function v31RenderMatchesPanel(){
+  const host=document.querySelector('#matchList'); if(!host) return;
+  const live=S.matches||[]; const archive=S.history?.matches||[];
+  const liveIds=new Set(live.map(m=>String(P(m.raw,['matchId','matchid','id'],''))));
+  const archOnly=archive.filter(x=>!liveIds.has(String(x.match_id))).slice(0,200);
+  host.innerHTML=`<section class="panel matchesPanel31"><div class="panelHead"><h3>Matches</h3><span>EA live + Clubroom archive</span></div>
+    <div class="matchesToolbar31"><div class="matchesMeta31">Readable match cards with quick drill-down instead of one flat table.</div><div class="matchesFilters31"><button class="active" data-match-filter="all">All</button><button data-match-filter="live">Live</button><button data-match-filter="archive">Archive</button></div></div>
+    <div data-match-section="live" class="archiveShell31"><div class="matchesSectionLabel31">EA live window · ${live.length} matches</div><div class="matchesGrid31">${live.length?live.map((m,i)=>v31MatchCardHtml(m,i)).join(''):'<div class="msg">No live matches available from EA.</div>'}</div></div>
+    <div data-match-section="archive" class="archiveShell31"><div class="matchesSectionLabel31">Clubroom archive · ${archOnly.length} older matches</div><div class="matchesGrid31">${archOnly.length?archOnly.map((m)=>v31MatchCardHtml(null,null,{archive:true,...m})).join(''):'<div class="msg">No older archived matches yet.</div>'}</div></div>
+  </section>`;
+  document.querySelectorAll('[data-match-filter]').forEach(btn=>btn.onclick=()=>{document.querySelectorAll('[data-match-filter]').forEach(x=>x.classList.toggle('active',x===btn)); const f=btn.dataset.matchFilter; document.querySelectorAll('[data-match-section]').forEach(sec=>sec.style.display=(f==='all'||sec.dataset.matchSection===f)?'block':'none');});
+}
+const __renderV31=render; render=function(id,d,searchClub=null){ __renderV31(id,d,searchClub); v31RenderMatchesPanel(); v31TranslateUI(); }
+renderArchiveMatches=function(matches){ v31RenderMatchesPanel(); };
+liveMatchDetail = function(i){
+ const m=S.matches[i],ps=(m.players||[]).map(matchPlayer),r=m.oursRaw||{},o=m.oppRaw||{};
+ const all=m.raw?flattenPlayers(m.raw.players||m.raw.playerStats||m.raw.members||[]).map(matchPlayer):[];
+ const oppPs=all.filter(p=>!ps.some(x=>x.id&&x.id===p.id));
+ const rows=[['Goals',m.og,m.tg],['Shots',teamVal(r,['shots','shotsTaken'],ps,'shots'),teamVal(o,['shots','shotsTaken'],oppPs,'shots')],['Passes',teamVal(r,['passes','passesMade'],ps,'passes'),teamVal(o,['passes','passesMade'],oppPs,'passes')],['Pass %',P(r,['passAccuracy','passPct','passPercentage'],ps.reduce((s,p)=>s+p.passAttempts,0)?pct(ps.reduce((s,p)=>s+p.passes,0)/ps.reduce((s,p)=>s+p.passAttempts,0)*100):'—'),P(o,['passAccuracy','passPct','passPercentage'],'—')],['Tackles',teamVal(r,['tackles','tacklesMade'],ps,'tackles'),teamVal(o,['tackles','tacklesMade'],oppPs,'tackles')],['Saves',teamVal(r,['saves'],ps,'saves'),teamVal(o,['saves'],oppPs,'saves')]];
+ return `<div class="inlineMatchInner"><div class="inlineTabs"><b>Match stats</b><span>Player stats</span><span>Goals</span><span>Formations</span></div><div class="matchDetailGrid"><div><h4>Team stats</h4>${rows.map(([k,a,b])=>`<div class="teamStat"><strong>${a}</strong><span>${k}</span><strong>${b}</strong></div>`).join('')}</div><div><h4>Goal events</h4><div class="goalTimeline">${goalRowsForLive(m,ps)}</div><h4 style="margin-top:16px">Formations</h4><div class="formationLine"><span>${escapeHtml(m.ours)}</span><b>${P(r,['formation','formationId'],'—')}</b><span>${escapeHtml(m.opp)}</span><b>${P(o,['formation','formationId'],'—')}</b></div></div></div><h4>Player stats</h4>${ps.length?matchStatsTable(ps):'<div class="inlineEmpty">EA did not return player stats for this match.</div>'}</div>`
+}
+archiveDetail = function(matchId){
+ const m=(S.history?.matches||[]).find(x=>String(x.match_id)===String(matchId)); if(!m) return '<div class="inlineEmpty">Archived match not found.</div>';
+ const ps=(S.history?.playerMatches||[]).filter(x=>String(x.match_id)===String(matchId));
+ const goals=ps.filter(x=>N(x.goals)>0).map(x=>`<div class="goalEvent"><span>⚽</span><b>${escapeHtml(x.player_name)}</b><em>${N(x.goals)>1?N(x.goals)+' goals':'1 goal'} · no minute stored</em></div>`).join('')||'<div class="inlineEmpty">No goal timeline stored for this archived match.</div>';
+ return `<div class="inlineMatchInner"><div class="inlineTabs"><b>Archive match</b><span>Player stats</span><span>Goals</span></div><div class="matchDetailGrid"><div><h4>Match</h4><div class="teamStat"><strong>${N(m.goals)}</strong><span>Goals</span><strong>${N(m.opponent_goals)}</strong></div><div class="teamStat"><strong>${escapeHtml(S.club.name)}</strong><span>vs</span><strong>${escapeHtml(m.opponent||'Opponent')}</strong></div><div class="teamStat"><strong>${escapeHtml(String(m.result||'—'))}</strong><span>Result</span><strong>${m.played_at?new Date(m.played_at).toLocaleString('en-GB'):'—'}</strong></div></div><div><h4>Goals</h4><div class="goalTimeline">${goals}</div></div></div><h4>Player stats</h4>${ps.length?`<div class="table"><table><thead><tr><th>Player</th><th>Rating</th><th>G</th><th>A</th><th>2A</th><th>Shots</th><th>Passes</th><th>Pass%</th><th>Tackles</th><th>Int.</th></tr></thead><tbody>${ps.map(x=>`<tr><td>${escapeHtml(x.player_name)}</td><td>${N(x.rating)?N(x.rating).toFixed(1):'—'}</td><td>${N(x.goals)}</td><td>${N(x.assists)}</td><td>${N(x.second_assists)}</td><td>${N(x.shots)}</td><td>${N(x.passes_made)}</td><td>${N(x.pass_attempts)?(N(x.passes_made)/N(x.pass_attempts)*100).toFixed(0)+'%':'—'}</td><td>${N(x.tackles_made)}</td><td>${N(x.interceptions)}</td></tr>`).join('')}</tbody></table></div>`:'<div class="inlineEmpty">No player stats stored for this archived match.</div>'}</div>`
+}
+v30RankingCard = function(def,compact=false){
+ const top=def.ranked[0]; if(!top) return '<div class="msg">No data yet.</div>';
+ if(compact)return `<article class="featuredRankCard" style="--tone:${def.tone}"><div class="frBody"><small>FUN RANKING</small><h4>${def.icon} ${def.title}</h4><p>${def.sub}</p></div><div class="frWinner"><i>${def.icon}</i><div><b>${funName(top.p)}</b><span>${escapeHtml(def.detail(top.p))}</span></div><strong>${Math.round(top.score)}</strong></div></article>`;
+ return `<article class="rankingHero30" style="--rank:${def.tone}"><div class="rankingHeroHead"><span>${def.icon}</span><h3>${def.title}</h3><p>${def.sub}</p></div><div class="rankingWinner30"><i>${def.icon}</i><div><small>${def.tag}</small><b>${funName(top.p)}</b><span>${escapeHtml(def.detail(top.p))}</span></div><strong>${Math.round(top.score)}</strong></div><div class="rankingList30">${def.ranked.slice(1,6).map((x,i)=>`<div><em>${i+2}</em><b>${funName(x.p)}</b><span><i style="width:${Math.max(3,Math.min(100,x.score))}%"></i></span><strong>${Math.round(x.score)}</strong></div>`).join('')}</div><div class="rankingDisclaimer">Fun rating only — built from available Clubroom stats, not an objective judgement of a human being.</div></article>`
+}
+v30RenderDuos = function(a){
+ const chem=(a?.chemistry||[]).slice().sort((x,y)=>v30DuoScore(y)-v30DuoScore(x));
+ const html=chem.length?chem.map(x=>{const [label,tone]=v30DuoLabel(x),m=Math.max(1,N(x.matches)),wr=N(x.wins)/m*100,score=v30DuoScore(x);return `<article class="duoCard" style="--duo:${tone}"><div class="duoTop"><span class="duoLabel">${label}</span><div class="duoNames"><b>${escapeHtml(x.a_name)}</b><i>×</i><b>${escapeHtml(x.b_name)}</b></div></div><div class="duoStats"><div><b>${score}</b><span>Duo Score</span></div><div><b>${x.matches}</b><span>Matches</span></div><div><b>${wr.toFixed(0)}%</b><span>Win Rate</span></div><div><b>${x.contributions}</b><span>Combined G+A</span></div></div><div class="duoMeta"><strong>${escapeHtml(x.a_name)}</strong> · ${N(x.a_goals)}G + ${N(x.a_assists)}A &nbsp; | &nbsp; <strong>${escapeHtml(x.b_name)}</strong> · ${N(x.b_goals)}G + ${N(x.b_assists)}A</div></article>`}).join(''):'<div class="msg">Duo Cards need at least two shared archived matches.</div>';
+ const all=$('#goalPartners');if(all)all.innerHTML=html; const feat=$('#featuredDuos');if(feat)feat.innerHTML=html;
+}
+function v31TranslateUI(){
+ const p=document.querySelector('.analyticsHero p'); if(p) p.textContent='Form, match-by-match trends, player development and passing insights from the Clubroom archive.';
+ document.querySelectorAll('.funSectionHeader small').forEach(el=>{ if(el.textContent.includes('výpočty')) el.textContent='calculated from the Clubroom archive'; if(el.textContent.includes('společné')) el.textContent='shared matches in the archive'; });
+ const searchFound=document.querySelector('.searchFound'); if(searchFound){ searchFound.textContent=searchFound.textContent.replace('Nalezeno','Found').replace('pro','for').replace('klubů','clubs').replace('klub','club'); }
+ const db=document.querySelector('#dbState'); if(db){ if(db.textContent==='DATABASE ON') db.textContent='DATABASE ON'; if(db.textContent==='LIVE ONLY') db.textContent='LIVE ONLY'; }
+}

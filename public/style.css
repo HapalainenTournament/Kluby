@@ -98,3 +98,75 @@ body{background:radial-gradient(circle at 50% -20%,#102b45 0,transparent 35%),va
 .funSubPane[data-fun-pane="extras"]>.panel{margin-bottom:14px}
 @media(max-width:1000px){.featuredRankings,.duoGrid{grid-template-columns:1fr 1fr}.featuredSuperlatives{grid-template-columns:repeat(3,1fr)}}
 @media(max-width:720px){.funSubnav{top:58px}.featuredRankings,.duoGrid{grid-template-columns:1fr}.featuredSuperlatives{grid-template-columns:1fr 1fr}.rankingHeroHead h3{font-size:27px}.duoStats{grid-template-columns:1fr 1fr}.duoStats div:nth-child(2){border-right:0}.duoStats div:nth-child(-n+2){border-bottom:1px solid #25364b}.funSectionHeader{align-items:flex-start;flex-direction:column}.featuredRankCard{min-height:190px}}
+
+
+/* v31 overrides: cleaner Fun cards + redesigned Matches */
+.debug{display:none!important}
+.funHero30,.funSubnav,.funSubPane,.panel,.clubHero{box-shadow:none}
+.funSubPane{padding-bottom:4px}
+.featuredRankings{grid-template-columns:repeat(3,minmax(0,1fr));gap:18px}
+.featuredRankCard{min-height:240px;border-radius:20px;border:1px solid #30465f;background:linear-gradient(180deg,#121d2e 0%,#0d1724 100%);overflow:hidden}
+.featuredRankCard:before{background:radial-gradient(circle at 14% 10%,color-mix(in srgb,var(--tone,#4e8cff) 26%,transparent) 0,transparent 42%),linear-gradient(180deg,#162336 0%,#0d1724 100%)}
+.featuredRankCard .frBody{padding:22px 22px 16px}
+.featuredRankCard h4{font-size:22px;line-height:1.1;margin:8px 0 8px}
+.featuredRankCard p{font-size:14px;line-height:1.45;color:#a9bad0;max-width:34ch}
+.featuredRankCard .frWinner{grid-template-columns:40px 1fr auto;padding:16px 18px;background:#0b1420;border-top:1px solid #23354b}
+.featuredRankCard .frWinner strong{font-size:34px;line-height:1;font-weight:900;color:#fff}
+.featuredRankCard .frWinner span{font-size:12px;color:#8da2bd}
+
+.duoGrid{grid-template-columns:repeat(3,minmax(0,1fr));gap:18px}
+.duoGrid.compact .duoCard:nth-child(n+4){display:none}
+.duoCard{border:1px solid #314a65;border-radius:20px;background:linear-gradient(180deg,#111b2a 0%,#0c1420 100%);position:relative;overflow:hidden}
+.duoCard:before{content:"";position:absolute;inset:auto 0 0 0;height:4px;background:var(--duo,#4e89ff)}
+.duoCard .duoTop{padding:20px 20px 12px;background:none;position:relative}
+.duoCard .duoTop:after{content:"";position:absolute;inset:0 0 auto 0;height:96px;background:linear-gradient(135deg,color-mix(in srgb,var(--duo,#4e89ff) 20%,transparent),transparent 70%);pointer-events:none}
+.duoCard .duoLabel{position:relative;background:rgba(255,255,255,.02);border-color:color-mix(in srgb,var(--duo,#4e89ff) 65%,#fff 10%);color:#edf5ff}
+.duoCard .duoNames{position:relative;justify-content:flex-start;font-size:28px;line-height:1.1;margin:18px 0 4px;text-align:left;gap:10px;flex-wrap:wrap}
+.duoCard .duoNames i{opacity:.55}
+.duoCard .duoStats{grid-template-columns:repeat(4,1fr);margin:0 20px 16px;border:1px solid #23384e;border-radius:14px;overflow:hidden;background:#0c1521}
+.duoCard .duoStats div{padding:14px 10px;border-right:1px solid #23384e}
+.duoCard .duoStats b{font-size:28px;line-height:1;color:#fff}
+.duoCard .duoStats span{font-size:11px;margin-top:6px;color:#8ea4c0}
+.duoCard .duoMeta{padding:0 20px 22px;border:0;color:#a9bdd8;font-size:13px;line-height:1.5}
+
+.matchesPanel31 .panelHead{padding-bottom:10px}
+.matchesToolbar31{display:flex;justify-content:space-between;align-items:center;gap:12px;padding:0 22px 18px;flex-wrap:wrap}
+.matchesMeta31{color:#8ea4bf;font-size:13px}
+.matchesFilters31{display:flex;gap:8px;flex-wrap:wrap}
+.matchesFilters31 button{border:1px solid #2d425b;background:#101b2a;color:#c9d8ea;border-radius:999px;padding:9px 14px;font-weight:800;cursor:pointer}
+.matchesFilters31 button.active{background:#173a2d;border-color:#2bc58f;color:#bffff0}
+.matchesSectionLabel31{padding:4px 22px 12px;color:#8ea4c0;font-size:12px;font-weight:900;letter-spacing:.12em;text-transform:uppercase}
+.matchesGrid31{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:16px;padding:0 22px 22px}
+.matchCard31{border:1px solid #2b4058;background:linear-gradient(180deg,#152236 0%,#121e30 100%);border-radius:18px;padding:18px;display:grid;gap:14px;cursor:pointer;transition:border-color .16s,transform .16s,background .16s}
+.matchCard31:hover{transform:translateY(-1px);border-color:#436280;background:linear-gradient(180deg,#17263c 0%,#132134 100%)}
+.matchCard31.open{border-color:#58e0ad}
+.matchCard31 .matchHead31{display:flex;justify-content:space-between;align-items:center;gap:12px}
+.matchCard31 .meta31{display:flex;align-items:center;gap:8px;flex-wrap:wrap;color:#9eb2cd;font-size:13px}
+.matchCard31 .tag31{border-radius:999px;padding:5px 9px;background:#212f43;color:#cfe0f5;font-size:11px;font-weight:800;border:1px solid #31465e}
+.matchCard31 .status31{border-radius:999px;padding:6px 11px;font-size:11px;font-weight:900;text-transform:uppercase}
+.matchCard31 .status31.w{background:#123d2a;color:#66f2b0;border:1px solid #1d714e}.matchCard31 .status31.d{background:#4b3506;color:#ffd56c;border:1px solid #836111}.matchCard31 .status31.l{background:#43151b;color:#ff8491;border:1px solid #7d2733}
+.matchCard31 .teams31{display:grid;grid-template-columns:1fr auto 1fr;gap:14px;align-items:center}
+.matchCard31 .team31{display:grid;gap:6px;min-width:0}
+.matchCard31 .team31.right{text-align:right}
+.matchCard31 .clubLine31{display:flex;align-items:center;gap:12px;min-width:0}.matchCard31 .team31.right .clubLine31{justify-content:flex-end}
+.matchCard31 .crest31{width:54px;height:54px;border-radius:14px;background:#0c1726;border:1px solid #2f445c;display:grid;place-items:center;font-weight:900;color:#a7bbd6;overflow:hidden;flex:0 0 54px}
+.matchCard31 .crest31 img{width:100%;height:100%;object-fit:contain;padding:6px}
+.matchCard31 .clubText31{min-width:0}.matchCard31 .clubText31 b{display:block;font-size:15px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}.matchCard31 .clubText31 small{display:block;color:#90a6c0;font-size:12px}
+.matchCard31 .scoreBox31{display:grid;place-items:center;min-width:120px}.matchCard31 .score31{font-size:38px;line-height:1;font-weight:950;letter-spacing:-.03em}.matchCard31 .scoreBox31 small{color:#8ca1bd;margin-top:4px}
+.matchCard31 .contributors31{display:flex;gap:10px;flex-wrap:wrap;padding-top:2px;color:#9eb4cf;font-size:12px}
+.matchCard31 .contributors31 b{color:#fff;font-size:12px}
+.matchCard31 .contributors31 span{display:inline-flex;align-items:center;gap:6px;padding:6px 10px;border-radius:999px;background:#0d1725;border:1px solid #25374b}
+.matchCard31 .expandHint31{color:#7e93ad;font-size:12px;padding-top:2px}
+.matchInlineDetail{margin:-6px 22px 18px;background:#0f1825;border:1px solid #263a52;border-radius:0 0 18px 18px;border-top:0;overflow:hidden}
+.inlineMatchInner{padding:18px}
+.inlineTabs{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:14px}.inlineTabs b,.inlineTabs span{border-radius:999px;padding:7px 10px;background:#18263a;border:1px solid #2b4058;color:#d8e5f4;font-size:12px}.inlineTabs b{background:#173a2d;border-color:#2ac58f;color:#c9ffeb}
+.matchDetailGrid{display:grid;grid-template-columns:1.2fr .8fr;gap:18px;margin-bottom:16px}
+.matchDetailGrid h4,.inlineMatchInner h4{margin:0 0 10px;font-size:13px;letter-spacing:.09em;text-transform:uppercase;color:#9cb0ca}
+.teamStat{display:grid;grid-template-columns:72px 1fr 72px;gap:10px;align-items:center;padding:11px 12px;border-radius:12px;background:#132031;border:1px solid #22384f;margin-bottom:8px}.teamStat strong:last-child{text-align:right}.teamStat span{text-align:center;color:#8ca1bc;font-size:12px}
+.goalTimeline{display:grid;gap:8px}.goalEvent{display:flex;align-items:center;gap:10px;padding:10px 12px;border-radius:12px;background:#132031;border:1px solid #22384f}.goalEvent em{margin-left:auto;font-style:normal;color:#8ea3bd;font-size:12px}
+.formationLine{display:grid;grid-template-columns:1fr auto 1fr auto;gap:10px;align-items:center;padding:10px 12px;border-radius:12px;background:#132031;border:1px solid #22384f}.formationLine span:nth-child(3){text-align:right}
+.inlineEmpty{padding:16px;border:1px dashed #31465e;border-radius:12px;color:#8ea4c0;background:#0f1825}
+.archiveShell31{padding-bottom:22px}
+.archiveShell31 .matchesSectionLabel31{padding-top:8px}
+@media (max-width:1100px){.matchesGrid31,.featuredRankings,.duoGrid{grid-template-columns:1fr}.matchDetailGrid{grid-template-columns:1fr}.matchCard31 .teams31{grid-template-columns:1fr}.matchCard31 .scoreBox31{order:-1;justify-self:start}.matchCard31 .team31.right{text-align:left}.matchCard31 .team31.right .clubLine31{justify-content:flex-start}.formationLine{grid-template-columns:1fr auto}.formationLine span:nth-child(3){text-align:left}}
+@media (max-width:720px){.matchesToolbar31{padding:0 16px 16px}.matchesGrid31{padding:0 16px 18px}.matchInlineDetail{margin: -6px 16px 16px}.duoCard .duoNames{font-size:22px}.featuredRankCard{min-height:210px}}
