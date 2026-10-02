@@ -50,6 +50,18 @@ app.get("/api/search", async (req,res)=>{
   } catch(e) { res.status(502).json({error:"EA search selhal.",detail:e.message}); }
 });
 
+app.get("/api/club-card/:id", async (req,res)=>{
+  try{
+    const id=String(req.params.id||"").replace(/[^\d]/g,"");
+    if(!id)return res.status(400).json({error:"Neplatné club ID."});
+    const platform=validPlatform(req.query.platform);
+    const [infoR,statsR]=await Promise.allSettled([ea("/clubs/info",{platform,clubIds:id},4500),ea("/clubs/overallStats",{platform,clubIds:id},4500)]);
+    const info=infoR.status==="fulfilled"?((infoR.value&&infoR.value[id])||Object.values(infoR.value||{})[0]||{}):{};
+    const stats=statsR.status==="fulfilled"?((statsR.value&&statsR.value[id])||Object.values(statsR.value||{})[0]||statsR.value||{}):{};
+    res.json({...stats,...info,clubId:id});
+  }catch(e){res.status(502).json({error:"EA club card selhal.",detail:e.message})}
+});
+
 const clubCache = new Map();
 const refreshes = new Map();
 function tagMatches(x,t){return Array.isArray(x)?x.map(m=>({...m,_matchType:t})):[]}
