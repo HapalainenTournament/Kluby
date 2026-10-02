@@ -170,3 +170,163 @@ body{background:radial-gradient(circle at 50% -20%,#102b45 0,transparent 35%),va
 .archiveShell31 .matchesSectionLabel31{padding-top:8px}
 @media (max-width:1100px){.matchesGrid31,.featuredRankings,.duoGrid{grid-template-columns:1fr}.matchDetailGrid{grid-template-columns:1fr}.matchCard31 .teams31{grid-template-columns:1fr}.matchCard31 .scoreBox31{order:-1;justify-self:start}.matchCard31 .team31.right{text-align:left}.matchCard31 .team31.right .clubLine31{justify-content:flex-start}.formationLine{grid-template-columns:1fr auto}.formationLine span:nth-child(3){text-align:left}}
 @media (max-width:720px){.matchesToolbar31{padding:0 16px 16px}.matchesGrid31{padding:0 16px 18px}.matchInlineDetail{margin: -6px 16px 16px}.duoCard .duoNames{font-size:22px}.featuredRankCard{min-height:210px}}
+
+/* v33 — restrained editorial card system. No carnival gradients, no giant empty slabs. */
+.funHero30{background:#0e1826;border:1px solid #26394f;padding:22px 24px;margin-bottom:14px}
+.funHero30 h3{font-size:26px;letter-spacing:-.02em;margin:5px 0 4px}
+.funHero30 p{max-width:760px;margin:0;color:#91a4bd;font-size:14px;line-height:1.5}
+.funSubnav{padding:6px;gap:6px;border-radius:12px;background:#0b1420f2;border:1px solid #23354a;margin-bottom:22px}
+.funSubnav button{border-radius:8px;padding:10px 13px;background:transparent;border:1px solid transparent;color:#aebfd4;font-size:13px}
+.funSubnav button:hover{background:#121f30;border-color:#2c4158;color:#fff}
+.funSubnav button.active{background:#17263a;border-color:#36506c;color:#fff;box-shadow:inset 0 -2px #42e0a4}
+.funSectionHeader{margin:0 0 12px;padding:0 2px;display:flex;justify-content:space-between;align-items:end;gap:12px}
+.funSectionHeader>div>span{color:#5ce2b2;font-size:10px;font-weight:900;letter-spacing:.13em}
+.funSectionHeader h3{font-size:21px;margin:4px 0 0;letter-spacing:-.015em}
+.funSectionHeader small{font-size:11px;color:#70849f}
+.funSectionHeader.compact{margin-top:26px}
+
+.featuredRankings{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:12px}
+.featuredRankCard{min-height:0;border-radius:14px;border:1px solid #2b3f55;background:#111c2b;display:grid;grid-template-rows:auto auto;overflow:hidden;box-shadow:none}
+.featuredRankCard:before{display:none}
+.featuredRankCard .frBody{padding:18px 18px 14px;min-height:118px;background:#132033}
+.featuredRankCard .frBody small{font-size:9px;color:#6f87a5;letter-spacing:.14em}
+.featuredRankCard .frBody h4{font-size:20px;margin:7px 0 6px;line-height:1.15}
+.featuredRankCard .frBody p{font-size:12px;line-height:1.42;color:#91a4bd;max-width:none}
+.featuredRankCard .frWinner{background:#0d1724;border-top:1px solid #263a51;padding:13px 15px;display:grid;grid-template-columns:34px 1fr auto;align-items:center;gap:9px}
+.featuredRankCard .frWinner>i{font-size:20px;font-style:normal;width:30px;height:30px;display:grid;place-items:center;border-radius:8px;background:#18263a}
+.featuredRankCard .frWinner b{font-size:14px}
+.featuredRankCard .frWinner span{font-size:10px;color:#788da8;margin-top:2px}
+.featuredRankCard .frWinner strong{font-size:23px;font-variant-numeric:tabular-nums;color:#f4f8ff}
+
+.duoGrid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:12px}
+.duoCard{border:1px solid #2a3e55;border-radius:14px;background:#111b29;overflow:hidden;box-shadow:none;position:relative}
+.duoCard:before{content:"";position:absolute;left:0;top:0;bottom:0;width:3px;background:var(--duo,#4e89ff)}
+.duoCard .duoTop{padding:17px 18px 12px;background:transparent}
+.duoCard .duoTop:after{display:none}
+.duoCard .duoLabel{font-size:9px;padding:4px 8px;border-radius:999px;background:#0d1724;color:#a9bdd6;border:1px solid #30475f;letter-spacing:.06em}
+.duoCard .duoNames{justify-content:flex-start;text-align:left;font-size:18px;line-height:1.25;margin:14px 0 2px;gap:8px;flex-wrap:wrap}
+.duoCard .duoNames i{color:#60738e;font-size:15px}
+.duoCard .duoStats{margin:0;border:0;border-top:1px solid #26394f;border-bottom:1px solid #26394f;border-radius:0;display:grid;grid-template-columns:repeat(4,1fr);background:#0d1724}
+.duoCard .duoStats div{padding:11px 6px;border-right:1px solid #26394f}
+.duoCard .duoStats b{font-size:18px;color:#f4f8ff;font-variant-numeric:tabular-nums}
+.duoCard .duoStats span{font-size:9px;color:#758aa4;margin-top:4px}
+.duoCard .duoMeta{padding:12px 18px 15px;font-size:10px;color:#7f93ad;line-height:1.45;border:0}
+.duoCard .duoMeta strong{color:#b8c8da;font-weight:700}
+
+.featuredSuperlatives{gap:10px}
+.miniReveal{min-height:82px;border:1px solid #2b3e55;background:#111b29;border-radius:12px;color:#fff;padding:13px 14px;display:grid;grid-template-columns:34px 1fr;grid-template-rows:auto auto;text-align:left;column-gap:10px}
+.miniReveal>span{grid-row:1/3;font-size:20px;width:34px;height:34px;border-radius:9px;background:#17263a;display:grid;place-items:center}
+.miniReveal b{font-size:13px}.miniReveal small{font-size:10px;color:#7f93ad}
+
+.rankingSolo{max-width:900px;margin:0 auto}
+.rankingHero30{border:1px solid #2b3f55;border-radius:15px;background:#111b29;overflow:hidden}
+.rankingHeroHead{padding:22px 22px 16px;background:#132033;border-bottom:1px solid #26394f}
+.rankingHeroHead>span{font-size:23px}.rankingHeroHead h3{font-size:26px;margin:8px 0 4px}.rankingHeroHead p{margin:0;color:#91a5be}
+.rankingWinner30{margin:16px 16px 8px;padding:14px;border:1px solid #31465e;border-radius:12px;background:#0d1724;display:grid;grid-template-columns:38px 1fr auto;gap:10px;align-items:center}
+.rankingWinner30>i{font-style:normal;font-size:22px}.rankingWinner30 small{display:block;color:#7187a4;font-size:9px;letter-spacing:.1em}.rankingWinner30 b{display:block;font-size:16px}.rankingWinner30 span{color:#869ab4;font-size:11px}.rankingWinner30>strong{font-size:28px}
+.rankingList30{padding:6px 16px 12px}.rankingList30>div{display:grid;grid-template-columns:24px 150px 1fr 38px;gap:10px;align-items:center;padding:10px 0;border-top:1px solid #22344a}.rankingList30 em{font-style:normal;color:#6f83a0}.rankingList30 span{height:5px;background:#223248;border-radius:5px;overflow:hidden}.rankingList30 span i{display:block;height:100%;background:#5f84b3}.rankingDisclaimer{padding:0 16px 16px;color:#667b96;font-size:10px}
+
+/* cleaner match cards */
+.matchesPanel31{border:0;background:transparent;overflow:visible;margin:0}
+.matchesPanel31>.panelHead{padding:0 2px 14px}.matchesPanel31>.panelHead h3{font-size:23px}.matchesPanel31>.panelHead span{font-size:11px;color:#6f84a0}
+.matchesToolbar31{padding:0 0 14px;border-bottom:1px solid #22344a;margin-bottom:14px}.matchesMeta31{display:none}
+.matchesFilters31 button{padding:7px 11px;border-radius:8px;font-size:12px;background:#111c2a;border-color:#2a3e55}.matchesFilters31 button.active{background:#183126;border-color:#2b7c5b;color:#bfffe8}
+.matchesSectionLabel31{padding:2px 2px 10px;color:#6e83a0;font-size:10px}
+.matchesGrid31{padding:0;grid-template-columns:1fr;gap:9px}
+.matchCard31{border-radius:13px;padding:14px 16px;background:#111c2a;border:1px solid #293d54;gap:10px;box-shadow:none}
+.matchCard31:hover{transform:none;border-color:#42607f;background:#132033}
+.matchCard31 .matchHead31{min-height:24px}.matchCard31 .meta31{font-size:11px}.matchCard31 .tag31{padding:4px 7px;font-size:9px;border-radius:6px}
+.matchCard31 .status31{padding:4px 8px;font-size:9px}
+.matchCard31 .teams31{grid-template-columns:minmax(0,1fr) 112px minmax(0,1fr);gap:10px}
+.matchCard31 .crest31{width:42px;height:42px;flex-basis:42px;border-radius:10px}
+.matchCard31 .clubText31 b{font-size:14px}.matchCard31 .clubText31 small{font-size:10px}.matchCard31 .scoreBox31{min-width:112px}.matchCard31 .score31{font-size:28px}.matchCard31 .scoreBox31 small{font-size:10px}
+.matchCard31 .contributors31{padding-top:0}.matchCard31 .contributors31 span{padding:4px 7px;font-size:10px;border-radius:7px}.matchCard31 .contributors31 b{font-size:10px}.matchCard31 .expandHint31{font-size:10px;color:#667b96}
+.matchInlineDetail{margin:-1px 0 10px;border-radius:12px;border-top:1px solid #263a52}
+.inlineMatchInner{padding:14px}.teamStat{padding:9px 10px}.goalEvent{padding:9px 10px}
+
+@media(max-width:980px){.featuredRankings,.duoGrid{grid-template-columns:1fr 1fr}.matchesGrid31{grid-template-columns:1fr}}
+@media(max-width:700px){.featuredRankings,.duoGrid{grid-template-columns:1fr}.duoCard .duoStats{grid-template-columns:1fr 1fr}.duoCard .duoStats div:nth-child(2){border-right:0}.duoCard .duoStats div:nth-child(-n+2){border-bottom:1px solid #26394f}.matchCard31 .teams31{grid-template-columns:1fr}.matchCard31 .scoreBox31{order:-1;justify-self:start}.rankingList30>div{grid-template-columns:22px 110px 1fr 34px}}
+
+
+/* v34 — Fun page aligned to the approved mockup structure */
+.funHero30{display:none!important}
+.funSubnav{margin-top:2px;margin-bottom:18px;border-radius:12px;padding:5px;background:#0b1420;border:1px solid #22354a;position:sticky;top:69px}
+.funSubnav button{min-height:44px;padding:0 18px;border-radius:8px;font-size:13px;font-weight:800;color:#aebfd3;background:transparent;border:1px solid transparent}
+.funSubnav button.active{background:#10302d;color:#78f0c6;border-color:#22b88d;box-shadow:inset 0 -2px #3ee2ae}
+.funSubPane[data-fun-pane="featured"]{display:none}
+.funSubPane[data-fun-pane="featured"].active{display:block}
+.featureHeader34{margin-top:2px}
+
+.featuredRankings{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:16px}
+.featuredRankCard{height:310px;border-radius:16px;border:1px solid #2a4059;background:#0e1724;overflow:hidden;display:grid;grid-template-rows:1fr auto;position:relative}
+.featuredRankCard:before{display:block!important;content:"";position:absolute;inset:0;background:
+ radial-gradient(circle at 74% 30%,color-mix(in srgb,var(--tone,#4c84ff) 50%,transparent) 0,transparent 16%),
+ radial-gradient(circle at 86% 14%,color-mix(in srgb,var(--tone,#4c84ff) 28%,transparent) 0,transparent 12%),
+ linear-gradient(135deg,color-mix(in srgb,var(--tone,#4c84ff) 36%,#0b1320) 0%,#101a28 48%,#0a111b 100%);opacity:.98}
+.featuredRankCard:after{content:"";position:absolute;right:-12px;top:12px;width:190px;height:190px;border:1px solid color-mix(in srgb,var(--tone,#4c84ff) 45%,transparent);border-radius:50%;box-shadow:0 0 0 28px color-mix(in srgb,var(--tone,#4c84ff) 8%,transparent),0 0 0 56px color-mix(in srgb,var(--tone,#4c84ff) 5%,transparent);opacity:.7}
+.featuredRankCard>*{position:relative;z-index:2}
+.featuredRankCard .frBody{padding:24px 22px 18px;display:flex;flex-direction:column;justify-content:flex-end;background:linear-gradient(180deg,transparent 0%,rgba(6,12,21,.08) 25%,rgba(6,12,21,.74) 100%)}
+.featuredRankCard .frBody small{font-size:10px;letter-spacing:.14em;color:#c2d4ea}
+.featuredRankCard .frBody h4{font-size:30px;line-height:1.02;margin:8px 0 8px;max-width:85%;letter-spacing:-.025em}
+.featuredRankCard .frBody p{font-size:14px;line-height:1.45;color:#c4d0df;max-width:31ch}
+.featuredRankCard .frWinner{min-height:78px;padding:14px 18px;background:rgba(8,15,25,.94);border-top:1px solid #31465e;grid-template-columns:42px 1fr auto}
+.featuredRankCard .frWinner>i{width:38px;height:38px;border-radius:10px;background:#152238;display:grid;place-items:center;font-size:22px}
+.featuredRankCard .frWinner b{font-size:16px}
+.featuredRankCard .frWinner span{font-size:11px;color:#8fa4bf;margin-top:3px}
+.featuredRankCard .frWinner strong{font-size:34px;line-height:1}
+
+.duoGrid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:16px}
+.duoCard{border-radius:16px;border:1px solid #30475f;background:#0f1927;overflow:hidden;position:relative}
+.duoCard:before{content:"";position:absolute;inset:0;background:linear-gradient(135deg,color-mix(in srgb,var(--duo,#4e89ff) 24%,transparent),transparent 40%);pointer-events:none}
+.duoCard .duoTop{position:relative;padding:20px 20px 18px;min-height:126px;display:flex;flex-direction:column;justify-content:space-between}
+.duoCard .duoTop:after{display:none}
+.duoCard .duoLabel{align-self:center;background:#0b1724cc;border-color:var(--duo,#4e89ff);color:#e8f4ff;padding:5px 11px}
+.duoCard .duoNames{font-size:19px;justify-content:center;text-align:center;margin:18px 0 0;gap:10px}
+.duoCard .duoStats{margin:0;background:#0b1521;border-top:1px solid #273a50;border-bottom:1px solid #273a50;grid-template-columns:repeat(4,1fr)}
+.duoCard .duoStats div{padding:14px 8px}
+.duoCard .duoStats b{font-size:24px;line-height:1;color:#fff}
+.duoCard .duoStats div:first-child b,.duoCard .duoStats div:nth-child(3) b{color:#63efb5}
+.duoCard .duoStats span{font-size:10px}
+.duoCard .duoMeta{padding:13px 18px 16px;text-align:center;color:#93a8c1;font-size:11px}
+
+.featuredSuperlatives{display:grid;grid-template-columns:repeat(5,minmax(0,1fr));gap:10px}
+.featuredSuperlatives .miniReveal{min-height:108px;border:1px solid #2a3e54;background:#101b29;border-radius:12px;display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center;padding:12px;color:#fff}
+.featuredSuperlatives .miniReveal>span{width:auto;height:auto;background:transparent;font-size:28px;margin-bottom:6px}
+.featuredSuperlatives .miniReveal b{font-size:13px;margin:0}
+.featuredSuperlatives .miniReveal small{font-size:10px;color:#8599b4;margin-top:4px}
+
+/* solo ranking pages echo the same card system */
+.rankingSolo{max-width:760px;margin:0 auto}
+.rankingHero30{border-radius:18px;border:1px solid #2e435d;background:#0f1825;overflow:hidden}
+.rankingHeroHead{min-height:180px;padding:28px;display:flex;flex-direction:column;justify-content:flex-end;background:linear-gradient(135deg,color-mix(in srgb,var(--rank,#4e89ff) 28%,#101a28),#0c1420)}
+.rankingHeroHead>span{font-size:36px}.rankingHeroHead h3{font-size:34px;margin:8px 0 4px}.rankingHeroHead p{font-size:14px;color:#aabbd0}
+.rankingWinner30{margin:16px;border-color:#38516e;background:#0b1420}.rankingWinner30>strong{font-size:36px}
+.rankingList30>div{grid-template-columns:26px 170px 1fr 42px}
+
+/* make the approved mockup hierarchy breathe */
+[data-fun-pane="featured"] .funSectionHeader.compact{margin-top:28px}
+[data-fun-pane="featured"]>.funSectionHeader:first-child{margin-bottom:14px}
+
+@media(max-width:1100px){.featuredRankings,.duoGrid{grid-template-columns:1fr 1fr}.featuredSuperlatives{grid-template-columns:repeat(3,1fr)}}
+@media(max-width:720px){.featuredRankings,.duoGrid{grid-template-columns:1fr}.featuredRankCard{height:280px}.featuredSuperlatives{grid-template-columns:1fr 1fr}.funSubnav button{padding:0 14px}.rankingList30>div{grid-template-columns:22px 105px 1fr 36px}}
+
+
+/* v35 Matches */
+.matchesPage35{display:grid;gap:18px}
+.matchesHeader35{display:flex;justify-content:space-between;align-items:flex-end;gap:20px;padding:4px 2px 2px}
+.matchesHeader35 h3{font-size:30px;margin:5px 0 5px;letter-spacing:-.03em}.matchesHeader35 p{margin:0;color:#8ea5c1}
+.matchesFilters35{display:flex;gap:8px;flex-wrap:wrap}.matchesFilters35 button{border:1px solid #2e425a;background:#101b2a;color:#c7d6e8;border-radius:999px;padding:9px 13px;font-weight:800}.matchesFilters35 button b{margin-left:5px;color:#7f95b0}.matchesFilters35 button.active{background:#173a2d;border-color:#2bc78f;color:#caffea}.matchesFilters35 button.active b{color:#7ef1bd}
+.matchesBlock35{display:grid;gap:10px}.matchesLabel35{font-size:11px;letter-spacing:.13em;text-transform:uppercase;font-weight:900;color:#7890ad;padding:0 2px}.matchesList35{display:grid;gap:10px}
+.match.matchRow35{display:grid!important;grid-template-columns:120px minmax(210px,1fr) 100px minmax(210px,1fr) 58px 1.5fr 82px!important;align-items:center;gap:14px;padding:14px 16px!important;border:1px solid #293d54!important;border-radius:14px;background:#111c2b;cursor:pointer;min-height:86px}
+.match.matchRow35:hover{background:#142236;border-color:#3a5572!important}.match.matchRow35.open{border-color:#43dca1!important;background:#132438}
+.matchMeta35{display:grid;gap:5px;color:#8fa5c0;font-size:12px}.matchMeta35 b{justify-self:start;font-size:10px;text-transform:uppercase;letter-spacing:.08em;color:#b9c8db;background:#1b2a3d;border:1px solid #2c425b;border-radius:6px;padding:4px 7px}
+.matchTeam35{display:flex;align-items:center;gap:10px;min-width:0}.matchTeam35.opp{justify-content:flex-end;text-align:right}.matchTeam35>div:not(.matchCrest35){min-width:0}.matchTeam35 strong{display:block;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}.matchTeam35 small{display:block;color:#6f86a3;font-size:11px;margin-top:3px}
+.matchCrest35{width:44px;height:44px;flex:0 0 44px;border:1px solid #2d425a;border-radius:10px;background:#0c1623;display:grid;place-items:center;overflow:hidden;color:#93a8c2;font-weight:900}.matchCrest35 img{width:100%;height:100%;object-fit:contain;padding:5px}
+.matchScore35{display:flex;align-items:center;justify-content:center;gap:9px;background:#0b1522;border:1px solid #22374d;border-radius:11px;padding:10px 12px;font-size:22px;font-weight:950}.matchScore35 span{opacity:.4}
+.matchResult35{justify-self:center;min-width:38px;height:38px;border-radius:999px;display:grid;place-items:center;font-size:11px;font-weight:950}.matchResult35.w{background:#123e2b;color:#63efaf;border:1px solid #1f714f}.matchResult35.d{background:#4c3608;color:#ffd266;border:1px solid #806112}.matchResult35.l{background:#44161d;color:#ff8491;border:1px solid #7b2935}
+.matchSummary35{display:flex;gap:6px;flex-wrap:wrap;min-width:0}.matchChip35{font-size:11px;padding:6px 8px;border-radius:8px;background:#0c1724;border:1px solid #24374b;color:#b8c9dc;white-space:nowrap}.matchNote35{font-size:11px;color:#6f86a2}
+.matchExpand35{justify-self:end;color:#8fa5c0;font-size:12px;white-space:nowrap}.matchExpand35 span{margin-left:5px;color:#d7e4f3}
+.matchInlineDetail{margin:-4px 0 6px!important;border-radius:0 0 14px 14px!important}
+@media(max-width:1180px){.match.matchRow35{grid-template-columns:100px minmax(180px,1fr) 90px minmax(180px,1fr) 48px 1fr!important}.matchExpand35{display:none}}
+@media(max-width:900px){.matchesHeader35{align-items:flex-start;flex-direction:column}.match.matchRow35{grid-template-columns:82px 1fr 76px 44px!important}.matchTeam35.opp{grid-column:2;text-align:left;justify-content:flex-start}.matchTeam35.opp .matchCrest35{order:-1}.matchSummary35{grid-column:2 / -1}.matchExpand35{display:none}}
+@media(max-width:620px){.match.matchRow35{grid-template-columns:1fr auto auto!important;gap:10px}.matchMeta35{grid-column:1}.matchTeam35.ours{grid-column:1 / -1}.matchScore35{grid-column:1}.matchResult35{grid-column:2}.matchTeam35.opp{grid-column:1 / -1}.matchSummary35{grid-column:1 / -1}.matchesFilters35{width:100%}.matchesFilters35 button{flex:1}}

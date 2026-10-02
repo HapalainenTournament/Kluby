@@ -493,10 +493,10 @@ function renderViral29(h){
  const sort=fn=>ps.slice().sort((a,b)=>fn(b)-fn(a));
  const games=p=>Math.max(1,N(p.matches)), wr=p=>N(p.wins)/games(p)*100, ga=p=>N(p.goals)+N(p.assists), rate=p=>N(p.rating);
  const cards=[
-  {title:'Ghost Rankings',sub:'Kdo mizí, když na tom záleží?',icon:'👻',score:p=>Math.max(0,100-Math.min(100,(ga(p)/games(p))*45+rate(p)*5)),tag:'BIGGEST GHOST'},
-  {title:'L Merchant Index',sub:'Kdo sbírá prohry jako kartičky?',icon:'📉',score:p=>100-wr(p),tag:'TOP L MERCHANT'},
+  {title:'Ghost Rankings',sub:'Who disappears when it matters most?',icon:'👻',score:p=>Math.max(0,100-Math.min(100,(ga(p)/games(p))*45+rate(p)*5)),tag:'BIGGEST GHOST'},
+  {title:'L Merchant Index',sub:"Who collects Ls like trading cards?",icon:'📉',score:p=>100-wr(p),tag:'TOP L MERCHANT'},
   {title:'Self-Glazer Rankings',sub:'Kdo má rating větší než produkci?',icon:'✨',score:p=>Math.max(0,Math.min(100,rate(p)*12-(ga(p)/games(p))*10)),tag:'CHIEF GLAZER'},
-  {title:'Main Character',sub:'Kdo si bere nejvíc spotlightu?',icon:'🎬',score:p=>Math.min(100,N(p.motm)*12+ga(p)*2),tag:'MAIN CHARACTER'}
+  {title:'Main Character',sub:'Who takes the most spotlight?',icon:'🎬',score:p=>Math.min(100,N(p.motm)*12+ga(p)*2),tag:'MAIN CHARACTER'}
  ];
  host.className='viralDeck';host.innerHTML=cards.map(c=>{const ranked=sort(c.score).slice(0,3),top=ranked[0];return `<article class="viralCard"><div class="viralVisual"><span>${c.icon}</span><b>${c.title}</b><small>${c.sub}</small></div><div class="viralWinner"><i>${c.icon}</i><div><small>${c.tag}</small><b>${funName(top)}</b><span>${games(top)} matches · ${wr(top).toFixed(0)}% win rate</span></div><strong>${Math.round(c.score(top))}</strong></div><div class="viralList">${ranked.slice(1).map((p,i)=>`<div><em>${i+2}</em><b>${funName(p)}</b><span><i style="width:${Math.max(4,c.score(p))}%"></i></span><strong>${Math.round(c.score(p))}</strong></div>`).join('')}</div></article>`}).join('');
 }
@@ -529,16 +529,16 @@ function v30Rankings(h){
  const ga=p=>N(p.goals)+N(p.assists), rate=p=>N(p.rating), motm=p=>N(p.motm);
  const wr=p=>{const r=record(p);return r.matches?N(r.wins)/N(r.matches)*100:0};
  const defs=[
-  {id:'ghost',title:'Ghost Rankings',sub:'Kdo mizí, když na tom záleží?',icon:'👻',tag:'BIGGEST GHOST',tone:'#2e8bc0',score:p=>Math.max(0,Math.min(100,100-((ga(p)/games(p))*38+motm(p)/games(p)*120+Math.max(0,rate(p)-7)*10))),detail:p=>`${games(p)} zápasů · ${(ga(p)/games(p)).toFixed(2)} G+A/zápas`},
-  {id:'lmerchant',title:'L Merchant Index',sub:'Kdo sbírá prohry jako kartičky?',icon:'📉',tag:'TOP L MERCHANT',tone:'#ef5b63',score:p=>{const r=record(p);return r.matches?N(r.losses)/N(r.matches)*100:Math.max(0,100-wr(p))},detail:p=>{const r=record(p);return `${r.matches||games(p)} zápasů · ${r.losses||0} proher`}},
-  {id:'selfglazer',title:'Self-Glazer Rankings',sub:'Rating vysoko, produkce níž. Čistě fun index.',icon:'✨',tag:'CHIEF GLAZER',tone:'#d9a72f',score:p=>Math.max(0,Math.min(100,rate(p)*12-(ga(p)/games(p))*12)),detail:p=>`${rate(p).toFixed(1)} avg · ${(ga(p)/games(p)).toFixed(2)} G+A/zápas`},
-  {id:'maincharacter',title:'Main Character',sub:'Kdo si bere nejvíc spotlightu?',icon:'♛',tag:'MAIN CHARACTER',tone:'#4b7bec',score:p=>Math.min(100,motm(p)*14+(ga(p)/games(p))*20+rate(p)*3),detail:p=>`${motm(p)} MOTM · ${ga(p)} G+A`}
+  {id:'ghost',title:'Ghost Rankings',sub:'Who disappears when it matters most?',icon:'👻',tag:'BIGGEST GHOST',tone:'#2e8bc0',score:p=>Math.max(0,Math.min(100,100-((ga(p)/games(p))*38+motm(p)/games(p)*120+Math.max(0,rate(p)-7)*10))),detail:p=>`${games(p)} zápasů · ${(ga(p)/games(p)).toFixed(2)} G+A/zápas`},
+  {id:'lmerchant',title:'L Merchant Index',sub:"Who collects Ls like trading cards?",icon:'📉',tag:'TOP L MERCHANT',tone:'#ef5b63',score:p=>{const r=record(p);return r.matches?N(r.losses)/N(r.matches)*100:Math.max(0,100-wr(p))},detail:p=>{const r=record(p);return `${r.matches||games(p)} zápasů · ${r.losses||0} proher`}},
+  {id:'selfglazer',title:'Self-Glazer Rankings',sub:'High rating, lower output. Purely a fun index.',icon:'✨',tag:'CHIEF GLAZER',tone:'#d9a72f',score:p=>Math.max(0,Math.min(100,rate(p)*12-(ga(p)/games(p))*12)),detail:p=>`${rate(p).toFixed(1)} avg · ${(ga(p)/games(p)).toFixed(2)} G+A/zápas`},
+  {id:'maincharacter',title:'Main Character',sub:'Who takes the most spotlight?',icon:'♛',tag:'MAIN CHARACTER',tone:'#4b7bec',score:p=>Math.min(100,motm(p)*14+(ga(p)/games(p))*20+rate(p)*3),detail:p=>`${motm(p)} MOTM · ${ga(p)} G+A`}
  ];
  return defs.map(d=>({...d,ranked:ps.map(p=>({p,score:d.score(p)})).sort((a,b)=>b.score-a.score)}));
 }
 v30RankingCard = function(def,compact=false){
  const top=def.ranked[0];if(!top)return '<div class="msg">Zatím bez dat.</div>';
- if(compact)return `<article class="featuredRankCard" style="--tone:${def.tone}"><div class="frBody"><small>FUN RANKING</small><h4>${def.icon} ${def.title}</h4><p>${def.sub}</p></div><div class="frWinner"><i>${def.icon}</i><div><b>${funName(top.p)}</b><span>${escapeHtml(def.detail(top.p))}</span></div><strong>${Math.round(top.score)}</strong></div></article>`;
+ if(compact)return `<article class="featuredRankCard rankArt-${def.id}" style="--tone:${def.tone}"><div class="frBody"><small>FUN RANKING</small><h4>${def.icon} ${def.title}</h4><p>${def.sub}</p></div><div class="frWinner"><i>${def.icon}</i><div><b>${funName(top.p)}</b><span>${escapeHtml(def.detail(top.p))}</span></div><strong>${Math.round(top.score)}</strong></div></article>`;
  return `<article class="rankingHero30" style="--rank:${def.tone}"><div class="rankingHeroHead"><span>${def.icon}</span><h3>${def.title}</h3><p>${def.sub}</p></div><div class="rankingWinner30"><i>${def.icon}</i><div><small>${def.tag}</small><b>${funName(top.p)}</b><span>${escapeHtml(def.detail(top.p))}</span></div><strong>${Math.round(top.score)}</strong></div><div class="rankingList30">${def.ranked.slice(1,6).map((x,i)=>`<div><em>${i+2}</em><b>${funName(x.p)}</b><span><i style="width:${Math.max(3,Math.min(100,x.score))}%"></i></span><strong>${Math.round(x.score)}</strong></div>`).join('')}</div><div class="rankingDisclaimer">Fun index odvozený jen z dostupných statistik Clubroomu. Není to objektivní hodnocení člověka, což je dobře, protože software už lidem hodnotí dost věcí.</div></article>`;
 }
 function v30DuoLabel(x){
@@ -646,7 +646,7 @@ archiveDetail = function(matchId){
 }
 v30RankingCard = function(def,compact=false){
  const top=def.ranked[0]; if(!top) return '<div class="msg">No data yet.</div>';
- if(compact)return `<article class="featuredRankCard" style="--tone:${def.tone}"><div class="frBody"><small>FUN RANKING</small><h4>${def.icon} ${def.title}</h4><p>${def.sub}</p></div><div class="frWinner"><i>${def.icon}</i><div><b>${funName(top.p)}</b><span>${escapeHtml(def.detail(top.p))}</span></div><strong>${Math.round(top.score)}</strong></div></article>`;
+ if(compact)return `<article class="featuredRankCard rankArt-${def.id}" style="--tone:${def.tone}"><div class="frBody"><small>FUN RANKING</small><h4>${def.icon} ${def.title}</h4><p>${def.sub}</p></div><div class="frWinner"><i>${def.icon}</i><div><b>${funName(top.p)}</b><span>${escapeHtml(def.detail(top.p))}</span></div><strong>${Math.round(top.score)}</strong></div></article>`;
  return `<article class="rankingHero30" style="--rank:${def.tone}"><div class="rankingHeroHead"><span>${def.icon}</span><h3>${def.title}</h3><p>${def.sub}</p></div><div class="rankingWinner30"><i>${def.icon}</i><div><small>${def.tag}</small><b>${funName(top.p)}</b><span>${escapeHtml(def.detail(top.p))}</span></div><strong>${Math.round(top.score)}</strong></div><div class="rankingList30">${def.ranked.slice(1,6).map((x,i)=>`<div><em>${i+2}</em><b>${funName(x.p)}</b><span><i style="width:${Math.max(3,Math.min(100,x.score))}%"></i></span><strong>${Math.round(x.score)}</strong></div>`).join('')}</div><div class="rankingDisclaimer">Fun rating only — built from available Clubroom stats, not an objective judgement of a human being.</div></article>`
 }
 v30RenderDuos = function(a){
@@ -659,4 +659,86 @@ function v31TranslateUI(){
  document.querySelectorAll('.funSectionHeader small').forEach(el=>{ if(el.textContent.includes('výpočty')) el.textContent='calculated from the Clubroom archive'; if(el.textContent.includes('společné')) el.textContent='shared matches in the archive'; });
  const searchFound=document.querySelector('.searchFound'); if(searchFound){ searchFound.textContent=searchFound.textContent.replace('Nalezeno','Found').replace('pro','for').replace('klubů','clubs').replace('klub','club'); }
  const db=document.querySelector('#dbState'); if(db){ if(db.textContent==='DATABASE ON') db.textContent='DATABASE ON'; if(db.textContent==='LIVE ONLY') db.textContent='LIVE ONLY'; }
+}
+
+/* v33 — English Fun copy and tighter, data-first cards */
+v30Rankings = function(h){
+ const ps=v27UniquePlayers((h?.players?.length?h.players:S.players)||[]), rec=v30PlayerRecords(h);
+ const key=p=>String(p.player_id||p.id||p.player_name||p.name||'').toLowerCase();
+ const record=p=>rec.get(key(p))||{matches:N(p.matches||p.games),wins:0,draws:0,losses:0};
+ const games=p=>Math.max(1,N(record(p).matches||p.matches||p.games));
+ const ga=p=>N(p.goals)+N(p.assists), rate=p=>N(p.rating), motm=p=>N(p.motm);
+ const wr=p=>{const r=record(p);return r.matches?N(r.wins)/N(r.matches)*100:0};
+ const defs=[
+  {id:'ghost',title:'Ghost Rankings',sub:'Who disappears when the output dries up?',icon:'◌',tag:'BIGGEST GHOST',tone:'#4f7fb3',score:p=>Math.max(0,Math.min(100,100-((ga(p)/games(p))*38+motm(p)/games(p)*120+Math.max(0,rate(p)-7)*10))),detail:p=>`${games(p)} matches · ${(ga(p)/games(p)).toFixed(2)} G+A / match`},
+  {id:'lmerchant',title:'L Merchant Index',sub:'Who has collected the most losses?',icon:'↘',tag:'TOP L MERCHANT',tone:'#ad5b64',score:p=>{const r=record(p);return r.matches?N(r.losses)/N(r.matches)*100:Math.max(0,100-wr(p))},detail:p=>{const r=record(p);return `${r.matches||games(p)} matches · ${r.losses||0} losses`}},
+  {id:'selfglazer',title:'Self-Glazer Rankings',sub:'High rating, lighter end product. A deliberately unserious index.',icon:'✦',tag:'CHIEF GLAZER',tone:'#a98a3d',score:p=>Math.max(0,Math.min(100,rate(p)*12-(ga(p)/games(p))*12)),detail:p=>`${rate(p).toFixed(1)} avg · ${(ga(p)/games(p)).toFixed(2)} G+A / match`},
+  {id:'maincharacter',title:'Main Character',sub:'Who owns the spotlight most often?',icon:'♛',tag:'MAIN CHARACTER',tone:'#6176a8',score:p=>Math.min(100,motm(p)*14+(ga(p)/games(p))*20+rate(p)*3),detail:p=>`${motm(p)} MOTM · ${ga(p)} G+A`}
+ ];
+ return defs.map(d=>({...d,ranked:ps.map(p=>({p,score:d.score(p)})).sort((a,b)=>b.score-a.score)}));
+}
+function v33EnglishPass(){
+ const map=[
+  ['DIVIZE','DIVISION'],['Výsledky','Results'],['Výhry','Wins'],['Remízy','Draws'],['Prohry','Losses'],['Góly','Goals'],['Vstřelené','Scored'],['Obdržené','Conceded'],['Góly / zápas','Goals / Match'],['Obdržené / zápas','Conceded / Match'],['Postup','Progress'],['hráčů','players'],['Soupeř','Opponent'],['zápasů','matches'],['Bez zápasů.','No matches yet.'],['Bez dat.','No data yet.'],['Zatím není dost dat.','Not enough data yet.']
+ ];
+ document.querySelectorAll('body *').forEach(el=>{
+  if(el.children.length===0 && el.textContent){let t=el.textContent;for(const [a,b] of map)t=t.split(a).join(b);el.textContent=t}
+ });
+}
+const __v33fun=v30RenderFun; v30RenderFun=function(h,a){__v33fun(h,a);v33EnglishPass()};
+const __v33hist=loadHistory; loadHistory=async function(id){const r=await __v33hist(id);setTimeout(()=>{v31RenderMatchesPanel();v33EnglishPass()},0);return r};
+
+
+/* v35: rebuild Matches as a clean single-column list. */
+function v35ClubCrestHtml(){
+  const info=S.raw?.info&&(S.raw.info[S.club?.id]||A(S.raw.info)[0]);
+  const crestId=P(info?.customKit,['crestAssetId'],P(info,['crestAssetId'],null));
+  return crestId?`<img src="${crestUrl(crestId)}" alt="">`:v31CrestByName(S.club?.name||'CL');
+}
+function v35OppCrestHtml(m,name){
+  const raw=m?.oppRaw||{};
+  const crestId=P(raw?.details?.customKit,['crestAssetId'],P(raw?.customKit,['crestAssetId'],P(raw,['crestAssetId'],null)));
+  return crestId?`<img src="${crestUrl(crestId)}" alt="">`:v31CrestByName(name||'OP');
+}
+function v35ScorersLive(m){
+  const ps=(m.players||[]).map(matchPlayer).filter(p=>N(p.goals)>0||N(p.assists)>0);
+  if(!ps.length)return '<span class="matchNote35">No scorer data</span>';
+  return ps.slice(0,4).map(p=>`<span class="matchChip35">${escapeHtml(p.name)}${N(p.goals)?` · ${N(p.goals)}G`:''}${N(p.assists)?` · ${N(p.assists)}A`:''}</span>`).join('');
+}
+function v35ScorersArchive(matchId){
+  const ps=(S.history?.playerMatches||[]).filter(x=>String(x.match_id)===String(matchId)).filter(x=>N(x.goals)>0||N(x.assists)>0);
+  if(!ps.length)return '<span class="matchNote35">No scorer data</span>';
+  return ps.slice(0,4).map(p=>`<span class="matchChip35">${escapeHtml(p.player_name)}${N(p.goals)?` · ${N(p.goals)}G`:''}${N(p.assists)?` · ${N(p.assists)}A`:''}</span>`).join('');
+}
+function v35MatchRow(m,i,archive){
+  const isA=!!archive;
+  const date=isA?(archive.played_at?new Date(archive.played_at):null):m.date;
+  const dateText=date?date.toLocaleDateString('en-GB',{day:'2-digit',month:'short'}):'—';
+  const type=isA?(archive.match_type||'Match'):(m.type||'Match');
+  const result=isA?archive.result:m.result;
+  const ourGoals=isA?N(archive.goals):m.og, oppGoals=isA?N(archive.opponent_goals):m.tg;
+  const opp=isA?(archive.opponent||'Opponent'):(m.opp||'Opponent');
+  const scorers=isA?v35ScorersArchive(archive.match_id):v35ScorersLive(m);
+  return `<article class="match matchRow35 ${isA?'archive':''}" ${isA?`data-am="${archive.match_id}"`:`data-m="${i}"`}>
+    <div class="matchMeta35"><span>${dateText}</span><b>${escapeHtml(String(type).replace(/^./,s=>s.toUpperCase()))}</b></div>
+    <div class="matchTeam35 ours"><div class="matchCrest35">${v35ClubCrestHtml()}</div><div><strong>${escapeHtml(S.club?.name||'Our club')}</strong><small>Clubroom</small></div></div>
+    <div class="matchScore35"><strong>${ourGoals}</strong><span>–</span><strong>${oppGoals}</strong></div>
+    <div class="matchTeam35 opp"><div><strong>${escapeHtml(opp)}</strong><small>Opponent</small></div><div class="matchCrest35">${isA?v31CrestByName(opp):v35OppCrestHtml(m,opp)}</div></div>
+    <div class="matchResult35 ${String(result||'D').toLowerCase()}">${result}</div>
+    <div class="matchSummary35">${scorers}</div>
+    <div class="matchExpand35">Details <span>⌄</span></div>
+  </article>`;
+}
+v31RenderMatchesPanel = function(){
+  const host=document.querySelector('#matchList');if(!host)return;
+  const live=S.matches||[];
+  const archive=S.history?.matches||[];
+  const liveIds=new Set(live.map(m=>String(P(m.raw,['matchId','matchid','id'],''))));
+  const older=archive.filter(x=>!liveIds.has(String(x.match_id))).slice(0,200);
+  host.innerHTML=`<section class="matchesPage35">
+    <div class="matchesHeader35"><div><span class="kicker">MATCH CENTRE</span><h3>Matches</h3><p>Live EA matches and your growing Clubroom archive.</p></div><div class="matchesFilters35"><button class="active" data-match-filter="all">All <b>${live.length+older.length}</b></button><button data-match-filter="live">Live <b>${live.length}</b></button><button data-match-filter="archive">Archive <b>${older.length}</b></button></div></div>
+    <div class="matchesBlock35" data-match-section="live"><div class="matchesLabel35">EA live window</div><div class="matchesList35">${live.length?live.map((m,i)=>v35MatchRow(m,i,null)).join(''):'<div class="msg">No live matches available from EA.</div>'}</div></div>
+    <div class="matchesBlock35" data-match-section="archive"><div class="matchesLabel35">Clubroom archive</div><div class="matchesList35">${older.length?older.map(m=>v35MatchRow(null,null,m)).join(''):'<div class="msg">No older archived matches yet.</div>'}</div></div>
+  </section>`;
+  document.querySelectorAll('[data-match-filter]').forEach(btn=>btn.onclick=()=>{document.querySelectorAll('[data-match-filter]').forEach(x=>x.classList.toggle('active',x===btn));const f=btn.dataset.matchFilter;document.querySelectorAll('[data-match-section]').forEach(sec=>sec.hidden=!(f==='all'||sec.dataset.matchSection===f));});
 }

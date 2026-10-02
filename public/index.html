@@ -1,4 +1,4 @@
-<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Clubroom FC27 v32</title><link rel="stylesheet" href="/style.css"></head><body>
+<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Clubroom FC27 v35</title><link rel="stylesheet" href="/style.css"></head><body>
 <header class="topbar"><a class="brand" href="/" aria-label="Clubroom homepage"><span class="brandMark">C</span><b>CLUBROOM</b><em>FC27</em></a><div class="topActions"><button id="openSearch" class="iconBtn" title="Search club">⌕</button></div></header>
 <main class="shell">
 <section id="home" class="searchPage"><div class="searchIntro"><span class="kicker">EA SPORTS FC 27 · PRO CLUBS</span><h1>Search Pro Clubs Stats</h1><p>Search any EA FC 27 Pro Clubs team and open detailed stats, players, match history, form and analytics.</p></div><form id="search" class="searchPanel"><div class="searchInputWrap"><input id="q" placeholder="Enter club name…" required><span>⌕</span></div><div class="searchActions"><select id="platform"><option value="common-gen5">PS5 / Xbox Series / PC</option><option value="common-gen4">PS4 / Xbox One</option><option value="nx">Switch</option></select><button>Search</button></div></form><div id="results" class="results searchResults"></div></section>
@@ -19,7 +19,7 @@
 </div>
 <div class="tabPane" data-pane="players"><section class="playersPage"><div id="positionSummary" class="positionSummary"></div><section class="creativityPanel"><div><span class="lockDot">✦</span><div><b>Creativity ranking</b><small>Completed dribbles + second assists per 90 from captured match data.</small></div></div><div id="creativityRanking" class="creativityRanking"></div></section><div class="playersToolbar"><span>Rank by</span><select id="playerRank"><option value="squad">Squad order</option><option value="rating">Avg rating</option><option value="goals">Goals</option><option value="assists">Assists</option><option value="ga">G+A</option><option value="passRate">Pass %</option><option value="shotRate">Shot %</option><option value="creativity">Creativity</option></select><span id="playerCount"></span></div><div id="playerCards" class="playerCards"></div></section></div>
 <div class="tabPane" data-pane="compare"><section class="panel comparePanel"><div class="panelHead"><h3>Player Compare</h3><span>career + Clubroom archive</span></div><div class="compareControls"><select id="cmpA"></select><b>VS</b><select id="cmpB"></select></div><div id="compareCoverage" class="compareCoverage"></div><div id="compareBody"></div></section></div>
-<div class="tabPane" data-pane="matches"><section class="panel"><div class="panelHead"><h3>Matches</h3><span>EA + Clubroom archive</span></div><div id="matchList"></div></section></div>
+<div class="tabPane" data-pane="matches"><div id="matchList"></div></div>
 <div class="tabPane" data-pane="analytics">
 <section class="analyticsHero"><div><span class="kicker">PERFORMANCE LAB</span><h3>Analytics</h3><p>Form, match-by-match trends, player development and passing insights from the Clubroom archive.</p></div><span class="betaBadge">BETA</span></section>
 <section class="panel analyticsSection"><div class="panelHead"><h3>📈 Form Graph</h3><span>ARCHIVE</span></div><div id="analyticsForm"></div></section>
@@ -42,11 +42,11 @@
 <button data-fun-tab="extras">＋ Extras</button>
 </nav>
 <section class="funSubPane active" data-fun-pane="featured">
-  <div class="funSectionHeader"><div><span>★ FEATURED FUN</span><h3>Best of club chaos</h3></div><small>calculated from the Clubroom archive</small></div>
+  <div class="funSectionHeader featureHeader34"><div><span>★ FEATURED</span><h3>Clubroom Rankings</h3></div><button class="textButton" data-open-fun="ghost">View all rankings →</button></div>
   <div id="viralRankings" class="featuredRankings"></div>
-  <div class="funSectionHeader compact"><div><span>🔗 DUO CARDS</span><h3>Top partnerships</h3></div><button class="textButton" data-open-fun="duos">View all duos →</button></div>
+  <div class="funSectionHeader compact"><div><span>🔗 DUO CARDS</span><h3>Best partnerships</h3></div><button class="textButton" data-open-fun="duos">View all duo cards →</button></div>
   <div id="featuredDuos" class="duoGrid compact"></div>
-  <div class="funSectionHeader compact"><div><span>🏆 SUPERLATIVES</span><h3>Reveal cards</h3></div><button class="textButton" data-open-fun="superlatives">Open all →</button></div>
+  <div class="funSectionHeader compact"><div><span>🏆 SQUAD SUPERLATIVES</span><h3>Tap to reveal</h3></div><button class="textButton" data-open-fun="superlatives">Reveal all →</button></div>
   <div id="featuredSuperlatives" class="featuredSuperlatives"></div>
 </section>
 <section class="funSubPane" data-fun-pane="duos"><div class="funSectionHeader"><div><span>🔗 DUO CARDS</span><h3>Best & worst partnerships</h3></div><small>shared matches in the archive</small></div><div id="goalPartners" class="duoGrid"></div></section>
@@ -66,4 +66,4 @@
 <div class="tabPane" data-pane="plus"><section class="plusHero"><span class="kicker">CLUBROOM ARCHIVE</span><h3>Club+</h3><p>Long-term history beyond EA's limited recent window. The longer the club is tracked, the richer the archive becomes.</p><div id="historyStats" class="metricGrid"></div><div id="dbState" class="dbState">DB</div></section><section class="panel"><div class="panelHead"><h3>Club+ Features</h3></div><div class="featureGrid"><article><b>Full History</b><p>Permanent archive of captured matches.</p></article><article><b>Sessions</b><p>Evenings grouped into play sessions.</p></article><article><b>Advanced Season</b><p>Second assists, passing, tackles, shots and more event-level data.</p></article><article><b>Records</b><p>Club and player records across the archive.</p></article></div></section></div>
 </section></main>
 <section id="playerView" class="overlay" hidden><button class="close" data-close="playerView">×</button><div id="playerContent"></div></section>
-<footer>CLUBROOM FC27 · v32</footer><script src="/app.js"></script></body></html>
+<footer>CLUBROOM FC27 · v35</footer><script src="/app.js"></script></body></html>
