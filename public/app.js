@@ -277,7 +277,7 @@ function renderFunLive(){
  $("#milestones").innerHTML=ps.slice().sort((x,y)=>y.ga-x.ga).slice(0,6).map(p=>`<article class="milestone"><small>CAREER CONTRIBUTIONS</small><b>${escapeHtml(p.name)}</b><p>${p.goals} G · ${p.assists} A · ${p.ga} G+A</p></article>`).join("");
  $("#goalPartners").innerHTML='<div class="msg">Partnerships potřebují společné uložené zápasy.</div>';
  $("#improvementTips").innerHTML='<div class="msg">Tipy se objeví po nasbírání detailních zápasových dat.</div>';
- $("#funMatchByMatch").innerHTML=$("#funForm").innerHTML;
+ const amb=$("#analyticsMatchByMatch"); if(amb) amb.innerHTML=$("#funForm").innerHTML;
 }
 function renderFun(h,a){
  const ps=h.players||[]; if(!ps.length){renderFunLive();return}
@@ -326,7 +326,7 @@ function renderFun(h,a){
  const pms=h.playerMatches||[],byMatch=new Map();
  for(const x of pms){if(!byMatch.has(x.match_id))byMatch.set(x.match_id,[]);byMatch.get(x.match_id).push(x)}
  const rows=matches.slice(0,15).map(m=>{const pp=byMatch.get(m.match_id)||[],best=pp.slice().sort((x,y)=>N(y.rating)-N(x.rating))[0];return `<tr><td>${m.played_at?new Date(m.played_at).toLocaleDateString("cs-CZ"):"—"}</td><td class="${String(m.result).toLowerCase()}"><b>${m.result}</b></td><td>${N(m.goals)}:${N(m.opponent_goals)}</td><td>${escapeHtml(m.opponent||"Soupeř")}</td><td>${best?`${escapeHtml(best.player_name)} · ${N(best.rating).toFixed(1)}`:"—"}</td></tr>`}).join("");
- $("#funMatchByMatch").innerHTML=rows?`<table class="funTable"><thead><tr><th>Date</th><th>Result</th><th>Score</th><th>Opponent</th><th>Best player</th></tr></thead><tbody>${rows}</tbody></table>`:'<div class="msg">Bez historie zápasů.</div>';
+ $("#analyticsMatchByMatch").innerHTML=rows?`<table class="funTable"><thead><tr><th>Date</th><th>Result</th><th>Score</th><th>Opponent</th><th>Best player</th></tr></thead><tbody>${rows}</tbody></table>`:'<div class="msg">Bez historie zápasů.</div>';
 }
 function showPlayer(id){
  let p=S.players.find(x=>x.id===id);if(!p)return;
@@ -415,10 +415,10 @@ renderArchiveMatches=function(matches){
 
 const _renderFunV21=renderFun;
 renderFun=function(h,a){
- _renderFunV21(h,a); const ps=a.players||[], ms=h.matches||[];
- const n=x=>escapeHtml(x?.player_name||x?.name||"—"), by=k=>ps.slice().sort((x,y)=>N(y[k])-N(x[k]))[0];
- const top=[by("goals"),by("assists"),by("rating"),by("motm")].filter(Boolean);
- const front=document.querySelector("#bestFront");if(front)front.innerHTML=top.length?`<div class="pitch"><div class="pitchLine"></div>${top.map((p,i)=>`<article class="pitchPlayer p${i}"><small>${i===0?"ST":i===1?"CAM":i===2?"RAM":"LAM"}</small><strong>${N(p.rating).toFixed(1)}</strong><b>${n(p)}</b><span>${N(p.goals)} G · ${N(p.assists)} A</span></article>`).join("")}</div>`:'<div class="msg">Potřebujeme hráčská data.</div>';
+ _renderFunV21(h,a); const ps=h.players||[], ms=h.matches||[];
+ const n=x=>escapeHtml(x?.pro_name||x?.player_name||x?.name||"—"), by=k=>ps.slice().sort((x,y)=>N(y[k])-N(x[k]))[0];
+ const pool=ps.slice(); const picked=[]; for(const key of ["goals","assists","rating","motm"]){const cand=pool.slice().sort((x,y)=>N(y[key])-N(x[key])).find(p=>!picked.some(q=>String(q.player_id||q.id||q.player_name||q.name)===String(p.player_id||p.id||p.player_name||p.name))); if(cand)picked.push(cand)}
+ const front=document.querySelector("#bestFront");if(front)front.innerHTML=picked.length?`<div class="pitch"><div class="pitchLine"></div>${picked.map((p,i)=>`<article class="pitchPlayer p${i}"><small>${i===0?"ST":i===1?"CAM":i===2?"RAM":"LAM"}</small><strong>${N(p.rating).toFixed(1)}</strong><b>${n(p)}</b><span>${N(p.goals)} G · ${N(p.assists)} A</span></article>`).join("")}</div>`:'<div class="msg">Potřebujeme hráčská data.</div>';
  const pass=document.querySelector("#passingInsights");if(pass){const ranked=ps.filter(x=>N(x.pass_attempts)>0).sort((x,y)=>N(y.passes_made)/N(y.pass_attempts)-N(x.passes_made)/N(x.pass_attempts));pass.innerHTML=ranked.length?`<div class="insightList"><h4>PASS ACCURACY RANKINGS</h4>${ranked.map((p,i)=>{const pc=N(p.passes_made)/N(p.pass_attempts)*100;return `<div class="insightRow"><i>${i+1}</i><b>${n(p)}</b><div><span style="width:${Math.min(100,pc)}%"></span></div><strong>${pc.toFixed(1)}%</strong></div>`}).join("")}<h4>VOLUME PASSERS / MATCH</h4>${ranked.slice().sort((x,y)=>N(y.passes_made)/Math.max(1,N(y.matches))-N(x.passes_made)/Math.max(1,N(x.matches))).map((p,i)=>`<div class="volumeRow"><b>${n(p)}</b><span>${(N(p.passes_made)/Math.max(1,N(p.matches))).toFixed(1)} / match</span></div>`).join("")}</div>`:'<div class="msg">Passing insights se objeví po uložení pass eventů.</div>'}
  const clutch=document.querySelector("#clutchStats");if(clutch){const c=ps.slice().sort((x,y)=>(N(y.goals)+N(y.assists)+N(y.motm)*2)-(N(x.goals)+N(x.assists)+N(x.motm)*2)).slice(0,4);clutch.innerHTML=c.length?`<div class="clutchBoard">${c.map((p,i)=>`<article><small>#${i+1}</small><b>${n(p)}</b><strong>${N(p.goals)+N(p.assists)+N(p.motm)*2}</strong><span>clutch index · G+A + 2×MOTM</span></article>`).join("")}</div>`:'<div class="msg">Bez dat.</div>'}
  const pad=document.querySelector("#statPadder");if(pad){const r=ps.map(p=>({p,score:(N(p.goals)+N(p.assists))*10-(N(p.rating)||0)*3})).sort((x,y)=>y.score-x.score);pad.innerHTML=r.length?`<div class="padderBoard">${r.slice(0,5).map((x,i)=>`<div><span>#${i+1}</span><b>${n(x.p)}</b><em>${N(x.p.goals)+N(x.p.assists)} G+A</em><strong>${N(x.p.rating).toFixed(1)} avg</strong></div>`).join("")}<p>Fun index, ne skutečný úsudek o hráči. Počítá produkci proti ratingu.</p></div>`:'<div class="msg">Bez dat.</div>'}
@@ -484,3 +484,92 @@ function v27Analytics(h,a){const ps=v27UniquePlayers(h?.players||[]), pms=h?.pla
 }
 const _v27RenderFun=renderFun;renderFun=function(h,a){_v27RenderFun(h,a);v27EnhanceFun(h,a)};
 const _v27RenderAnalytics=renderAnalytics;renderAnalytics=function(h,a){_v27RenderAnalytics(h,a);v27Analytics(h,a)};
+
+// v29: Fun = reveal/share-style cards; Analytics = match-by-match + player development.
+function playerKey29(p){return String(p?.player_id||p?.id||p?.player_name||p?.pro_name||p?.name||'').toLowerCase()}
+function renderViral29(h){
+ const ps=h.players||[], host=document.querySelector('#viralRankings'); if(!host)return;
+ if(!ps.length){host.innerHTML='<div class="msg">Viral rankings se objeví po uložení hráčské historie.</div>';return}
+ const sort=fn=>ps.slice().sort((a,b)=>fn(b)-fn(a));
+ const games=p=>Math.max(1,N(p.matches)), wr=p=>N(p.wins)/games(p)*100, ga=p=>N(p.goals)+N(p.assists), rate=p=>N(p.rating);
+ const cards=[
+  {title:'Ghost Rankings',sub:'Kdo mizí, když na tom záleží?',icon:'👻',score:p=>Math.max(0,100-Math.min(100,(ga(p)/games(p))*45+rate(p)*5)),tag:'BIGGEST GHOST'},
+  {title:'L Merchant Index',sub:'Kdo sbírá prohry jako kartičky?',icon:'📉',score:p=>100-wr(p),tag:'TOP L MERCHANT'},
+  {title:'Self-Glazer Rankings',sub:'Kdo má rating větší než produkci?',icon:'✨',score:p=>Math.max(0,Math.min(100,rate(p)*12-(ga(p)/games(p))*10)),tag:'CHIEF GLAZER'},
+  {title:'Main Character',sub:'Kdo si bere nejvíc spotlightu?',icon:'🎬',score:p=>Math.min(100,N(p.motm)*12+ga(p)*2),tag:'MAIN CHARACTER'}
+ ];
+ host.className='viralDeck';host.innerHTML=cards.map(c=>{const ranked=sort(c.score).slice(0,3),top=ranked[0];return `<article class="viralCard"><div class="viralVisual"><span>${c.icon}</span><b>${c.title}</b><small>${c.sub}</small></div><div class="viralWinner"><i>${c.icon}</i><div><small>${c.tag}</small><b>${funName(top)}</b><span>${games(top)} matches · ${wr(top).toFixed(0)}% win rate</span></div><strong>${Math.round(c.score(top))}</strong></div><div class="viralList">${ranked.slice(1).map((p,i)=>`<div><em>${i+2}</em><b>${funName(p)}</b><span><i style="width:${Math.max(4,c.score(p))}%"></i></span><strong>${Math.round(c.score(p))}</strong></div>`).join('')}</div></article>`}).join('');
+}
+function renderAnalyticsMatch29(h){
+ const host=document.querySelector('#analyticsMatchByMatch'); if(!host)return; const pm=h.playerMatches||[], matches=h.matches||[];
+ const names=[...new Set(pm.map(x=>x.player_name).filter(Boolean))]; if(!names.length){host.innerHTML='<div class="msg">Match-by-match graf potřebuje uložené player match stats.</div>';return}
+ const player=names[0], rows=pm.filter(x=>x.player_name===player).slice(0,10).reverse(), vals=rows.map(x=>N(x.rating));
+ const pts=vals.map((v,i)=>`${i*(100/Math.max(1,vals.length-1))},${100-Math.max(0,Math.min(100,(v-5)*20))}`).join(' ');
+ host.innerHTML=`<div class="mbmControls"><div><button class="active">⭐ Match Rating</button><button>🦵 Tackles Made</button><button>🎯 Pass Accuracy</button><button>⚽ Goal Contributions</button></div><div>${names.slice(0,8).map((x,i)=>`<button class="${i?'':'active'}">${escapeHtml(x)}</button>`).join('')}</div></div><div class="mbmChart"><div><h4>⭐ ${escapeHtml(player)} — Match Rating</h4><small>Average: <b>${vals.length?(vals.reduce((a,b)=>a+b,0)/vals.length).toFixed(1):'—'}</b></small></div><svg viewBox="0 0 100 100" preserveAspectRatio="none"><polyline points="${pts}" fill="none" stroke="currentColor" stroke-width="2" vector-effect="non-scaling-stroke"/></svg><div class="mbmSummary"><b>${vals.length?(vals.reduce((a,b)=>a+b,0)/vals.length).toFixed(1):'—'}<small>Average</small></b><b>${vals.length?Math.max(...vals).toFixed(1):'—'}<small>Best</small></b><b>${vals.length?Math.min(...vals).toFixed(1):'—'}<small>Worst</small></b></div></div>`;
+}
+const _renderFunV29=renderFun; renderFun=function(h,a){_renderFunV29(h,a);renderViral29(h);renderAnalyticsMatch29(h)};
+document.addEventListener('click',e=>{const a=e.target.closest('#funAwards .award');if(a)a.classList.toggle('revealed')});
+
+// v30: Fun sub-navigation, Duo Cards, and compact editorial rankings.
+function v30PlayerRecords(h){
+ const map=new Map();
+ for(const x of (h?.playerMatches||[])){
+  const k=String(x.player_id||x.player_name||'').toLowerCase();
+  if(!k)continue;
+  if(!map.has(k))map.set(k,{matches:0,wins:0,draws:0,losses:0});
+  const r=map.get(k);r.matches++;if(x.result==='W')r.wins++;else if(x.result==='D')r.draws++;else if(x.result==='L')r.losses++;
+ }
+ return map;
+}
+function v30Rankings(h){
+ const ps=v27UniquePlayers((h?.players?.length?h.players:S.players)||[]), rec=v30PlayerRecords(h);
+ const key=p=>String(p.player_id||p.id||p.player_name||p.name||'').toLowerCase();
+ const record=p=>rec.get(key(p))||{matches:N(p.matches||p.games),wins:0,draws:0,losses:0};
+ const games=p=>Math.max(1,N(record(p).matches||p.matches||p.games));
+ const ga=p=>N(p.goals)+N(p.assists), rate=p=>N(p.rating), motm=p=>N(p.motm);
+ const wr=p=>{const r=record(p);return r.matches?N(r.wins)/N(r.matches)*100:0};
+ const defs=[
+  {id:'ghost',title:'Ghost Rankings',sub:'Kdo mizí, když na tom záleží?',icon:'👻',tag:'BIGGEST GHOST',tone:'#2e8bc0',score:p=>Math.max(0,Math.min(100,100-((ga(p)/games(p))*38+motm(p)/games(p)*120+Math.max(0,rate(p)-7)*10))),detail:p=>`${games(p)} zápasů · ${(ga(p)/games(p)).toFixed(2)} G+A/zápas`},
+  {id:'lmerchant',title:'L Merchant Index',sub:'Kdo sbírá prohry jako kartičky?',icon:'📉',tag:'TOP L MERCHANT',tone:'#ef5b63',score:p=>{const r=record(p);return r.matches?N(r.losses)/N(r.matches)*100:Math.max(0,100-wr(p))},detail:p=>{const r=record(p);return `${r.matches||games(p)} zápasů · ${r.losses||0} proher`}},
+  {id:'selfglazer',title:'Self-Glazer Rankings',sub:'Rating vysoko, produkce níž. Čistě fun index.',icon:'✨',tag:'CHIEF GLAZER',tone:'#d9a72f',score:p=>Math.max(0,Math.min(100,rate(p)*12-(ga(p)/games(p))*12)),detail:p=>`${rate(p).toFixed(1)} avg · ${(ga(p)/games(p)).toFixed(2)} G+A/zápas`},
+  {id:'maincharacter',title:'Main Character',sub:'Kdo si bere nejvíc spotlightu?',icon:'♛',tag:'MAIN CHARACTER',tone:'#4b7bec',score:p=>Math.min(100,motm(p)*14+(ga(p)/games(p))*20+rate(p)*3),detail:p=>`${motm(p)} MOTM · ${ga(p)} G+A`}
+ ];
+ return defs.map(d=>({...d,ranked:ps.map(p=>({p,score:d.score(p)})).sort((a,b)=>b.score-a.score)}));
+}
+function v30RankingCard(def,compact=false){
+ const top=def.ranked[0];if(!top)return '<div class="msg">Zatím bez dat.</div>';
+ if(compact)return `<article class="featuredRankCard" style="--tone:${def.tone}"><div class="frBody"><small>FUN RANKING</small><h4>${def.icon} ${def.title}</h4><p>${def.sub}</p></div><div class="frWinner"><i>${def.icon}</i><div><b>${funName(top.p)}</b><span>${escapeHtml(def.detail(top.p))}</span></div><strong>${Math.round(top.score)}</strong></div></article>`;
+ return `<article class="rankingHero30" style="--rank:${def.tone}"><div class="rankingHeroHead"><span>${def.icon}</span><h3>${def.title}</h3><p>${def.sub}</p></div><div class="rankingWinner30"><i>${def.icon}</i><div><small>${def.tag}</small><b>${funName(top.p)}</b><span>${escapeHtml(def.detail(top.p))}</span></div><strong>${Math.round(top.score)}</strong></div><div class="rankingList30">${def.ranked.slice(1,6).map((x,i)=>`<div><em>${i+2}</em><b>${funName(x.p)}</b><span><i style="width:${Math.max(3,Math.min(100,x.score))}%"></i></span><strong>${Math.round(x.score)}</strong></div>`).join('')}</div><div class="rankingDisclaimer">Fun index odvozený jen z dostupných statistik Clubroomu. Není to objektivní hodnocení člověka, což je dobře, protože software už lidem hodnotí dost věcí.</div></article>`;
+}
+function v30DuoLabel(x){
+ const ag=N(x.a_goals),aa=N(x.a_assists)+N(x.a_second_assists)*.5,bg=N(x.b_goals),ba=N(x.b_assists)+N(x.b_second_assists)*.5,wr=N(x.matches)?N(x.wins)/N(x.matches)*100:0;
+ if((aa>ag&&bg>ba)||(ba>bg&&ag>aa))return ['CREATOR × FINISHER','#17b890'];
+ if(wr>=65)return ['CARRY PAIR','#3987d7'];
+ if(wr<45)return ['CHAOS DUO','#8d4ac7'];
+ return ['BALANCED DUO','#4b6f91'];
+}
+function v30DuoScore(x){const m=Math.max(1,N(x.matches)),wr=N(x.wins)/m*100,cpm=N(x.contributions)/m;return Math.max(0,Math.min(99,Math.round(wr*.55+Math.min(25,m*1.2)+Math.min(20,cpm*5))))}
+function v30RenderDuos(a){
+ const chem=(a?.chemistry||[]).slice().sort((x,y)=>v30DuoScore(y)-v30DuoScore(x));
+ const html=chem.length?chem.map(x=>{const [label,tone]=v30DuoLabel(x),m=Math.max(1,N(x.matches)),wr=N(x.wins)/m*100,score=v30DuoScore(x);return `<article class="duoCard" style="--duo:${tone}"><div class="duoTop"><span class="duoLabel">${label}</span><div class="duoNames"><b>${escapeHtml(x.a_name)}</b><i>×</i><b>${escapeHtml(x.b_name)}</b></div></div><div class="duoStats"><div><b>${score}</b><span>Duo Score</span></div><div><b>${x.matches}</b><span>Matches</span></div><div><b>${wr.toFixed(0)}%</b><span>Win Rate</span></div><div><b>${x.contributions}</b><span>Combined G+A</span></div></div><div class="duoMeta">${N(x.a_goals)}G + ${N(x.a_assists)}A · ${escapeHtml(x.a_name)} &nbsp; | &nbsp; ${N(x.b_goals)}G + ${N(x.b_assists)}A · ${escapeHtml(x.b_name)}</div></article>`}).join(''):'<div class="msg">Duo Cards potřebují aspoň dva společné archivované zápasy.</div>';
+ const all=$('#goalPartners');if(all)all.innerHTML=html;
+ const feat=$('#featuredDuos');if(feat)feat.innerHTML=html;
+}
+function v30FeaturedSuperlatives(){
+ const src=[...document.querySelectorAll('#funAwards .revealCard')].slice(0,5);const host=$('#featuredSuperlatives');if(!host)return;
+ host.innerHTML=src.length?src.map(x=>`<button class="miniReveal" type="button"><span>${x.querySelector('.revealIcon')?.textContent||'★'}</span><b>${escapeHtml(x.querySelector('b')?.textContent||'Award')}</b><small>Click to reveal in Superlatives</small></button>`).join(''):'<div class="msg">Superlativy se naplní z hráčských dat.</div>';
+ host.querySelectorAll('.miniReveal').forEach(b=>b.onclick=()=>v30OpenFun('superlatives'));
+}
+function v30OpenFun(tab){
+ document.querySelectorAll('[data-fun-tab]').forEach(b=>b.classList.toggle('active',b.dataset.funTab===tab));
+ document.querySelectorAll('[data-fun-pane]').forEach(p=>p.classList.toggle('active',p.dataset.funPane===tab));
+ const nav=$('#funSubnav');if(nav){const active=nav.querySelector(`[data-fun-tab="${tab}"]`);active?.scrollIntoView({behavior:'smooth',block:'nearest',inline:'center'})}
+}
+document.addEventListener('click',e=>{const b=e.target.closest('[data-fun-tab]');if(b)v30OpenFun(b.dataset.funTab);const o=e.target.closest('[data-open-fun]');if(o)v30OpenFun(o.dataset.openFun);if(e.target.closest('#revealAll30'))document.querySelectorAll('#funAwards .revealCard').forEach(x=>x.classList.add('revealed'))});
+function v30RenderFun(h,a){
+ const defs=v30Rankings(h), byId=id=>defs.find(x=>x.id===id);
+ const featured=$('#viralRankings');if(featured)featured.innerHTML=defs.slice(0,3).map(d=>v30RankingCard(d,true)).join('');
+ for(const [id,host] of [['ghost','#viralGhost'],['lmerchant','#viralLmerchant'],['selfglazer','#viralSelfglazer'],['maincharacter','#viralMaincharacter']]){const el=$(host),d=byId(id);if(el&&d)el.innerHTML=v30RankingCard(d,false)}
+ v30RenderDuos(a);v30FeaturedSuperlatives();
+}
+const _renderFunV30=renderFun;renderFun=function(h,a){_renderFunV30(h,a);v30RenderFun(h,a)};
