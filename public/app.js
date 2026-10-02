@@ -149,7 +149,7 @@ function render(id,d,searchClub=null){
  const om=$("#overviewMatches"); if(om)om.innerHTML=ms.length?ms.slice(0,5).map(m=>`<div class="overviewMatch"><span class="resultBadge ${m.result.toLowerCase()}">${m.result}</span><div><strong>${escapeHtml(m.opp||"Soupeř")}</strong><small>${m.type} · ${m.date?m.date.toLocaleDateString("cs-CZ"):"—"}</small></div><b>${m.og}:${m.tg}</b></div>`).join(""):'<div class="msg">Zatím bez zápasů.</div>';
  const ol=$("#overviewLeaders"); if(ol)ol.innerHTML=ps.slice().sort((a,b)=>b.ga-a.ga).slice(0,4).map((p,i)=>`<div class="overviewLeader"><span class="leaderRank">${i+1}</span><div><strong>${escapeHtml(p.name)}</strong><small>${p.games} zápasů · ${p.goals}G + ${p.assists}A</small></div><b>${p.rating?p.rating.toFixed(1):"—"}</b></div>`).join("");
  document.querySelectorAll("[data-m]").forEach(x=>x.onclick=()=>showMatch(+x.dataset.m));
- let er=d.errors||{};$("#status").innerHTML=["info","overall","career","members","achievements","league","playoff","friendly"].map(k=>`<div class="endpoint"><span>${k}</span><b>${er[k]?"CHYBA":"OK"}</b></div>`).join("");
+ let er=d.errors||{}; const statusEl=$("#status"); if(statusEl) statusEl.innerHTML=["info","overall","career","members","achievements","league","playoff","friendly"].map(k=>`<div class="endpoint"><span>${k}</span><b>${er[k]?"ERROR":"OK"}</b></div>`).join("");
  fillCompare();$("#home").hidden=true;$("#dash").hidden=false;window.scrollTo({top:0,behavior:"smooth"});loadHistory(id)
 }
 function playerSortValue(p,key){
