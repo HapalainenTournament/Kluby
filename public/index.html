@@ -1,10 +1,10 @@
-<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Clubroom FC27 v35</title><link rel="stylesheet" href="/style.css"></head><body>
+<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Clubroom FC27 v37</title><link rel="stylesheet" href="/style.css"></head><body>
 <header class="topbar"><a class="brand" href="/" aria-label="Clubroom homepage"><span class="brandMark">C</span><b>CLUBROOM</b><em>FC27</em></a><div class="topActions"><button id="openSearch" class="iconBtn" title="Search club">⌕</button></div></header>
 <main class="shell">
 <section id="home" class="searchPage"><div class="searchIntro"><span class="kicker">EA SPORTS FC 27 · PRO CLUBS</span><h1>Search Pro Clubs Stats</h1><p>Search any EA FC 27 Pro Clubs team and open detailed stats, players, match history, form and analytics.</p></div><form id="search" class="searchPanel"><div class="searchInputWrap"><input id="q" placeholder="Enter club name…" required><span>⌕</span></div><div class="searchActions"><select id="platform"><option value="common-gen5">PS5 / Xbox Series / PC</option><option value="common-gen4">PS4 / Xbox One</option><option value="nx">Switch</option></select><button>Search</button></div></form><div id="results" class="results searchResults"></div></section>
 <section id="dash" hidden>
 <section class="clubHero"><div class="clubIdentity"><div id="clubLogo" class="clubLogo"><img id="clubCrest" alt="Klubový crest" hidden><span id="clubFallback">C</span></div><div><span class="kicker">CLUB PROFILE</span><h2 id="clubName">—</h2><div class="clubBadges"><span id="divisionBadge" class="divisionBadge">DIV —</span><span id="skillBadge" class="softBadge">SR —</span><span id="clubIdBadge" class="softBadge">ID —</span></div></div></div><div class="recordLine"><b class="win" id="recW">0W</b><b class="draw" id="recD">0D</b><b class="loss" id="recL">0L</b></div><div class="formBlock"><span>RECENT FORM</span><div id="formPills" class="formPills"></div><b id="formSummary"></b></div></section>
-<nav class="clubTabs" id="clubTabs"><button data-tab="stats" class="active">Overview</button><button data-tab="players">Players</button><button data-tab="compare">Compare</button><button data-tab="matches">Matches</button><button data-tab="analytics">Analytics <small>BETA</small></button><button data-tab="fun">Fun</button><button data-tab="plus">Club+</button></nav>
+<nav class="clubTabs" id="clubTabs"><button data-tab="stats" class="active">Overview</button><button data-tab="players">Players</button><button data-tab="compare">Compare</button><button data-tab="matches">Matches</button><button data-tab="analytics">Analytics</button><button data-tab="fun">Fun</button><button data-tab="plus">Club+</button></nav>
 <div class="tabPane active" data-pane="stats">
 <div class="overviewLayout">
   <div class="overviewMain">
@@ -21,11 +21,23 @@
 <div class="tabPane" data-pane="compare"><section class="panel comparePanel"><div class="panelHead"><h3>Player Compare</h3><span>career + Clubroom archive</span></div><div class="compareControls"><select id="cmpA"></select><b>VS</b><select id="cmpB"></select></div><div id="compareCoverage" class="compareCoverage"></div><div id="compareBody"></div></section></div>
 <div class="tabPane" data-pane="matches"><div id="matchList"></div></div>
 <div class="tabPane" data-pane="analytics">
-<section class="analyticsHero"><div><span class="kicker">PERFORMANCE LAB</span><h3>Analytics</h3><p>Form, match-by-match trends, player development and passing insights from the Clubroom archive.</p></div><span class="betaBadge">BETA</span></section>
-<section class="panel analyticsSection"><div class="panelHead"><h3>📈 Form Graph</h3><span>ARCHIVE</span></div><div id="analyticsForm"></div></section>
-<section class="panel analyticsSection purple"><div class="panelHead"><h3>📊 Match-by-Match</h3><span>PLAYER TRENDS</span></div><div id="analyticsMatchByMatch"></div></section>
-<section class="panel analyticsSection"><div class="panelHead"><h3>💡 Improvement Tips</h3><span>PLAYER DEVELOPMENT</span></div><div id="improvementTips" class="tipGrid"></div></section>
-<section class="panel analyticsSection green"><div class="panelHead"><h3>🎯 Passing Insights</h3><span>ACCURACY + VOLUME</span></div><div id="passingInsights"></div></section>
+<section class="analyticsHero analyticsHero37"><div><span class="kicker">PERFORMANCE LAB</span><h3>Analytics</h3><p>Team form, player trends, partnerships and impact metrics from the Clubroom archive.</p></div></section>
+<nav class="analyticsSubnav" id="analyticsSubnav">
+  <button class="active" data-analytics-tab="form">Form</button>
+  <button data-analytics-tab="match">Match-by-Match</button>
+  <button data-analytics-tab="partnerships">Goal Partnerships</button>
+  <button data-analytics-tab="clutch">Clutch</button>
+  <button data-analytics-tab="carry">Carry</button>
+  <button data-analytics-tab="passing">Passing</button>
+  <button data-analytics-tab="improvement">Improvement</button>
+</nav>
+<section class="analyticsPane37 active" data-analytics-pane="form"><div class="analyticsCard37"><div class="analyticsTitle37"><div><span>FORM</span><h3>Form Graph</h3></div><small>RECENT ARCHIVE</small></div><div id="analyticsForm"></div></div></section>
+<section class="analyticsPane37" data-analytics-pane="match"><div class="analyticsCard37"><div class="analyticsTitle37"><div><span>PLAYER TRENDS</span><h3>Match-by-Match</h3></div><small>INTERACTIVE</small></div><div id="analyticsMatchByMatch"></div></div></section>
+<section class="analyticsPane37" data-analytics-pane="partnerships"><div class="analyticsCard37"><div class="analyticsTitle37"><div><span>PAIR OUTPUT</span><h3>Goal Partnerships</h3></div><small>SHARED MATCHES</small></div><div id="analyticsPartnerships"></div></div></section>
+<section class="analyticsPane37" data-analytics-pane="clutch"><div class="analyticsCard37"><div class="analyticsTitle37"><div><span>BIG MATCH IMPACT</span><h3>Clutch</h3></div><small>ARCHIVE INDEX</small></div><div id="analyticsClutch"></div></div></section>
+<section class="analyticsPane37" data-analytics-pane="carry"><div class="analyticsCard37"><div class="analyticsTitle37"><div><span>TEAM DEPENDENCY</span><h3>Carry Stats</h3></div><small>OUTPUT SHARE</small></div><div id="analyticsCarry"></div></div></section>
+<section class="analyticsPane37" data-analytics-pane="passing"><div class="analyticsCard37"><div class="analyticsTitle37"><div><span>PASSING</span><h3>Passing Insights</h3></div><small>ACCURACY + VOLUME</small></div><div id="passingInsights"></div></div></section>
+<section class="analyticsPane37" data-analytics-pane="improvement"><div class="analyticsCard37"><div class="analyticsTitle37"><div><span>PLAYER DEVELOPMENT</span><h3>Improvement Tips</h3></div><small>ARCHIVE BASED</small></div><div id="improvementTips" class="tipGrid"></div></div></section>
 <div class="legacySink" hidden><div id="analyticsCards"></div><div id="chemistry"></div></div>
 </div>
 <div class="tabPane" data-pane="fun">
@@ -66,4 +78,4 @@
 <div class="tabPane" data-pane="plus"><section class="plusHero"><span class="kicker">CLUBROOM ARCHIVE</span><h3>Club+</h3><p>Long-term history beyond EA's limited recent window. The longer the club is tracked, the richer the archive becomes.</p><div id="historyStats" class="metricGrid"></div><div id="dbState" class="dbState">DB</div></section><section class="panel"><div class="panelHead"><h3>Club+ Features</h3></div><div class="featureGrid"><article><b>Full History</b><p>Permanent archive of captured matches.</p></article><article><b>Sessions</b><p>Evenings grouped into play sessions.</p></article><article><b>Advanced Season</b><p>Second assists, passing, tackles, shots and more event-level data.</p></article><article><b>Records</b><p>Club and player records across the archive.</p></article></div></section></div>
 </section></main>
 <section id="playerView" class="overlay" hidden><button class="close" data-close="playerView">×</button><div id="playerContent"></div></section>
-<footer>CLUBROOM FC27 · v35</footer><script src="/app.js"></script></body></html>
+<footer>CLUBROOM FC27 · v37</footer><script src="/app.js"></script></body></html>

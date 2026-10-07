@@ -265,7 +265,6 @@ function renderAnalytics(h,a){
  const best=(a.players||[]).slice().sort((x,y)=>N(y.rating)-N(x.rating))[0],pass=(a.players||[]).slice().sort((x,y)=>(N(y.pass_attempts)?N(y.passes_made)/N(y.pass_attempts):0)-(N(x.pass_attempts)?N(x.passes_made)/N(x.pass_attempts):0))[0],fin=(a.players||[]).slice().sort((x,y)=>(N(y.shots)?N(y.goals)/N(y.shots):0)-(N(x.shots)?N(x.goals)/N(x.shots):0))[0];
  $("#analyticsCards").innerHTML=metric("FORM · LAST 5",last5.map(x=>x.result).join(" ")||"—")+metric("WR · LAST 10",last10.length?wr(last10)+"%":"—")+metric("AVG GOALS · L10",last10.length?(last10.reduce((s,x)=>s+N(x.goals),0)/last10.length).toFixed(2):"—")+metric("AVG CONC. · L10",last10.length?(last10.reduce((s,x)=>s+N(x.opponent_goals),0)/last10.length).toFixed(2):"—")+metric("BEST RATING",best?`${best.player_name} · ${N(best.rating).toFixed(2)}`:"—")+metric("PASS LEADER",pass&&N(pass.pass_attempts)?`${pass.player_name} · ${(N(pass.passes_made)/N(pass.pass_attempts)*100).toFixed(1)}%`:"—")+metric("FINISHING",fin&&N(fin.shots)?`${fin.player_name} · ${(N(fin.goals)/N(fin.shots)*100).toFixed(1)}%`:"—")+metric("SESSIONS",(a.sessions||[]).length);
  const chem=a.chemistry||[];$("#chemistry").innerHTML=chem.length?`<div class="table"><table><thead><tr><th>#</th><th>Partnership</th><th>Matches</th><th>Wins</th><th>WR</th><th>G+A combined</th></tr></thead><tbody>${chem.map((x,i)=>`<tr><td>${i+1}</td><td>${escapeHtml(x.a_name)} + ${escapeHtml(x.b_name)}</td><td>${x.matches}</td><td>${x.wins}</td><td>${Math.round(N(x.wins)/N(x.matches)*100)}%</td><td>${x.contributions}</td></tr>`).join("")}</tbody></table></div>`:'<div class="msg">Chemistry potřebuje aspoň dva společné uložené zápasy.</div>';
- const pane=document.querySelector('[data-pane="analytics"]');let sessions=pane.querySelector("#sessionsPanel");if(!sessions){sessions=document.createElement("section");sessions.id="sessionsPanel";sessions.className="panel";pane.appendChild(sessions)}sessions.innerHTML=`<div class="panelHead"><h3>Session Reports</h3><span>pauza 2+ hodiny = nová session</span></div>${(a.sessions||[]).length?`<div class="table"><table><thead><tr><th>Start</th><th>Matches</th><th>W-D-L</th><th>Goals</th><th>Conceded</th><th>GD</th></tr></thead><tbody>${a.sessions.slice(0,20).map(x=>`<tr><td>${new Date(x.started_at).toLocaleString("cs-CZ")}</td><td>${x.matches}</td><td>${x.wins}-${x.draws}-${x.losses}</td><td>${x.goals}</td><td>${x.conceded}</td><td>${N(x.goals)-N(x.conceded)>=0?"+":""}${N(x.goals)-N(x.conceded)}</td></tr>`).join("")}</tbody></table></div>`:'<div class="msg">Zatím bez session historie.</div>'}`;
 }
 function funName(p){return escapeHtml(p?.pro_name||p?.player_name||p?.name||"—")}
 function renderFunLive(){
@@ -742,3 +741,85 @@ v31RenderMatchesPanel = function(){
   </section>`;
   document.querySelectorAll('[data-match-filter]').forEach(btn=>btn.onclick=()=>{document.querySelectorAll('[data-match-filter]').forEach(x=>x.classList.toggle('active',x===btn));const f=btn.dataset.matchFilter;document.querySelectorAll('[data-match-section]').forEach(sec=>sec.hidden=!(f==='all'||sec.dataset.matchSection===f));});
 }
+
+
+/* v36: delegated match card opening after v35 dynamically replaces the list. */
+document.addEventListener('click',e=>{
+  const live=e.target.closest('.matchRow35[data-m]');
+  if(!live)return;
+  e.preventDefault();
+  showMatch(Number(live.dataset.m));
+});
+
+
+/* v37 Analytics navigation + interactive views */
+function v37OpenAnalytics(tab){
+ document.querySelectorAll('[data-analytics-tab]').forEach(b=>b.classList.toggle('active',b.dataset.analyticsTab===tab));
+ document.querySelectorAll('[data-analytics-pane]').forEach(p=>p.classList.toggle('active',p.dataset.analyticsPane===tab));
+}
+document.addEventListener('click',e=>{const b=e.target.closest('[data-analytics-tab]');if(b)v37OpenAnalytics(b.dataset.analyticsTab)});
+
+function v37PlayerName(x){return escapeHtml(x?.player_name||x?.pro_name||x?.name||'Unknown')}
+function v37PlayerKey(x){return String(x?.player_id||x?.id||x?.player_name||x?.name||'').toLowerCase()}
+function v37FmtDate(v){return v?new Date(v).toLocaleDateString('en-GB',{day:'2-digit',month:'short'}):'—'}
+function v37MetricValue(row,mode){
+ if(mode==='rating') return N(row.rating)||null;
+ if(mode==='tackles') return N(row.tackles_made);
+ if(mode==='passing') return N(row.pass_attempts)?N(row.passes_made)/N(row.pass_attempts)*100:null;
+ if(mode==='contrib') return N(row.goals)+N(row.assists);
+ return null;
+}
+function v37MetricMeta(mode){
+ return {rating:['Match Rating','rating',v=>v.toFixed(1)],tackles:['Tackles Made','tackles',v=>String(Math.round(v))],passing:['Pass Accuracy','%',v=>v.toFixed(0)+'%'],contrib:['Goal Contributions','G+A',v=>String(Math.round(v))]}[mode];
+}
+function v37RenderMatchByMatch(h){
+ const host=$('#analyticsMatchByMatch'); if(!host)return;
+ const pm=(h?.playerMatches||[]).slice();
+ const players=[...new Map(pm.filter(x=>x.player_name).map(x=>[v37PlayerKey(x),{id:v37PlayerKey(x),name:x.player_name}])).values()];
+ if(!players.length){host.innerHTML='<div class="msg">Match-by-match needs archived player match stats.</div>';return}
+ let state={mode:'rating',player:players[0].id};
+ const draw=()=>{
+   const meta=v37MetricMeta(state.mode), rows=pm.filter(x=>v37PlayerKey(x)===state.player).slice(0,20).reverse();
+   const vals=rows.map(x=>v37MetricValue(x,state.mode)); const valid=vals.filter(v=>v!=null&&Number.isFinite(v));
+   let min=0,max=10;if(state.mode==='rating'){min=5;max=10}else if(state.mode==='passing'){min=0;max=100}else{max=Math.max(1,...valid);min=0}
+   const W=1000,H=250,pad=28; const pts=vals.map((v,i)=>v==null?null:[pad+i*((W-pad*2)/Math.max(1,vals.length-1)),H-pad-((v-min)/Math.max(.0001,max-min))*(H-pad*2)]);
+   const segments=[];let seg=[];pts.forEach(p=>{if(!p){if(seg.length)segments.push(seg),seg=[]}else seg.push(p)});if(seg.length)segments.push(seg);
+   const avg=valid.length?valid.reduce((a,b)=>a+b,0)/valid.length:null,best=valid.length?Math.max(...valid):null,worst=valid.length?Math.min(...valid):null;
+   $('#analyticsMatchGraph37').innerHTML=`<div class="mbmHead37"><div><small>${escapeHtml(players.find(p=>p.id===state.player)?.name||'Player')}</small><h4>${meta[0]}</h4></div><div class="mbmStats37"><span><b>${avg==null?'—':meta[2](avg)}</b>Average</span><span><b>${best==null?'—':meta[2](best)}</b>Best</span><span><b>${worst==null?'—':meta[2](worst)}</b>Worst</span></div></div><div class="mbmPlot37"><svg viewBox="0 0 ${W} ${H}" preserveAspectRatio="none">${[0,.25,.5,.75,1].map(q=>`<line x1="${pad}" y1="${pad+q*(H-pad*2)}" x2="${W-pad}" y2="${pad+q*(H-pad*2)}"/>`).join('')}${segments.map(a=>`<polyline points="${a.map(p=>p.join(',')).join(' ')}"/>`).join('')}${pts.map((p,i)=>p?`<circle cx="${p[0]}" cy="${p[1]}" r="4"><title>${v37FmtDate(rows[i]?.played_at)} · ${meta[2](vals[i])}</title></circle>`:'').join('')}</svg></div><div class="mbmDates37">${rows.map((x,i)=>`<span>${i+1}</span>`).join('')}</div>`;
+   host.querySelectorAll('[data-metric37]').forEach(b=>b.classList.toggle('active',b.dataset.metric37===state.mode));
+   host.querySelectorAll('[data-player37]').forEach(b=>b.classList.toggle('active',b.dataset.player37===state.player));
+ };
+ host.innerHTML=`<div class="mbmToolbar37"><div class="metricSwitch37"><button class="active" data-metric37="rating">Rating</button><button data-metric37="tackles">Tackles</button><button data-metric37="passing">Pass accuracy</button><button data-metric37="contrib">Goal contributions</button></div><div class="playerSwitch37">${players.slice(0,10).map((p,i)=>`<button class="${i?'':'active'}" data-player37="${escapeHtml(p.id)}">${escapeHtml(p.name)}</button>`).join('')}</div></div><div id="analyticsMatchGraph37"></div>`;
+ host.querySelectorAll('[data-metric37]').forEach(b=>b.onclick=()=>{state.mode=b.dataset.metric37;draw()});
+ host.querySelectorAll('[data-player37]').forEach(b=>b.onclick=()=>{state.player=b.dataset.player37;draw()});
+ draw();
+}
+function v37RenderForm(h){
+ const host=$('#analyticsForm');if(!host)return;const ms=(h?.matches||[]).slice(0,20).reverse();
+ if(!ms.length){host.innerHTML='<div class="msg">No archived matches yet.</div>';return}
+ const pts=ms.map(x=>x.result==='W'?3:x.result==='D'?1:0), gf=ms.map(x=>N(x.goals)),ga=ms.map(x=>N(x.opponent_goals));
+ const W=1000,H=230,pad=28,max=Math.max(4,...gf,...ga);
+ const line=arr=>arr.map((v,i)=>`${pad+i*((W-pad*2)/Math.max(1,arr.length-1))},${H-pad-(v/max)*(H-pad*2)}`).join(' ');
+ const w=ms.filter(x=>x.result==='W').length,d=ms.filter(x=>x.result==='D').length,l=ms.length-w-d;
+ host.innerHTML=`<div class="formSummary37"><div><small>LAST ${ms.length}</small><strong>${w}W · ${d}D · ${l}L</strong></div><div><small>GOALS</small><strong>${gf.reduce((a,b)=>a+b,0)} : ${ga.reduce((a,b)=>a+b,0)}</strong></div><div><small>POINTS / MATCH</small><strong>${(pts.reduce((a,b)=>a+b,0)/ms.length).toFixed(2)}</strong></div></div><div class="formResultStrip37">${ms.map(x=>`<span class="${String(x.result).toLowerCase()}" title="${escapeHtml(x.opponent||'Opponent')}">${x.result}</span>`).join('')}</div><div class="formGraph37"><div class="formLegend37"><span>Goals scored</span><span>Goals conceded</span></div><svg viewBox="0 0 ${W} ${H}" preserveAspectRatio="none"><polyline class="gf" points="${line(gf)}"/><polyline class="ga" points="${line(ga)}"/></svg></div>`;
+}
+function v37RenderPartnerships(a){
+ const host=$('#analyticsPartnerships');if(!host)return;const chem=(a?.chemistry||[]).slice().sort((x,y)=>N(y.contributions)-N(x.contributions));
+ host.innerHTML=chem.length?`<div class="partnerList37">${chem.slice(0,10).map((x,i)=>{const m=Math.max(1,N(x.matches)),wr=N(x.wins)/m*100,cpm=N(x.contributions)/m;return `<article><em>#${i+1}</em><div class="partnerNames37"><b>${escapeHtml(x.a_name)}</b><span>+</span><b>${escapeHtml(x.b_name)}</b></div><div class="partnerNums37"><span><b>${x.matches}</b>matches</span><span><b>${wr.toFixed(0)}%</b>win rate</span><span><b>${N(x.contributions)}</b>combined G+A</span><span><b>${cpm.toFixed(2)}</b>G+A / match</span></div></article>`}).join('')}</div><p class="analyticsNote37">This measures shared output while both players appeared. It does not claim that one directly assisted the other unless EA provides that event link.</p>`:'<div class="msg">Partnerships need shared archived matches.</div>';
+}
+function v37RenderClutch(h){
+ const host=$('#analyticsClutch');if(!host)return;const pm=h?.playerMatches||[], mm=new Map((h?.matches||[]).map(m=>[String(m.match_id),m]));
+ const agg=new Map(); for(const x of pm){const m=mm.get(String(x.match_id));if(!m)continue;const close=Math.abs(N(m.goals)-N(m.opponent_goals))<=1, win=m.result==='W';if(!close)continue;const k=v37PlayerKey(x),o=agg.get(k)||{name:x.player_name,matches:0,wins:0,ga:0,r:0,motm:0};o.matches++;o.wins+=win?1:0;o.ga+=N(x.goals)+N(x.assists);o.r+=N(x.rating);o.motm+=N(x.motm);agg.set(k,o)}
+ const rows=[...agg.values()].map(x=>({...x,avg:x.matches?x.r/x.matches:0,score:(x.wins*5)+(x.ga*4)+(x.motm*6)+(x.avg*2)})).sort((a,b)=>b.score-a.score);
+ host.innerHTML=rows.length?`<div class="impactGrid37">${rows.slice(0,6).map((x,i)=>`<article><small>#${i+1} · CLOSE MATCHES</small><h4>${escapeHtml(x.name)}</h4><strong>${Math.round(x.score)}</strong><div><span>${x.matches} matches</span><span>${x.wins} wins</span><span>${x.ga} G+A</span><span>${x.avg.toFixed(1)} avg</span></div></article>`).join('')}</div><p class="analyticsNote37">Clutch Index uses only archived matches decided by one goal or fewer: wins, G+A, MOTM and average rating.</p>`:'<div class="msg">Not enough close-match data yet.</div>';
+}
+function v37RenderCarry(h){
+ const host=$('#analyticsCarry');if(!host)return;const pm=h?.playerMatches||[], matches=h?.matches||[],teamGoals=matches.reduce((s,m)=>s+N(m.goals),0);const agg=new Map();for(const x of pm){const k=v37PlayerKey(x),o=agg.get(k)||{name:x.player_name,matches:0,goals:0,assists:0,r:0};o.matches++;o.goals+=N(x.goals);o.assists+=N(x.assists);o.r+=N(x.rating);agg.set(k,o)}
+ const rows=[...agg.values()].map(x=>{const ga=x.goals+x.assists,share=teamGoals?ga/teamGoals*100:0,avg=x.matches?x.r/x.matches:0,score=share*.7+avg*3;return {...x,ga,share,avg,score}}).sort((a,b)=>b.score-a.score);
+ host.innerHTML=rows.length?`<div class="carryList37">${rows.slice(0,8).map((x,i)=>`<article><em>${i+1}</em><div><b>${escapeHtml(x.name)}</b><small>${x.goals}G + ${x.assists}A · ${x.avg.toFixed(1)} avg</small></div><div class="carryBar37"><span style="width:${Math.min(100,x.share)}%"></span></div><strong>${x.share.toFixed(1)}%</strong></article>`).join('')}</div><p class="analyticsNote37">Output Share = player G+A divided by the club's archived goals. It is a dependency indicator, not a literal share of goals created.</p>`:'<div class="msg">Carry Stats need archived player match data.</div>';
+}
+function v37RenderAnalytics(h,a){
+ const sess=document.querySelector('#sessionsPanel');if(sess)sess.remove();
+ v37RenderForm(h);v37RenderMatchByMatch(h);v37RenderPartnerships(a);v37RenderClutch(h);v37RenderCarry(h);
+}
+const __renderAnalyticsV37=renderAnalytics;renderAnalytics=function(h,a){__renderAnalyticsV37(h,a);const sess=document.querySelector('#sessionsPanel');if(sess)sess.remove();v37RenderAnalytics(h,a)};
