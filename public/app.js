@@ -823,3 +823,58 @@ function v37RenderAnalytics(h,a){
  v37RenderForm(h);v37RenderMatchByMatch(h);v37RenderPartnerships(a);v37RenderClutch(h);v37RenderCarry(h);
 }
 const __renderAnalyticsV37=renderAnalytics;renderAnalytics=function(h,a){__renderAnalyticsV37(h,a);const sess=document.querySelector('#sessionsPanel');if(sess)sess.remove();v37RenderAnalytics(h,a)};
+
+
+/* v38: robust analytics navigation + redesigned cards */
+(function(){
+ const nav=document.getElementById('analyticsSubnav');
+ if(nav){
+   nav.addEventListener('click',function(e){
+     const b=e.target.closest('[data-analytics-tab]'); if(!b)return;
+     e.preventDefault(); e.stopPropagation();
+     const tab=b.dataset.analyticsTab;
+     nav.querySelectorAll('[data-analytics-tab]').forEach(x=>x.classList.toggle('active',x===b));
+     document.querySelectorAll('[data-analytics-pane]').forEach(p=>{const on=p.dataset.analyticsPane===tab;p.classList.toggle('active',on);p.hidden=!on;});
+   },true);
+   document.querySelectorAll('[data-analytics-pane]').forEach(p=>p.hidden=!p.classList.contains('active'));
+ }
+ const fnav=document.getElementById('funSubnav');
+ if(fnav){fnav.addEventListener('click',function(e){const b=e.target.closest('[data-fun-tab]');if(!b)return;e.preventDefault();e.stopPropagation();const tab=b.dataset.funTab;fnav.querySelectorAll('[data-fun-tab]').forEach(x=>x.classList.toggle('active',x===b));document.querySelectorAll('[data-fun-pane]').forEach(p=>{const on=p.dataset.funPane===tab;p.classList.toggle('active',on);p.hidden=!on;});},true);document.querySelectorAll('[data-fun-pane]').forEach(p=>p.hidden=!p.classList.contains('active'));}
+})();
+
+v37RenderMatchByMatch = function(h){
+ const host=$('#analyticsMatchByMatch'); if(!host)return;
+ const pm=(h?.playerMatches||[]).slice();
+ const players=[...new Map(pm.filter(x=>x.player_name).map(x=>[v37PlayerKey(x),{id:v37PlayerKey(x),name:x.player_name}])).values()];
+ if(!players.length){host.innerHTML='<div class="msg">Match-by-match needs archived player match stats.</div>';return}
+ let state={mode:'rating',player:players[0].id};
+ const draw=()=>{
+   const meta=v37MetricMeta(state.mode), rows=pm.filter(x=>v37PlayerKey(x)===state.player).slice(0,16).reverse();
+   const vals=rows.map(x=>v37MetricValue(x,state.mode)); const valid=vals.filter(v=>v!=null&&Number.isFinite(v));
+   let floor=0,ceil=Math.max(1,...valid); if(state.mode==='rating'){floor=5;ceil=10}else if(state.mode==='passing'){floor=0;ceil=100}
+   const fmt=v=>v==null?'—':meta[2](v); const avg=valid.length?valid.reduce((a,b)=>a+b,0)/valid.length:null,best=valid.length?Math.max(...valid):null,worst=valid.length?Math.min(...valid):null;
+   const pname=players.find(p=>p.id===state.player)?.name||'Player';
+   const cards=rows.map((r,i)=>{const v=vals[i],pctH=v==null?4:Math.max(5,Math.min(100,((v-floor)/Math.max(.001,ceil-floor))*100));const result=String(r.result||'').toLowerCase();return `<article class="mbmMatch38 ${result}"><div class="mTop38"><span>${v37FmtDate(r.played_at)}</span><b>${String(r.result||'—')}</b></div><div class="mValue38"><strong>${fmt(v)}</strong><span><i style="--h:${pctH}%"></i></span></div><div class="mBottom38"><b>${escapeHtml(r.opponent||'Opponent')}</b><small>${N(r.goals)}G · ${N(r.assists)}A · ${N(r.rating)?N(r.rating).toFixed(1):'—'} rating</small></div></article>`}).join('');
+   const graph=$('#analyticsMatchGraph37'); if(graph)graph.innerHTML=`<div class="mbmSummary38"><div class="mbmIdentity38"><small>PLAYER TREND</small><h4>${escapeHtml(pname)} · ${meta[0]}</h4></div><div class="mbmKpi38"><b>${fmt(avg)}</b><span>Average</span></div><div class="mbmKpi38"><b>${fmt(best)}</b><span>Best</span></div><div class="mbmKpi38"><b>${fmt(worst)}</b><span>Worst</span></div></div><div class="mbmRail38">${cards||'<div class="msg">No matches for this metric.</div>'}</div>`;
+   host.querySelectorAll('[data-metric37]').forEach(b=>b.classList.toggle('active',b.dataset.metric37===state.mode)); host.querySelectorAll('[data-player37]').forEach(b=>b.classList.toggle('active',b.dataset.player37===state.player));
+ };
+ host.innerHTML=`<div class="mbm38"><div class="mbmToolbar38"><div class="mbmSwitch38"><button class="active" data-metric37="rating">Rating</button><button data-metric37="tackles">Tackles</button><button data-metric37="passing">Pass accuracy</button><button data-metric37="contrib">G+A</button></div><div class="mbmPlayers38">${players.slice(0,10).map((p,i)=>`<button class="${i?'':'active'}" data-player37="${escapeHtml(p.id)}">${escapeHtml(p.name)}</button>`).join('')}</div></div><div id="analyticsMatchGraph37"></div></div>`;
+ host.querySelectorAll('[data-metric37]').forEach(b=>b.addEventListener('click',e=>{e.preventDefault();state.mode=b.dataset.metric37;draw()})); host.querySelectorAll('[data-player37]').forEach(b=>b.addEventListener('click',e=>{e.preventDefault();state.player=b.dataset.player37;draw()})); draw();
+};
+
+v30RankingCard = function(def,compact=false){
+ const top=def.ranked[0];if(!top)return '<div class="msg">No data yet.</div>';
+ if(compact)return `<article class="featuredRankCard rankArt-${def.id}" style="--tone:${def.tone}" data-rank="#1"><div class="frBody"><small>CLUBROOM INDEX</small><h4>${def.title}</h4><p>${def.sub}</p></div><div class="frWinner"><i>${def.icon}</i><div><b>${funName(top.p)}</b><span>${escapeHtml(def.detail(top.p))}</span></div><strong>${Math.round(top.score)}</strong></div></article>`;
+ return `<article class="rankingHero30" style="--rank:${def.tone}"><div class="rankingHeroHead"><span>${def.icon}</span><h3>${def.title}</h3><p>${def.sub}</p></div><div class="rankingWinner30"><i>${def.icon}</i><div><small>${def.tag}</small><b>${funName(top.p)}</b><span>${escapeHtml(def.detail(top.p))}</span></div><strong>${Math.round(top.score)}</strong></div><div class="rankingList30">${def.ranked.slice(1,6).map((x,i)=>`<div><em>${i+2}</em><b>${funName(x.p)}</b><span><i style="width:${Math.max(3,Math.min(100,x.score))}%"></i></span><strong>${Math.round(x.score)}</strong></div>`).join('')}</div></article>`;
+};
+
+v30RenderDuos = function(a){
+ const chem=(a?.chemistry||[]).slice().sort((x,y)=>v30DuoScore(y)-v30DuoScore(x));
+ const initial=n=>(String(n||'?').trim()[0]||'?').toUpperCase();
+ const html=chem.length?chem.map(x=>{const [label,tone]=v30DuoLabel(x),m=Math.max(1,N(x.matches)),wr=N(x.wins)/m*100,score=v30DuoScore(x);return `<article class="duoCard" style="--duo:${tone}"><div class="duoTop"><span class="duoLabel">${label}</span><div class="duoNames"><b data-initial="${initial(x.a_name)}">${escapeHtml(x.a_name)}</b><i>×</i><b data-initial="${initial(x.b_name)}">${escapeHtml(x.b_name)}</b></div></div><div class="duoStats"><div><b>${score}</b><span>Duo Score</span></div><div><b>${wr.toFixed(0)}%</b><span>Win Rate</span></div><div><b>${x.matches}</b><span>Matches Together</span></div><div><b>${x.contributions}</b><span>Combined G+A</span></div></div><div class="duoMeta">${escapeHtml(x.a_name)} · ${N(x.a_goals)}G + ${N(x.a_assists)}A &nbsp; · &nbsp; ${escapeHtml(x.b_name)} · ${N(x.b_goals)}G + ${N(x.b_assists)}A</div></article>`}).join(''):'<div class="msg">Duo Cards need at least two shared archived matches.</div>';
+ const all=$('#goalPartners');if(all)all.innerHTML=html;const feat=$('#featuredDuos');if(feat)feat.innerHTML=html;
+};
+
+/* Small health helper for Club+ so collector state is visible without digging through Render logs. */
+async function v38LoadHealth(){try{const h=await fetchJSON('/api/health',5000);const db=$('#dbState');if(db&&h.database){db.textContent=h.collectorEnabled?'DB ON · COLLECTOR ON':'DB ON · COLLECTOR OFF';db.title=`Collector interval: ${Math.round((h.collectorIntervalMs||0)/60000)} min · batch ${h.collectorBatch||0}`}}catch{}}
+const __renderV38=render;render=function(id,d,searchClub=null){__renderV38(id,d,searchClub);v38LoadHealth();};
