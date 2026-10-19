@@ -10,3 +10,10 @@ Clubroom FC27 v39
 - Passing Insights je přesunuté do Analytics.
 - Fun rankings mají editoriální karty bez generovaných obrázků.
 - Databázový archiv zůstává zachovaný.
+
+
+## v40 event match probe
+
+The background collector now also probes likely FC27 special-event/tournament match type values: `tournamentMatch`, `tournament`, `eventMatch`, `liveEventMatch`, and `clubTournamentMatch`. Successful responses are archived as match type `event` and retain the raw EA candidate in `_eaMatchType`. Invalid candidates fail independently and do not stop league/playoff/friendly collection.
+
+Diagnostic endpoint: `/api/event-probe/:clubId?platform=common-gen5` returns the status and recent match IDs for each candidate without requiring UI changes.
