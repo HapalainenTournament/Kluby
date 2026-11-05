@@ -54,10 +54,52 @@ export async function history(clubId){
  return {enabled:true,players,matches,playerMatches,snapshots};
 }
 
+export async function buildSessions(clubId,{gapMinutes=90,activeMinutes=45}={}){
+ if(!enabled)return {enabled:false,gapMinutes,activeMinutes,active:false,sessions:[]};
+ const rows=(await query(`SELECT m.match_id,m.played_at,m.match_type,mc.result,mc.goals,
+   (SELECT club_name FROM match_clubs o WHERE o.match_id=m.match_id AND o.club_id<>$1 LIMIT 1) opponent,
+   (SELECT goals FROM match_clubs o WHERE o.match_id=m.match_id AND o.club_id<>$1 LIMIT 1) opponent_goals
+   FROM matches m JOIN match_clubs mc ON mc.match_id=m.match_id AND mc.club_id=$1
+   WHERE m.played_at IS NOT NULL ORDER BY m.played_at ASC`,[clubId])).rows;
+ const pRows=(await query(`SELECT s.match_id,s.player_id,MAX(s.player_name) player_name,
+   SUM(s.goals)::int goals,SUM(s.assists)::int assists,SUM(s.second_assists)::int second_assists,
+   SUM(s.motm)::int motm,SUM(s.shots)::int shots,SUM(s.passes_made)::int passes_made,SUM(s.pass_attempts)::int pass_attempts,SUM(s.tackles_made)::int tackles_made,AVG(NULLIF(s.rating,0))::real rating
+   FROM player_match_stats s WHERE s.club_id=$1 GROUP BY s.match_id,s.player_id`,[clubId])).rows;
+ const byMatch=new Map();
+ for(const p of pRows){const a=byMatch.get(String(p.match_id))||[];a.push(p);byMatch.set(String(p.match_id),a)}
+ const kind=t=>{const x=String(t||'').toLowerCase();if(x.includes('playoff'))return'playoff';if(x.includes('league'))return'league';if(x.includes('friendly'))return'friendly';if(x.includes('event')||x.includes('tournament'))return'event';return'other'};
+ const groups=[];let cur=null;
+ for(const r of rows){const at=new Date(r.played_at).getTime();if(!Number.isFinite(at))continue;
+   const prev=cur?.lastAt??null;
+   if(!cur||prev==null||(at-prev)>gapMinutes*60000){cur={firstAt:at,lastAt:at,matches:[]};groups.push(cur)}
+   cur.lastAt=at;cur.matches.push({...r,type:kind(r.match_type),players:byMatch.get(String(r.match_id))||[]});
+ }
+ const agg=list=>{const n=list.length,w=list.filter(x=>x.result==='W').length,d=list.filter(x=>x.result==='D').length,l=n-w-d,gf=list.reduce((a,x)=>a+N(x.goals),0),ga=list.reduce((a,x)=>a+N(x.opponent_goals),0),cleanSheets=list.filter(x=>N(x.opponent_goals)===0).length;const map=new Map();let shots=0,capturedGoals=0,passesMade=0,passAttempts=0,ratingSum=0,ratingN=0;for(const m of list)for(const p of m.players||[]){const k=String(p.player_id),v=map.get(k)||{player_id:k,player_name:p.player_name,matches:0,goals:0,assists:0,second_assists:0,motm:0,shots:0,passes_made:0,pass_attempts:0,tackles_made:0,ratingSum:0,ratingN:0};v.matches++;v.goals+=N(p.goals);v.assists+=N(p.assists);v.second_assists+=N(p.second_assists);v.motm+=N(p.motm);v.shots+=N(p.shots);v.passes_made+=N(p.passes_made);v.pass_attempts+=N(p.pass_attempts);v.tackles_made+=N(p.tackles_made);shots+=N(p.shots);capturedGoals+=N(p.goals);passesMade+=N(p.passes_made);passAttempts+=N(p.pass_attempts);if(N(p.rating)>0){v.ratingSum+=N(p.rating);v.ratingN++;ratingSum+=N(p.rating);ratingN++}map.set(k,v)}const ps=[...map.values()].map(x=>({...x,rating:x.ratingN?x.ratingSum/x.ratingN:0,contributions:x.goals+x.assists,passAccuracy:x.pass_attempts?x.passes_made/x.pass_attempts*100:0})).sort((a,b)=>(b.contributions-a.contributions)||(b.rating-a.rating)||(b.motm-a.motm));return{matches:n,wins:w,draws:d,losses:l,goals:gf,conceded:ga,goalDiff:gf-ga,winRate:n?w/n*100:0,pointsPerMatch:n?(w*3+d)/n:0,avgGoals:n?gf/n:0,teamRating:ratingN?ratingSum/ratingN:0,passAccuracy:passAttempts?passesMade/passAttempts*100:0,shotConversion:shots?capturedGoals/shots*100:0,cleanSheets,topPlayer:ps[0]||null,players:ps.slice(0,12)}};
+ const now=Date.now();
+ const sessions=groups.reverse().map((g,i)=>{
+  const lastMatchEnd=g.lastAt+15*60000;
+  const all=agg(g.matches);
+  const league=agg(g.matches.filter(x=>x.type==='league'));
+  const playoff=agg(g.matches.filter(x=>x.type==='playoff'));
+  const active=(now-g.lastAt)<=activeMinutes*60000;
+  return {
+    id:`${g.firstAt}-${i}`,
+    startedAt:new Date(g.firstAt).toISOString(),
+    lastMatchAt:new Date(g.lastAt).toISOString(),
+    estimatedEndAt:new Date(lastMatchEnd).toISOString(),
+    durationMinutes:Math.max(15,Math.round((lastMatchEnd-g.firstAt)/60000)),
+    active,all,byType:{league,playoff},
+    types:[...new Set(g.matches.map(x=>x.type))],
+    matches:g.matches.map(x=>({match_id:x.match_id,played_at:x.played_at,type:x.type,match_type:x.match_type,result:x.result,goals:N(x.goals),opponent_goals:N(x.opponent_goals),opponent:x.opponent,players:(x.players||[]).map(p=>({player_id:String(p.player_id),player_name:p.player_name,goals:N(p.goals),assists:N(p.assists),second_assists:N(p.second_assists),motm:N(p.motm),shots:N(p.shots),passes_made:N(p.passes_made),pass_attempts:N(p.pass_attempts),tackles_made:N(p.tackles_made),rating:N(p.rating)}))}))
+  };
+});
+ return {enabled:true,gapMinutes,activeMinutes,active:!!sessions[0]?.active,sessions};
+}
+
 export async function analytics(clubId){
- if(!enabled)return {enabled:false,players:[],chemistry:[],sessions:[]};
+ if(!enabled)return {enabled:false,players:[],chemistry:[],sessions:[],sessionMeta:{enabled:false}};
  const players=(await query(`SELECT p.player_id,MAX(p.player_name) player_name,COUNT(*)::int matches,AVG(NULLIF(p.rating,0))::real rating,SUM(p.goals)::int goals,SUM(p.assists)::int assists,SUM(p.second_assists)::int second_assists,SUM(p.shots)::int shots,SUM(p.passes_made)::int passes_made,SUM(p.pass_attempts)::int pass_attempts,SUM(p.tackles_made)::int tackles_made,SUM(p.tackle_attempts)::int tackle_attempts,SUM(p.interceptions)::int interceptions,SUM(p.dribbles)::int dribbles,SUM(p.motm)::int motm FROM player_match_stats p WHERE p.club_id=$1 GROUP BY p.player_id`,[clubId])).rows;
  const chemistry=(await query(`SELECT a.player_id a_id,MAX(a.player_name) a_name,b.player_id b_id,MAX(b.player_name) b_name,COUNT(*)::int matches,SUM(CASE WHEN mc.result='W' THEN 1 ELSE 0 END)::int wins,SUM(CASE WHEN mc.result='D' THEN 1 ELSE 0 END)::int draws,SUM(CASE WHEN mc.result='L' THEN 1 ELSE 0 END)::int losses,SUM(a.goals+a.assists+b.goals+b.assists)::int contributions,SUM(a.goals)::int a_goals,SUM(a.assists)::int a_assists,SUM(a.second_assists)::int a_second_assists,SUM(b.goals)::int b_goals,SUM(b.assists)::int b_assists,SUM(b.second_assists)::int b_second_assists,AVG(NULLIF(a.rating,0))::real a_rating,AVG(NULLIF(b.rating,0))::real b_rating FROM player_match_stats a JOIN player_match_stats b ON a.match_id=b.match_id AND a.club_id=b.club_id AND a.player_id<b.player_id JOIN match_clubs mc ON mc.match_id=a.match_id AND mc.club_id=a.club_id WHERE a.club_id=$1 GROUP BY a.player_id,b.player_id HAVING COUNT(*)>=2 ORDER BY (SUM(CASE WHEN mc.result='W' THEN 1 ELSE 0 END)::float/COUNT(*)) DESC,COUNT(*) DESC LIMIT 30`,[clubId])).rows;
- const sessions=(await query(`WITH x AS (SELECT m.played_at,mc.result,mc.goals,(SELECT goals FROM match_clubs o WHERE o.match_id=m.match_id AND o.club_id<>$1 LIMIT 1) opp_goals,CASE WHEN lag(m.played_at) OVER(ORDER BY m.played_at)-m.played_at < interval '-2 hours' THEN 1 ELSE 0 END new_session FROM matches m JOIN match_clubs mc ON mc.match_id=m.match_id AND mc.club_id=$1), y AS (SELECT *,sum(new_session) OVER(ORDER BY played_at) grp FROM x) SELECT min(played_at) started_at,max(played_at) ended_at,count(*)::int matches,sum(CASE WHEN result='W' THEN 1 ELSE 0 END)::int wins,sum(CASE WHEN result='D' THEN 1 ELSE 0 END)::int draws,sum(CASE WHEN result='L' THEN 1 ELSE 0 END)::int losses,sum(goals)::int goals,sum(opp_goals)::int conceded FROM y GROUP BY grp ORDER BY max(played_at) DESC LIMIT 50`,[clubId])).rows;
- return {enabled:true,players,chemistry,sessions};
+ const sessionMeta=await buildSessions(clubId);
+ return {enabled:true,players,chemistry,sessions:sessionMeta.sessions,sessionMeta};
 }

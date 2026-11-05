@@ -1,8 +1,8 @@
 import express from "express";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
-import {migrate,enabled as dbEnabled} from "./db.js";
-import {persistClubPayload,history,analytics} from "./storage.js";
+import {migrate,enabled as dbEnabled,query} from "./db.js";
+import {persistClubPayload,history,analytics,buildSessions} from "./storage.js";
 import {dueClubs,rescheduleClub} from "./collector.js";
 
 const app = express();
@@ -111,9 +111,54 @@ app.get("/api/event-probe/:id",async(req,res)=>{
  }catch(e){res.status(500).json({ok:false,error:e.message})}
 });
 
+
+app.get("/api/db-export", async (req,res)=>{
+  try{
+    if(!dbEnabled) return res.status(503).json({error:"Database is not enabled."});
+    const expected=String(process.env.EXPORT_TOKEN||"");
+    const supplied=String(req.query.token||req.get("x-export-token")||"");
+    if(!expected) return res.status(503).json({error:"EXPORT_TOKEN is not configured on the server."});
+    if(supplied!==expected) return res.status(401).json({error:"Invalid export token."});
+
+    const tables=[
+      "clubs",
+      "players",
+      "club_memberships",
+      "matches",
+      "match_clubs",
+      "player_match_stats",
+      "player_match_events",
+      "club_snapshots"
+    ];
+    const data={};
+    const counts={};
+    for(const table of tables){
+      const r=await query(`SELECT * FROM ${table}`);
+      data[table]=r.rows;
+      counts[table]=r.rowCount;
+    }
+    const payload={
+      format:"clubroom-postgres-json-backup",
+      version:"43.0.0",
+      exportedAt:new Date().toISOString(),
+      counts,
+      data
+    };
+    const stamp=new Date().toISOString().replace(/[:.]/g,"-");
+    res.setHeader("Content-Type","application/json; charset=utf-8");
+    res.setHeader("Content-Disposition",`attachment; filename=clubroom-db-backup-${stamp}.json`);
+    res.setHeader("Cache-Control","no-store");
+    res.send(JSON.stringify(payload));
+  }catch(e){
+    console.error("db export",e);
+    res.status(500).json({error:"Database export failed.",detail:e.message});
+  }
+});
+
 app.get("/api/history/:id",async(req,res)=>{try{res.json(await history(String(req.params.id).replace(/[^\d]/g,"")))}catch(e){res.status(500).json({error:e.message})}});
 app.get("/api/analytics/:id",async(req,res)=>{try{res.json(await analytics(String(req.params.id).replace(/[^\d]/g,"")))}catch(e){res.status(500).json({error:e.message})}});
-app.get("/api/health",(_,res)=>res.json({ok:true,version:"40.0.0",database:dbEnabled,collectorEnabled:dbEnabled && process.env.COLLECTOR_ENABLED!=="false",collectorIntervalMs:Number(process.env.COLLECTOR_INTERVAL_MS||300000),collectorBatch:Number(process.env.COLLECTOR_BATCH||20),time:new Date().toISOString()}));
+app.get("/api/sessions/:id",async(req,res)=>{try{const id=String(req.params.id).replace(/[^\d]/g,"");const gap=Math.max(30,Math.min(240,Number(req.query.gap||90)));res.json(await buildSessions(id,{gapMinutes:gap,activeMinutes:45}))}catch(e){res.status(500).json({error:e.message})}});
+app.get("/api/health",(_,res)=>res.json({ok:true,version:"43.0.0",database:dbEnabled,collectorEnabled:dbEnabled && process.env.COLLECTOR_ENABLED!=="false",collectorIntervalMs:Number(process.env.COLLECTOR_INTERVAL_MS||300000),collectorBatch:Number(process.env.COLLECTOR_BATCH||20),time:new Date().toISOString()}));
 app.get("/{*splat}",(_,res)=>res.sendFile(path.join(DIR,"public","index.html")));
 await migrate();
 // Background archive: clubs are discovered by real searches/visits, then refreshed in batches.
@@ -122,4 +167,4 @@ if(dbEnabled && process.env.COLLECTOR_ENABLED!=="false"){
  const runCollector=async()=>{try{for(const c of await dueClubs(Number(process.env.COLLECTOR_BATCH||20))){try{const d=await loadClubFull(String(c.club_id),validPlatform(c.platform));const saved=await persistClubPayload(String(c.club_id),validPlatform(c.platform),d);await rescheduleClub(String(c.club_id),validPlatform(c.platform),Number(saved?.newMatches||0));}catch(e){console.warn("collector",c.club_id,e.message)}}}catch(e){console.warn("collector batch",e.message)}};
  setTimeout(runCollector,15000);setInterval(runCollector,Number(process.env.COLLECTOR_INTERVAL_MS||300000));
 }
-app.listen(PORT,()=>console.log(`Clubroom FC27 v40 běží na ${PORT} · DB ${dbEnabled?"ON":"OFF"}`));
+app.listen(PORT,()=>console.log(`Clubroom FC27 v43 běží na ${PORT} · DB ${dbEnabled?"ON":"OFF"}`));

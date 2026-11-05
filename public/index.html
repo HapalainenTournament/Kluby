@@ -1,10 +1,10 @@
-<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Clubroom FC27 v38</title><link rel="stylesheet" href="/style.css"></head><body>
+<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Clubroom FC27 v43</title><link rel="stylesheet" href="/style.css"></head><body>
 <header class="topbar"><a class="brand" href="/" aria-label="Clubroom homepage"><span class="brandMark">C</span><b>CLUBROOM</b><em>FC27</em></a><div class="topActions"><button id="openSearch" class="iconBtn" title="Search club">⌕</button></div></header>
 <main class="shell">
 <section id="home" class="searchPage"><div class="searchIntro"><span class="kicker">EA SPORTS FC 27 · PRO CLUBS</span><h1>Search Pro Clubs Stats</h1><p>Search any EA FC 27 Pro Clubs team and open detailed stats, players, match history, form and analytics.</p></div><form id="search" class="searchPanel"><div class="searchInputWrap"><input id="q" placeholder="Enter club name…" required><span>⌕</span></div><div class="searchActions"><select id="platform"><option value="common-gen5">PS5 / Xbox Series / PC</option><option value="common-gen4">PS4 / Xbox One</option><option value="nx">Switch</option></select><button>Search</button></div></form><div id="results" class="results searchResults"></div></section>
 <section id="dash" hidden>
 <section class="clubHero"><div class="clubIdentity"><div id="clubLogo" class="clubLogo"><img id="clubCrest" alt="Klubový crest" hidden><span id="clubFallback">C</span></div><div><span class="kicker">CLUB PROFILE</span><h2 id="clubName">—</h2><div class="clubBadges"><span id="divisionBadge" class="divisionBadge">DIV —</span><span id="skillBadge" class="softBadge">SR —</span><span id="clubIdBadge" class="softBadge">ID —</span></div></div></div><div class="recordLine"><b class="win" id="recW">0W</b><b class="draw" id="recD">0D</b><b class="loss" id="recL">0L</b></div><div class="formBlock"><span>RECENT FORM</span><div id="formPills" class="formPills"></div><b id="formSummary"></b></div></section>
-<nav class="clubTabs" id="clubTabs"><button data-tab="stats" class="active">Overview</button><button data-tab="players">Players</button><button data-tab="compare">Compare</button><button data-tab="matches">Matches</button><button data-tab="analytics">Analytics</button><button data-tab="fun">Fun</button><button data-tab="plus">Club+</button></nav>
+<nav class="clubTabs" id="clubTabs"><button data-tab="stats" class="active">Overview</button><button data-tab="players">Players</button><button data-tab="compare">Compare</button><button data-tab="matches">Matches</button><button data-tab="sessions">Sessions</button><button data-tab="analytics">Analytics</button><button data-tab="fun">Fun</button><button data-tab="plus">Club+</button></nav>
 <div class="tabPane active" data-pane="stats">
 <div class="overviewLayout">
   <div class="overviewMain">
@@ -20,6 +20,23 @@
 <div class="tabPane" data-pane="players"><section class="playersPage"><div id="positionSummary" class="positionSummary"></div><section class="creativityPanel"><div><span class="lockDot">✦</span><div><b>Creativity ranking</b><small>Completed dribbles + second assists per 90 from captured match data.</small></div></div><div id="creativityRanking" class="creativityRanking"></div></section><div class="playersToolbar"><span>Rank by</span><select id="playerRank"><option value="squad">Squad order</option><option value="rating">Avg rating</option><option value="goals">Goals</option><option value="assists">Assists</option><option value="ga">G+A</option><option value="passRate">Pass %</option><option value="shotRate">Shot %</option><option value="creativity">Creativity</option></select><span id="playerCount"></span></div><div id="playerCards" class="playerCards"></div></section></div>
 <div class="tabPane" data-pane="compare"><section class="panel comparePanel"><div class="panelHead"><h3>Player Compare</h3><span>career + Clubroom archive</span></div><div class="compareControls"><select id="cmpA"></select><b>VS</b><select id="cmpB"></select></div><div id="compareCoverage" class="compareCoverage"></div><div id="compareBody"></div></section></div>
 <div class="tabPane" data-pane="matches"><div id="matchList"></div></div>
+
+<div class="tabPane" data-pane="sessions">
+<section class="sessionsPage43">
+  <div class="sessionsHero43">
+    <div><span class="kicker">CLUBROOM ARCHIVE</span><h3>Sessions</h3><p>Every run, form swing and standout performance grouped from your archived matches.</p></div>
+    <div id="sessionLive42" class="sessionLive42">WAITING FOR ARCHIVE</div>
+  </div>
+  <div class="sessionsToolbar43">
+    <div class="sessionFilters42" id="sessionFilters42"><button class="active" data-session-filter="all">All</button><button data-session-filter="league">League</button><button data-session-filter="playoff">Playoff</button></div>
+    <div id="sessionSummary42" class="sessionSummary42"></div>
+  </div>
+  <div class="sessionWorkspace43">
+    <aside class="sessionArchive43"><div class="sessionArchiveHead43"><div><span>SESSION ARCHIVE</span><b id="sessionArchiveCount43">0 sessions</b></div><small>Newest first</small></div><div id="sessionList42" class="sessionList42"><div class="msg">Session data loads from the archive.</div></div></aside>
+    <section id="sessionDetail43" class="sessionDetail43"><div class="sessionEmpty43"><b>Select a session</b><span>Choose a run from the archive to open its performance detail.</span></div></section>
+  </div>
+</section>
+</div>
 <div class="tabPane" data-pane="analytics">
 <section class="analyticsHero analyticsHero37"><div><span class="kicker">PERFORMANCE LAB</span><h3>Analytics</h3><p>Team form, player trends and impact metrics from the Clubroom archive.</p></div></section>
 <nav class="analyticsSubnav" id="analyticsSubnav">
@@ -74,7 +91,8 @@
 </section>
 <div class="legacySink" hidden><div id="funForm"></div></div>
 </div>
-<div class="tabPane" data-pane="plus"><section class="plusHero"><span class="kicker">CLUBROOM ARCHIVE</span><h3>Club+</h3><p>Long-term history beyond EA's limited recent window. The longer the club is tracked, the richer the archive becomes.</p><div id="historyStats" class="metricGrid"></div><div id="dbState" class="dbState">DB</div></section><section class="panel"><div class="panelHead"><h3>Club+ Features</h3></div><div class="featureGrid"><article><b>Full History</b><p>Permanent archive of captured matches.</p></article><article><b>Sessions</b><p>Evenings grouped into play sessions.</p></article><article><b>Advanced Season</b><p>Second assists, passing, tackles, shots and more event-level data.</p></article><article><b>Records</b><p>Club and player records across the archive.</p></article></div></section></div>
+<div class="tabPane" data-pane="plus"><section class="plusHero"><span class="kicker">CLUBROOM ARCHIVE</span><h3>Club+</h3><p>Long-term history beyond EA's limited recent window. The longer the club is tracked, the richer the archive becomes.</p><div id="historyStats" class="metricGrid"></div><div id="dbState" class="dbState">DB</div></section>
+<section class="panel"><div class="panelHead"><h3>Club+ Features</h3></div><div class="featureGrid"><article><b>Full History</b><p>Permanent archive of captured matches.</p></article><article><b>Sessions</b><p>Automatic session length, W-D-L and mode splits.</p></article><article><b>Advanced Season</b><p>Second assists, passing, tackles, shots and more event-level data.</p></article><article><b>Records</b><p>Club and player records across the archive.</p></article></div></section></div>
 </section></main>
 <section id="playerView" class="overlay" hidden><button class="close" data-close="playerView">×</button><div id="playerContent"></div></section>
-<footer>CLUBROOM FC27 · v39</footer><script src="/app.js"></script></body></html>
+<footer>CLUBROOM FC27 · v43</footer><script src="/app.js"></script></body></html>

@@ -986,3 +986,60 @@ v37RenderClutch=function(h){
 
 /* Partnerships stay in Fun. Analytics deliberately does not render a duplicate. */
 v37RenderPartnerships=function(){};
+
+/* v43 Sessions workspace */
+(function(){
+ const state={filter:'all',data:null,selected:null};
+ const fmtDuration=min=>{min=Math.max(0,Math.round(N(min)));const h=Math.floor(min/60),m=min%60;return h?`${h}h ${m}m`:`${m}m`};
+ const dLabel=v=>{const d=new Date(v);return Number.isNaN(d.getTime())?'—':d.toLocaleDateString('en-GB',{weekday:'long',day:'numeric',month:'long'})};
+ const time=v=>{const d=new Date(v);return Number.isNaN(d.getTime())?'—':d.toLocaleTimeString('en-GB',{hour:'2-digit',minute:'2-digit'})};
+ const stats=(s,f)=>f==='all'?s.all:(s.byType?.[f]||{matches:0,wins:0,draws:0,losses:0,goals:0,conceded:0,goalDiff:0,winRate:0,pointsPerMatch:0,players:[]});
+ const relevant=(s,f)=> (s.matches||[]).filter(m=>f==='all'||m.type===f);
+ const resultClass=x=>String(x||'').toLowerCase();
+ function sparkSvg(session,filter){
+  const ms=relevant(session,filter); if(!ms.length)return '<div class="sessionNoChart43">No match data.</div>';
+  const ids=[];const names=new Map();
+  for(const m of ms)for(const p of m.players||[]){const id=String(p.player_id);if(!ids.includes(id)){ids.push(id);names.set(id,p.player_name||'Player')}}
+  const top=ids.map(id=>({id,name:names.get(id),avg:ms.reduce((a,m)=>{const p=(m.players||[]).find(x=>String(x.player_id)===id);return a+(p&&N(p.rating)>0?N(p.rating):0)},0)})).sort((a,b)=>b.avg-a.avg).slice(0,3);
+  if(!top.length)return '<div class="sessionNoChart43">Player ratings are not available for this session.</div>';
+  const W=760,H=210,pad=24,min=5,max=10,step=ms.length>1?(W-pad*2)/(ms.length-1):0;
+  const y=v=>pad+(max-Math.max(min,Math.min(max,N(v))))/(max-min)*(H-pad*2);
+  const cls=['lineA','lineB','lineC'];
+  const lines=top.map((pl,idx)=>{const pts=ms.map((m,i)=>{const p=(m.players||[]).find(x=>String(x.player_id)===pl.id);return p&&N(p.rating)>0?`${pad+i*step},${y(p.rating)}`:null}).filter(Boolean);return pts.length>1?`<polyline class="${cls[idx]}" points="${pts.join(' ')}"/>`:''}).join('');
+  const dots=top.map((pl,idx)=>ms.map((m,i)=>{const p=(m.players||[]).find(x=>String(x.player_id)===pl.id);return p&&N(p.rating)>0?`<circle class="${cls[idx]}Dot" cx="${pad+i*step}" cy="${y(p.rating)}" r="4"/>`:''}).join('')).join('');
+  const grid=[6,7,8,9,10].map(v=>`<g><line x1="${pad}" x2="${W-pad}" y1="${y(v)}" y2="${y(v)}"/><text x="3" y="${y(v)+4}">${v}</text></g>`).join('');
+  const legend=top.map((p,i)=>`<span class="${cls[i]}">${escapeHtml(p.name)}</span>`).join('');
+  return `<div class="sessionChart43"><svg viewBox="0 0 ${W} ${H}" preserveAspectRatio="none"><g class="chartGrid43">${grid}</g>${lines}${dots}</svg><div class="sessionLegend43"><span class="teamAvg43">Ratings</span>${legend}</div></div>`;
+ }
+ function renderDetail(s){
+  const host=document.getElementById('sessionDetail43'); if(!host||!s)return;
+  const x=stats(s,state.filter),ms=relevant(s,state.filter),players=x.players||[];
+  const bestStretch=(()=>{let best=0,cur=0;for(const m of ms){cur=m.result==='W'?cur+1:0;best=Math.max(best,cur)}return best})();
+  const ratings=[]; for(const m of ms)for(const p of m.players||[])if(N(p.rating)>0)ratings.push(N(p.rating));
+  const hi=ratings.length?Math.max(...ratings):0,lo=ratings.length?Math.min(...ratings):0;
+  host.innerHTML=`
+   <div class="sessionDetailTop43"><div><span class="kicker">SESSION DETAIL</span><h3>${dLabel(s.startedAt)}</h3><p>${time(s.startedAt)} – ${time(s.estimatedEndAt)} · ${s.active?'Active run':'Completed run'}</p></div><div class="sessionStatus43 ${s.active?'live':''}">${s.active?'● LIVE':'✓ COMPLETED'}</div></div>
+   <div class="sessionDetailMetrics43">
+    <div><b>${x.matches}</b><span>Matches</span></div><div><b>${fmtDuration(s.durationMinutes)}</b><span>Duration</span></div><div><b>${x.goalDiff>=0?'+':''}${x.goalDiff}</b><span>Goal diff · ${x.goals}:${x.conceded}</span></div><div><b>${N(x.pointsPerMatch).toFixed(2)}</b><span>Points / match</span></div><div><b>${x.passAccuracy?N(x.passAccuracy).toFixed(0)+'%':'—'}</b><span>Pass accuracy</span></div><div><b>${x.shotConversion?N(x.shotConversion).toFixed(0)+'%':'—'}</b><span>Shot conversion</span></div><div><b>${x.cleanSheets||0}</b><span>Clean sheets</span></div>
+   </div>
+   <div class="sessionDetailGrid43">
+    <section class="sessionCardPanel43 performance"><div class="sessionPanelTitle43"><div><span>PERFORMANCE CENTER</span><h4>Rating trend</h4></div><small>${x.matches} matches</small></div>${sparkSvg(s,state.filter)}</section>
+    <section class="sessionCardPanel43 leaders"><div class="sessionPanelTitle43"><div><span>SQUAD LEADERS</span><h4>Session performers</h4></div></div><div class="sessionLeaders43">${players.slice(0,5).map((p,i)=>`<div><span>${i+1}</span><div><b>${escapeHtml(p.player_name||'Player')}</b><small>${p.goals} G · ${p.assists} A · ${p.contributions} G+A</small></div><strong>${p.rating?N(p.rating).toFixed(1):'—'}</strong></div>`).join('')||'<div class="msg">No player data.</div>'}</div></section>
+   </div>
+   <div class="sessionInsights43"><div><span>BEST STRETCH</span><b>${bestStretch?`${bestStretch} wins in a row`:'—'}</b></div><div><span>TEAM RATING</span><b>${x.teamRating?N(x.teamRating).toFixed(2):'—'}</b></div><div><span>BIGGEST RATING SWING</span><b>${ratings.length?`+${Math.max(0,hi-lo).toFixed(1)}`:'—'}</b></div><div><span>WIN RATE</span><b>${N(x.winRate).toFixed(0)}%</b></div></div>
+   <section class="sessionCardPanel43 matches"><div class="sessionPanelTitle43"><div><span>MATCHES IN THIS SESSION</span><h4>${ms.length} archived matches</h4></div></div><div class="sessionMatchRows43">${ms.map((m,i)=>{const motm=(m.players||[]).slice().sort((a,b)=>N(b.motm)-N(a.motm)||N(b.rating)-N(a.rating))[0];const contrib=(m.players||[]).slice().sort((a,b)=>(N(b.goals)+N(b.assists))-(N(a.goals)+N(a.assists)))[0];return `<div class="sessionMatchRow43"><span class="mode43 ${m.type}">${escapeHtml(m.type||'match')}</span><small>${time(m.played_at)} · Match ${i+1}</small><div class="sessionClub43"><b>${escapeHtml(S.club?.name||'Clubroom')}</b><strong>${m.goals}:${m.opponent_goals}</strong><b>${escapeHtml(m.opponent||'Opponent')}</b></div><span class="sessionResult43 ${resultClass(m.result)}">${m.result==='W'?'Win':m.result==='L'?'Loss':'Draw'}</span><em>${motm&&N(motm.motm)?`★ ${escapeHtml(motm.player_name)} MOTM`:contrib?`${escapeHtml(contrib.player_name)} ${N(contrib.goals)}G ${N(contrib.assists)}A`:''}</em></div>`}).join('')}</div></section>`;
+ }
+ function render(){
+  const data=state.data,list=document.getElementById('sessionList42'),sum=document.getElementById('sessionSummary42'),live=document.getElementById('sessionLive42'),count=document.getElementById('sessionArchiveCount43');if(!data||!list||!sum)return;
+  const sessions=(data.sessions||[]).filter(s=>stats(s,state.filter).matches>0);if(!state.selected||!sessions.some(s=>s.id===state.selected))state.selected=sessions[0]?.id||null;
+  const total=sessions.reduce((a,s)=>a+stats(s,state.filter).matches,0),wins=sessions.reduce((a,s)=>a+stats(s,state.filter).wins,0),gf=sessions.reduce((a,s)=>a+stats(s,state.filter).goals,0),ga=sessions.reduce((a,s)=>a+stats(s,state.filter).conceded,0);
+  if(count)count.textContent=`${sessions.length} sessions`;if(live){const cur=(data.sessions||[])[0];live.classList.toggle('active',!!cur?.active);live.textContent=cur?.active?`● ACTIVE SESSION · ${fmtDuration(cur.durationMinutes)}`:'ARCHIVE READY'}
+  sum.innerHTML=`<div><small>SESSIONS</small><b>${sessions.length}</b></div><div><small>MATCHES</small><b>${total}</b></div><div><small>WIN RATE</small><b>${total?Math.round(wins/total*100):0}%</b></div><div><small>GOAL DIFF</small><b>${gf-ga>=0?'+':''}${gf-ga}</b></div>`;
+  list.innerHTML=sessions.length?sessions.map(s=>{const x=stats(s,state.filter),ms=relevant(s,state.filter),tp=x.topPlayer;return `<button class="sessionArchiveCard43 ${s.id===state.selected?'selected':''} ${s.active?'live':''}" data-session-id43="${escapeHtml(s.id)}"><div class="sessionArchiveTop43"><div><span>${dLabel(s.startedAt)}</span><small>${fmtDuration(s.durationMinutes)}</small></div><strong>${x.wins}-${x.draws}-${x.losses}</strong></div><div class="sessionArchiveMetrics43"><div><b>${x.goals}</b><span>Goals</span></div><div><b>${N(x.pointsPerMatch).toFixed(2)}</b><span>Avg pts</span></div><div><b>${x.teamRating?N(x.teamRating).toFixed(2):'—'}</b><span>Team rtg</span></div></div><div class="sessionTimeline43">${ms.slice(0,8).map(m=>`<i class="${resultClass(m.result)}" title="${m.result} ${m.goals}:${m.opponent_goals}">${m.result}</i>`).join('')}</div><div class="sessionArchivePlayer43">${tp?`<span>★ ${escapeHtml(tp.player_name)}</span><b>${tp.rating?N(tp.rating).toFixed(1):'—'} RTG · ${tp.goals}G ${tp.assists}A</b>`:'<span>No player data</span>'}</div></button>`}).join(''):'<div class="msg">No sessions for this filter yet.</div>';
+  const selected=sessions.find(s=>s.id===state.selected);if(selected)renderDetail(selected);
+ }
+ window.v43RenderSessions=function(a){state.data=a?.sessionMeta||{sessions:a?.sessions||[],active:false};render()};
+ document.addEventListener('click',e=>{const f=e.target.closest('#sessionFilters42 [data-session-filter]');if(f){state.filter=f.dataset.sessionFilter;state.selected=null;document.querySelectorAll('#sessionFilters42 [data-session-filter]').forEach(x=>x.classList.toggle('active',x===f));render();return}const s=e.target.closest('[data-session-id43]');if(s){state.selected=s.dataset.sessionId43;render();}});
+})();
+
+const __renderAnalyticsV43=renderAnalytics;renderAnalytics=function(h,a){__renderAnalyticsV43(h,a);v43RenderSessions(a)};
