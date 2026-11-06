@@ -1,6 +1,6 @@
 services:
   - type: web
-    name: clubroom-fc27
+    name: clubroom
     runtime: node
     plan: free
     buildCommand: npm install

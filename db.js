@@ -15,6 +15,24 @@ export async function query(text,params=[]){
 export async function migrate(){
  if(!enabled){console.log("DATABASE_URL není nastaveno — Clubroom běží v live-only režimu.");return;}
  await query(`
+ CREATE TABLE IF NOT EXISTS privacy_removal_requests(
+   id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+   gamertag TEXT NOT NULL, club TEXT NOT NULL, platform TEXT NOT NULL,
+   email TEXT NOT NULL, reason TEXT NOT NULL, status TEXT NOT NULL DEFAULT 'pending',
+   verified_club_id TEXT, created_at TIMESTAMPTZ NOT NULL DEFAULT now(),
+   notified_at TIMESTAMPTZ, resolved_at TIMESTAMPTZ
+ );
+ CREATE TABLE IF NOT EXISTS privacy_hidden_players(
+   club_id TEXT NOT NULL, platform TEXT NOT NULL, gamertag TEXT NOT NULL,
+   active BOOLEAN NOT NULL DEFAULT true, created_at TIMESTAMPTZ NOT NULL DEFAULT now(),
+   PRIMARY KEY(club_id,platform,gamertag)
+ );
+ CREATE TABLE IF NOT EXISTS pass_consent_evidence(
+   id UUID PRIMARY KEY DEFAULT gen_random_uuid(),payer_email TEXT NOT NULL,
+   club_id TEXT NOT NULL,consent_version TEXT NOT NULL,consent_text TEXT NOT NULL,
+   consent_at TIMESTAMPTZ NOT NULL DEFAULT now(),provider_transaction_id TEXT,
+   status TEXT NOT NULL DEFAULT 'pending'
+ );
  CREATE TABLE IF NOT EXISTS clubs(
    club_id TEXT NOT NULL,
    platform TEXT NOT NULL,

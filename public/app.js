@@ -348,15 +348,6 @@ function enforceDistinctCompare54(changed){
  }
  updateCompareOptions54();
 }
-function renderCompareDuo54(aa,bb){
- const card=$("#compareDuoCard54"),coverage=$("#duoCoverage54");if(!card||!aa||!bb)return;
- const duo=duoData54(aa,bb),crest=cardCrestUrl();
- card.playerA={name:aa.name,overall:P(aa.raw,["proOverall","overall"],aa.overall),position:cardPos(aa.position),crestUrl:crest};
- card.playerB={name:bb.name,overall:P(bb.raw,["proOverall","overall"],bb.overall),position:cardPos(bb.position),crestUrl:crest};
- card.duoStats=duo;
- if(coverage)coverage.textContent=duo.shared.matches?`${duo.shared.matches} shared captured match${duo.shared.matches===1?'':'es'}`:'No shared captured matches';
-}
-
 let comparePickerSide62='a';
 function comparePortrait62(p){return p?.id?`/cards/players/${encodeURIComponent(String(p.id))}/base.png`:'/cards/players/default.png'}
 function comparePlayerMeta62(p){const a=advancedFor(p);return {position:cardPos(p.position)||'--',matches:N(a.trackedMatches)||N(a.games)||N(p.games)||0}}
@@ -1432,15 +1423,16 @@ function renderOverviewPerformance44(h=null,limit=null){
 document.addEventListener('change',e=>{if(e.target?.id==='overviewPerformanceRange44')renderOverviewPerformance44(null,e.target.value)});
 
 
-/* v68 — Misc structure + archive-driven Duo Categories. No new data sources. */
+/* v75 Chemistry/Partnerships. Archived match rows only; no inferred pair assists. */
 (function(){
- const state={dataset:[],winners:[],history:null,customA:null,customB:null,modalPair:null};
+ const config=Object.freeze(window.CLUBROOM_MISC_CONFIG?.chemistry||{minSharedMatches:5,minTrioMatches:5});
+ const state={history:null,dataset:[],trios:[],players:[],a:null,b:null,mode:'best',pickerSide:null};
  const pKey=p=>String(p?.player_id||p?.id||p?.player_name||p?.pro_name||p?.name||'').trim().toLowerCase();
  const pName=p=>String(p?.pro_name||p?.player_name||p?.name||'Player');
  const pPos=p=>String(p?.position||p?.pos||'');
  const matchId=m=>String(m?.match_id??m?.matchId??m?.id??'');
  const pairKey=(a,b)=>[a,b].sort().join('::');
- function playerMetaMap68(h){const map=new Map();for(const p of [...(h?.players||[]),...(S.players||[])]){const k=pKey(p);if(k&&!map.has(k))map.set(k,p)}return map}
+ function playerMetaMap68(h){const map=new Map();for(const p of [...(S.players||[]),...(h?.players||[])]){const k=pKey(p);if(k&&!map.has(k))map.set(k,p);const byName=String(p.name||p.pro_name||p.player_name||'').toLowerCase();if(byName&&!map.has(byName))map.set(byName,p)}return map}
  function rowKey68(r){return String(r?.player_id||r?.player_name||'').trim().toLowerCase()}
  function rowName68(r){return String(r?.player_name||r?.pro_name||'Player')}
  function buildDuoDataset68(h){
@@ -1458,22 +1450,63 @@ document.addEventListener('change',e=>{if(e.target?.id==='overviewPerformanceRan
   const crest=crestUrl(resolveClubCrestId(S.raw?.info,S.searchClub,currentClubBookmark49));
   return [...pairs.values()].map(x=>{x.winRate=x.sharedMatches?x.wins/x.sharedMatches*100:null;x.avgRating=x.ratingPairCount?x.ratingPairSum/x.ratingPairCount:null;x.goalsConcededPerMatch=x.sharedMatches?x.goalsConceded/x.sharedMatches:null;x.playerA.crestUrl=crest;x.playerB.crestUrl=crest;x.a.avgRating=x.a.ratingCount?x.a.ratingSum/x.a.ratingCount:null;x.a.goalsPerGame=x.sharedMatches?x.a.goals/x.sharedMatches:null;x.a.assistsPerGame=x.sharedMatches?x.a.assists/x.sharedMatches:null;x.b.avgRating=x.b.ratingCount?x.b.ratingSum/x.b.ratingCount:null;x.b.goalsPerGame=x.sharedMatches?x.b.goals/x.sharedMatches:null;x.b.assistsPerGame=x.sharedMatches?x.b.assists/x.sharedMatches:null;const groups=[posGroup(x.playerA.position),posGroup(x.playerB.position)];x.wallEligible=groups.every(g=>g==='DEF'||g==='GK');return x})
  }
- function categoryCandidates68(cat){return state.dataset.filter(x=>x.sharedMatches>=N(cat.minSharedMatches||0)&&(!cat.eligible||cat.eligible(x)))}
- function winner68(cat){const rows=categoryCandidates68(cat).map(pair=>({pair,value:cat.metric(pair)})).filter(x=>x.value!=null&&Number.isFinite(Number(x.value))&&(!cat.requirePositive||Number(x.value)>0));rows.sort((a,b)=>cat.higherIsBetter===false?Number(a.value)-Number(b.value):Number(b.value)-Number(a.value));return rows[0]||null}
- function formatHero68(cat,v){if(v==null)return'--';if(cat.format==='percent')return `${Number(v).toFixed(0)}%`;if(cat.format==='rating')return Number(v).toFixed(2);if(cat.format==='decimal2')return Number(v).toFixed(2);return String(Math.round(Number(v)))}
- function duoStats68(pair,heroLabel,heroValue){return {a:{avgRating:pair.a.avgRating,goalsPerGame:pair.a.goalsPerGame,assistsPerGame:pair.a.assistsPerGame},b:{avgRating:pair.b.avgRating,goalsPerGame:pair.b.goalsPerGame,assistsPerGame:pair.b.assistsPerGame},hero:{label:heroLabel,value:heroValue},shared:{matches:pair.sharedMatches,goals:pair.combinedGoals,linkUps:null,motm:pair.combinedMotm}}}
- function bindCard68(card,pair,cat,value){if(!card||!pair)return;card.playerA=pair.playerA;card.playerB=pair.playerB;card.duoStats=duoStats68(pair,cat?.heroLabel||'MATCHES',cat?formatHero68(cat,value):pair.sharedMatches)}
- function renderCategories68(){const host=$('#miscDuoCategories68');if(!host)return;const cats=window.DUO_CATEGORIES||[];state.winners=cats.map(cat=>({cat,win:winner68(cat)})).filter(x=>x.win);host.innerHTML=state.winners.length?state.winners.map((x,i)=>`<button class="miscDuoItem68" type="button" data-misc-duo68="${i}"><span class="miscDuoBadge68">${escapeHtml(x.cat.title)}</span><duo-card></duo-card><small>${escapeHtml(x.cat.heroLabel)} · ${escapeHtml(formatHero68(x.cat,x.win.value))}</small></button>`).join(''):'<div class="msg">Not enough shared match data yet.</div>';host.querySelectorAll('[data-misc-duo68]').forEach(btn=>{const i=N(btn.dataset.miscDuo68),entry=state.winners[i];bindCard68(btn.querySelector('duo-card'),entry.win.pair,entry.cat,entry.win.value);btn.onclick=()=>openModal68(entry)});const cov=$('#miscDuoCoverage68');if(cov)cov.textContent=`${state.dataset.length} tracked pair${state.dataset.length===1?'':'s'}`}
- function playerOptions68(){const seen=new Map();for(const pair of state.dataset){for(const p of [pair.playerA,pair.playerB])if(!seen.has(p.key))seen.set(p.key,p)}return [...seen.values()].sort((a,b)=>a.name.localeCompare(b.name))}
- function findPair68(a,b){return state.dataset.find(x=>(x.playerA.key===a&&x.playerB.key===b)||(x.playerA.key===b&&x.playerB.key===a))||null}
- function renderBuilder68(){const A=$('#miscDuoA68'),B=$('#miscDuoB68'),card=$('#miscCustomDuo68'),meta=$('#miscBuilderMeta68'),share=$('#miscCustomShare68');if(!A||!B||!card)return;const players=playerOptions68();if(players.length<2){A.innerHTML=B.innerHTML='<option>Not enough players</option>';card.style.display='none';if(share)share.disabled=true;return}card.style.display='block';if(!state.customA||!players.some(p=>p.key===state.customA))state.customA=players[0].key;if(!state.customB||state.customB===state.customA||!players.some(p=>p.key===state.customB))state.customB=players.find(p=>p.key!==state.customA)?.key;const opts=(sel,other)=>players.map(p=>`<option value="${escapeHtml(p.key)}" ${p.key===sel?'selected':''} ${p.key===other?'disabled':''}>${escapeHtml(p.name)}</option>`).join('');A.innerHTML=opts(state.customA,state.customB);B.innerHTML=opts(state.customB,state.customA);const pair=findPair68(state.customA,state.customB);if(pair){bindCard68(card,pair,null);if(meta)meta.textContent=`${pair.sharedMatches} shared matches · ${pair.wins}-${pair.draws}-${pair.losses} · ${pair.winRate?.toFixed(0)??'--'}% win rate`;if(share)share.disabled=false}else{card.playerA=players.find(p=>p.key===state.customA);card.playerB=players.find(p=>p.key===state.customB);card.duoStats={hero:{label:'MATCHES',value:null},shared:{}};if(meta)meta.textContent='No shared archived matches for this pair.';if(share)share.disabled=true}}
- function openModal68(entry){state.modalPair=entry;const modal=$('#miscDuoModal68'),title=$('#miscDuoModalTitle68'),card=$('#miscDuoModalCard68');if(!modal||!card)return;if(title)title.innerHTML=`<span>${escapeHtml(entry.cat.title)}</span><h3>${escapeHtml(entry.win.pair.playerA.name)} + ${escapeHtml(entry.win.pair.playerB.name)}</h3><p>${escapeHtml(entry.cat.heroLabel)} · ${escapeHtml(formatHero68(entry.cat,entry.win.value))}</p>`;bindCard68(card,entry.win.pair,entry.cat,entry.win.value);modal.hidden=false}
- function closeModal68(){const m=$('#miscDuoModal68');if(m)m.hidden=true;state.modalPair=null}
- window.renderMisc68=function(h){state.history=h;state.dataset=buildDuoDataset68(h);renderCategories68();renderBuilder68()}
- document.addEventListener('change',e=>{if(e.target?.id==='miscDuoA68'){state.customA=e.target.value;if(state.customA===state.customB)state.customB=null;renderBuilder68()}if(e.target?.id==='miscDuoB68'){state.customB=e.target.value;if(state.customA===state.customB)state.customA=null;renderBuilder68()}});
- document.addEventListener('click',async e=>{if(e.target?.id==='miscDuoModalClose68'||e.target===document.getElementById('miscDuoModal68'))closeModal68();if(e.target?.id==='miscCustomShare68'){const c=$('#miscCustomDuo68');if(c&&!e.target.disabled)await c.exportPng({filename:'clubroom-custom-duo.png'})}if(e.target?.id==='miscDuoModalShare68'&&state.modalPair){const c=$('#miscDuoModalCard68');if(c)await c.exportPng({filename:`clubroom-${state.modalPair.cat.id}.png`})}});
+
+ const $chem=id=>document.getElementById(id);
+ const pos=p=>posGroup(p?.position||p?.pos||'');
+ const playerOvr=p=>{const live=(S.players||[]).find(x=>pKey(x)===p.key||String(x.name||'').toLowerCase()===String(p.name||'').toLowerCase());const value=N(live?.overall??live?.raw?.proOverall??p.overall);return value>0?String(value):'--'};
+ function displayPlayer(p){const live=(S.players||[]).find(x=>pKey(x)===p.key||String(x.name||'').toLowerCase()===String(p.name||'').toLowerCase());return {...p,overall:playerOvr(p),id:live?.id||p.id||p.key,position:pos(p)};}
+ function portrait(p){const live=(S.players||[]).find(x=>pKey(x)===p.key||String(x.name||'').toLowerCase()===String(p.name||'').toLowerCase());return window.ClubroomCharacters?.getCharacterForPlayer?.(live||p)?.src||'/cards/players/default.png'}
+ const fmt=(x,n=0)=>Number.isFinite(Number(x))?Number(x).toFixed(n):'--';
+ function cardMarkup(pair){
+   const a=displayPlayer(pair.playerA),b=displayPlayer(pair.playerB),pct=pair.winRate==null?'--':fmt(pair.winRate)+'%';
+   const metric=(label,val)=>`<span><strong>${escapeHtml(String(val))}</strong><small>${label}</small></span>`;
+   return `<div class="partnershipHero75" role="img" aria-label="${escapeHtml(a.name)} and ${escapeHtml(b.name)} win rate ${pct}">
+      <div class="partnershipTop75"><div class="partnershipPlayer75"><img src="${escapeHtml(portrait(a))}" alt=""><small>${escapeHtml(a.position)} · OVR ${a.overall}</small><button type="button" class="chemProfileLink75" data-chem-profile="${escapeHtml(a.id)}">${escapeHtml(a.name)}</button></div>
+      <div class="partnershipCenter75"><small>PARTNERSHIP</small><strong>${pct}</strong><span>WIN RATE TOGETHER</span><em>VS</em></div>
+      <div class="partnershipPlayer75"><img src="${escapeHtml(portrait(b))}" alt=""><small>${escapeHtml(b.position)} · OVR ${b.overall}</small><button type="button" class="chemProfileLink75" data-chem-profile="${escapeHtml(b.id)}">${escapeHtml(b.name)}</button></div></div>
+      <div class="partnershipRecord75">${pair.sharedMatches} shared matches · ${pair.wins}-${pair.draws}-${pair.losses} W-D-L</div>
+      <div class="partnershipMetrics75">${metric('MATCHES',pair.sharedMatches)}${metric('GOALS',pair.combinedGoals)}${metric('G+A',pair.combinedGoals+pair.combinedAssists)}${metric('MOTM',pair.combinedMotm)}</div>
+    </div>`;
+ }
+ function pairFor(a,b){return state.dataset.find(x=>pairKey(x.playerA.key,x.playerB.key)===pairKey(a,b))||null}
+ function rankPairs(){return state.dataset.filter(p=>p.sharedMatches>=config.minSharedMatches).sort((a,b)=>b.winRate-a.winRate||b.sharedMatches-a.sharedMatches)}
+ function pickDefault(){const best=rankPairs()[0]||state.dataset.slice().sort((a,b)=>b.sharedMatches-a.sharedMatches)[0];if(best){state.a=best.playerA.key;state.b=best.playerB.key;state.mode='best'}else{state.a=state.players[0]?.key||null;state.b=state.players.find(p=>p.key!==state.a)?.key||null;state.mode='selected'}}
+ function pickCard(p,side){if(!p)return '<span>Choose player</span>';return `<span class="chemPickPortrait75"><img src="${escapeHtml(portrait(p))}" alt=""></span><strong>${escapeHtml(p.name)}</strong><small>${escapeHtml(pos(p))} · OVR ${playerOvr(p)}</small><em>Change ${side} player</em>`}
+ function renderHero(){const best=rankPairs()[0]||null;const pair=state.mode==='best'?best:pairFor(state.a,state.b);
+   if(state.mode==='best'&&best){state.a=best.playerA.key;state.b=best.playerB.key;}
+   const a=state.players.find(p=>p.key===state.a),b=state.players.find(p=>p.key===state.b);
+   $chem('chemPickA75').innerHTML=pickCard(a,'first');$chem('chemPickB75').innerHTML=pickCard(b,'second');
+   $chem('chemBest75').disabled=!best;
+   const meta=$chem('chemMeta75'),warn=$chem('chemWarning75'),host=$chem('chemHero75'),share=$chem('chemShare75');
+   const count=pair?.sharedMatches||0;
+   meta.textContent=pair?`${count} shared matches · ${pair.wins}-${pair.draws}-${pair.losses} · ${fmt(pair.winRate)}% win rate`:'No shared archived matches for this pair.';
+   warn.hidden=!(count>0&&count<config.minSharedMatches);
+   host.innerHTML=count>0?cardMarkup(pair):'<div class="chemEmpty75">No shared archived matches for this pair. Choose a different partnership.</div>';
+   share.disabled=!count;share.dataset.filename=pair?`clubroom-partnership-${pair.playerA.key}-${pair.playerB.key}.png`:'';
+   document.querySelectorAll('[data-chem-pair]').forEach(el=>el.classList.toggle('selected',!!pair&&el.dataset.chemPair===pairKey(pair.playerA.key,pair.playerB.key)));
+ }
+ function selectPair(a,b){if(a===b)return;state.a=a;state.b=b;state.mode='selected';renderHero();$chem('chemHero75')?.scrollIntoView?.({behavior:'smooth',block:'nearest'});}
+ function renderMatrix(){const players=state.players,host=$chem('chemMatrix75');if(players.length<2){host.innerHTML='<div class="chemEmpty75">At least two players with archived match participation are required.</div>';return}
+ host.innerHTML=`<table class="chemHeatmap75"><thead><tr><th>PLAYER</th>${players.map(p=>`<th title="${escapeHtml(p.name)}">${escapeHtml(p.name)}</th>`).join('')}</tr></thead><tbody>${players.map(a=>`<tr><th>${escapeHtml(a.name)}</th>${players.map(b=>{if(a.key===b.key)return '<td class="chemSame75">·</td>';const pair=pairFor(a.key,b.key),cnt=pair?.sharedMatches||0;if(!cnt)return '<td class="chemNone75" title="No shared matches">—</td>';const valid=cnt>=config.minSharedMatches,rate=pair.winRate||0;const hue=Math.round(rate*1.3),key=pairKey(a.key,b.key);return `<td><button data-chem-pair="${escapeHtml(key)}" data-a="${escapeHtml(a.key)}" data-b="${escapeHtml(b.key)}" class="chemHeatCell75 ${valid?'':'low'}" style="--heat-hue:${hue}" title="${cnt} shared matches · ${fmt(rate)}% win rate${valid?'':' · Small sample'}">${fmt(rate)}%</button></td>`}).join('')}</tr>`).join('')}</tbody></table>`;
+ }
+ function trios(h){const matches=h?.matches||[],byMatch=new Map(),rows=h?.playerMatches||[];for(const r of rows){const id=String(r.match_id||'');const key=rowKey68(r);if(!id||!key)continue;if(!byMatch.has(id))byMatch.set(id,new Set());byMatch.get(id).add(key)}const pairs=new Map();for(const m of matches){const ks=[...(byMatch.get(matchId(m))||[])].sort();for(let i=0;i<ks.length;i++)for(let j=i+1;j<ks.length;j++)for(let k=j+1;k<ks.length;k++){const key=[ks[i],ks[j],ks[k]].join('::');if(!pairs.has(key))pairs.set(key,{keys:[ks[i],ks[j],ks[k]],matches:0,wins:0,draws:0,losses:0});const row=pairs.get(key);row.matches++;if(m.result==='W')row.wins++;else if(m.result==='D')row.draws++;else if(m.result==='L')row.losses++}}return [...pairs.values()].filter(r=>r.matches>=config.minTrioMatches).map(r=>({...r,rate:100*r.wins/r.matches})).sort((a,b)=>b.rate-a.rate||b.matches-a.matches).slice(0,5)}
+ function renderLists(){const ranked=rankPairs();$chem('chemRanking75').innerHTML=ranked.length?ranked.slice(0,10).map((p,i)=>`<button type="button" class="chemRankRow75" data-chem-pair="${escapeHtml(pairKey(p.playerA.key,p.playerB.key))}" data-a="${escapeHtml(p.playerA.key)}" data-b="${escapeHtml(p.playerB.key)}"><span>#${i+1}</span><strong>${escapeHtml(p.playerA.name)} + ${escapeHtml(p.playerB.name)}</strong><b>${fmt(p.winRate)}%</b><small>${p.sharedMatches} matches</small></button>`).join(''):'<div class="chemEmpty75">No partnership has reached the minimum of 5 shared matches.</div>';
+ $chem('chemTrios75').innerHTML=state.trios.length?state.trios.map((t,i)=>`<div class="chemRankRow75"><span>#${i+1}</span><strong>${t.keys.map(k=>escapeHtml(state.players.find(p=>p.key===k)?.name||k)).join(' + ')}</strong><b>${fmt(t.rate)}%</b><small>${t.matches} matches</small></div>`).join(''):'<div class="chemEmpty75">No trio has reached the minimum of 5 shared matches.</div>';
+ }
+ function render(h){state.history=h||null;state.dataset=buildDuoDataset68(h||{});const seen=new Map();for(const p of S.players||[]){const key=pKey(p);if(key)seen.set(key,{key,name:p.name,position:p.position,overall:p.overall,id:p.id});}for(const p of state.dataset.flatMap(x=>[x.playerA,x.playerB]))if(!seen.has(p.key))seen.set(p.key,p);state.players=[...seen.values()].sort((a,b)=>a.name.localeCompare(b.name));state.trios=trios(h||{});
+ $chem('chemCoverage75').textContent=`${state.dataset.length} tracked pairs`;
+ if(!state.a||!state.b||!state.players.some(p=>p.key===state.a)||!state.players.some(p=>p.key===state.b))pickDefault();renderMatrix();renderLists();renderHero();}
+ window.renderMisc68=render;
+ document.addEventListener('click',async e=>{const profile=e.target.closest('[data-chem-profile]');if(profile){showPlayer(profile.dataset.chemProfile);return;}const b=e.target.closest('[data-chem-pair]');if(b){selectPair(b.dataset.a,b.dataset.b);return;}if(e.target.closest('#chemBest75')){const best=rankPairs()[0];if(best)selectPair(best.playerA.key,best.playerB.key);return;}
+ if(e.target.closest('#chemSwap75')){[state.a,state.b]=[state.b,state.a];state.mode='selected';renderHero();return;}
+ const a=e.target.closest('#chemPickA75'),c=e.target.closest('#chemPickB75');if(a||c){state.pickerSide=a?'a':'b';const other=state.pickerSide==='a'?state.b:state.a;$chem('chemDialogList75').innerHTML=state.players.map(p=>`<button type="button" data-chem-choice="${escapeHtml(p.key)}" ${p.key===other?'disabled':''}><img src="${escapeHtml(portrait(p))}" alt=""><span><strong>${escapeHtml(p.name)}</strong><small>${escapeHtml(pos(p))} · OVR ${playerOvr(p)}</small></span></button>`).join('');$chem('chemPickerDialog75').hidden=false;return;}
+ const choice=e.target.closest('[data-chem-choice]');if(choice){const value=choice.dataset.chemChoice;if(state.pickerSide==='a'&&value!==state.b)state.a=value;else if(state.pickerSide==='b'&&value!==state.a)state.b=value;state.mode='selected';$chem('chemPickerDialog75').hidden=true;renderHero();return;}
+ if(e.target.closest('#chemDialogClose75')||e.target===$chem('chemPickerDialog75')){$chem('chemPickerDialog75').hidden=true;return;}
+ if(e.target.closest('#chemShare75')){const card=$chem('chemHero75')?.querySelector('.partnershipHero75');if(!card)return;try{const mod=await import('/cards/cardShared.js');const style=document.createElement('style');style.textContent=await (await fetch('/style.css')).text();const blob=await mod.rasterizeCardElement({card,style,width:1200,height:740,assetReplacer:async(clone,css)=>{const source=[...card.querySelectorAll('img')],target=[...clone.querySelectorAll('img')];for(let i=0;i<target.length;i++){const url=await mod.cardUrlToDataUrl(source[i].currentSrc||source[i].src);if(url)target[i].src=url;}return {css};}});await mod.downloadCardBlob(blob,'clubroom-partnership.png')}catch(err){console.error('Partnership PNG export failed',err);alert('PNG export could not be completed.')}}
+ });
+ document.addEventListener('keydown',e=>{if(e.key==='Escape'&&$chem('chemPickerDialog75'))$chem('chemPickerDialog75').hidden=true});
 })();
-const __renderFunV68=renderFun;renderFun=function(h,a){__renderFunV68(h,a);renderMisc68(h)};
+const __renderFunV75=renderFun;renderFun=function(h,a){__renderFunV75(h,a);if(window.renderMisc68)window.renderMisc68(h)};
 
 /* Route compatibility: old Fun URLs become Misc. */
 (function(){const p=location.pathname;if(p==='/fun')history.replaceState(null,'','/misc');else if(/\/club\/[^/]+\/fun\/?$/.test(p))history.replaceState(null,'',p.replace(/\/fun\/?$/,'/misc'))})();

@@ -1,7 +1,7 @@
-<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Clubroom FC27 v74</title><link rel="icon" type="image/png" href="/assets/clubroom-favicon.png"><link rel="stylesheet" href="/style.css"><script type="module" src="/cards/player-card.js"></script><script type="module" src="/cards/duo-card.js"></script><script type="module" src="/components/club-crest.js"></script><script type="module" src="/icons/badges/index.js"></script><script type="module" src="/charts/player-radar.js"></script>
+<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>CLUBROOM</title><meta name="description" content="Independent club statistics and match insights for EA SPORTS FC Pro Clubs."><meta property="og:title" content="CLUBROOM"><meta property="og:description" content="Independent club statistics and match insights for EA SPORTS FC Pro Clubs."><meta property="og:image" content="/assets/clubroom-mark.png"><link rel="manifest" href="/manifest.webmanifest"><link rel="icon" type="image/png" href="/assets/clubroom-favicon.png"><link rel="stylesheet" href="/style.css"><script type="module" src="/cards/player-card.js"></script><script type="module" src="/components/club-crest.js"></script><script type="module" src="/icons/badges/index.js"></script><script type="module" src="/charts/player-radar.js"></script>
 </head><body>
 <header class="topbar overviewTopbar44">
-  <a class="brand" href="/" aria-label="Clubroom homepage"><img class="brandMark" src="/assets/clubroom-mark.png" alt="" aria-hidden="true"><b>CLUBROOM</b><em>FC27</em></a>
+  <a class="brand" href="/" aria-label="Clubroom homepage"><img class="brandMark" src="/assets/clubroom-mark.png" alt="" aria-hidden="true"><b>CLUBROOM</b></a>
   <nav class="clubTabs topNav44" id="clubTabs" hidden>
     <button data-tab="stats" class="active">Overview</button><button data-tab="players">Players</button><button data-tab="compare">Compare</button><button data-tab="matches">Matches</button><button data-tab="sessions">Sessions</button><button data-tab="analytics">Analytics</button><button data-tab="misc">Misc</button><button data-tab="plus" class="clubPlusNav44">♛ Club+</button>
   </nav>
@@ -12,9 +12,9 @@
   <section class="homeSearchHero44" aria-labelledby="homeSearchTitle44">
     <div class="homeSearchGlow44" aria-hidden="true"></div>
     <div class="homeSearchContent44">
-      <span class="kicker">EA SPORTS FC 27 · PRO CLUBS</span>
+      <span class="kicker">INDEPENDENT PRO CLUBS ANALYTICS</span>
       <h1 id="homeSearchTitle44">Search Pro Clubs Stats</h1>
-      <p>Find any EA SPORTS FC 27 Pro Clubs team and open its club profile, players, match archive, sessions and analytics.</p>
+      <p>Find any EA SPORTS FC Pro Clubs team and open its club profile, players, match archive, sessions and analytics.</p>
       <form id="search" class="homeSearchForm44">
         <div class="homeSearchInput44">
           <span class="homeSearchIcon44" aria-hidden="true">⌕</span>
@@ -189,21 +189,38 @@
 </div>
 <div class="tabPane" data-pane="misc">
 <section class="miscPage68">
-  <section class="miscIntro68"><div><span class="kicker">CLUBROOM LAB</span><h3>Misc</h3><p>Duo cards, squad superlatives, rankings and archive-driven extras.</p></div></section>
+  <section class="miscIntro68"><div><span class="kicker">CLUBROOM LAB</span><h3>Misc</h3><p>Partnerships, player chemistry and archive-driven insights.</p></div></section>
 
-  <section class="miscSection68" id="miscDuos68">
-    <div class="miscSectionHead68"><div><span class="kicker">DUO CARDS</span><h3>Best partnerships</h3><p>Automatically selected from matches captured for both players.</p></div><small id="miscDuoCoverage68">ARCHIVE DATA</small></div>
-    <div id="miscDuoCategories68" class="miscDuoGrid68"><div class="msg">Duo categories load from the archive.</div></div>
-    <section class="miscBuilder68">
-      <div class="miscSectionHead68 compact"><div><span class="kicker">BUILD YOUR OWN DUO</span><h3>Create a Duo Card</h3><p>Choose two different players. Only their shared archived matches are used.</p></div></div>
-      <div class="miscBuilderControls68"><label><span>PLAYER A</span><select id="miscDuoA68"></select></label><span class="miscVs68">VS</span><label><span>PLAYER B</span><select id="miscDuoB68"></select></label></div>
-      <div id="miscBuilderMeta68" class="miscBuilderMeta68"></div>
-      <div class="miscBuilderStage68"><duo-card id="miscCustomDuo68"></duo-card></div>
-      <button id="miscCustomShare68" class="miscShare68" type="button">Share PNG</button>
-    </section>
+  <nav class="miscSubtabs75" role="tablist" aria-label="Misc sections">
+    <button type="button" role="tab" aria-selected="true" class="active" data-misc-tab="chemistry">Chemistry</button>
+    <button type="button" role="tab" data-misc-tab="records" hidden>Records</button>
+    <button type="button" role="tab" data-misc-tab="streaks" hidden>Streaks</button>
+    <button type="button" role="tab" data-misc-tab="habits" hidden>Habits</button>
+    <button type="button" role="tab" data-misc-tab="lucky-charm" hidden>Lucky Charm</button>
+    <button type="button" role="tab" data-misc-tab="milestones" hidden>Milestones</button>
+    <button type="button" role="tab" data-misc-tab="awards" hidden>Awards</button>
+    <button type="button" role="tab" data-misc-tab="wrapped" hidden>Wrapped</button>
+  </nav>
+  <section class="miscSection68 chemistry75" data-misc-pane="chemistry" id="chemistry75">
+    <div class="miscSectionHead68"><div><span class="kicker">CHEMISTRY LAB</span><h3>Partnerships</h3><p>Only archived matches played together count toward a partnership.</p></div><small id="chemCoverage75">ARCHIVE DATA</small></div>
+    <div class="chemTop75">
+      <section class="chemHeroSection75"><div class="chemMiniTitle75"><span>PARTNERSHIP SPOTLIGHT</span><button id="chemBest75" type="button">Best duo</button></div>
+        <div id="chemHero75" class="chemHero75"><div class="chemEmpty75">Load a club to explore partnerships.</div></div>
+        <div class="chemActions75"><button id="chemShare75" type="button" disabled>Share PNG</button></div>
+      </section>
+      <section class="chemPicker75"><div class="chemMiniTitle75"><span>PICK A PAIR</span></div>
+        <div class="chemPickRow75"><button type="button" id="chemPickA75" aria-label="Choose player A" class="chemPickPlayer75"></button><div class="chemVs75"><b>VS</b><button id="chemSwap75" type="button" aria-label="Swap players">⇄</button></div><button type="button" id="chemPickB75" aria-label="Choose player B" class="chemPickPlayer75"></button></div>
+        <div id="chemMeta75" class="chemMeta75" aria-live="polite">Choose two different players.</div>
+        <div id="chemWarning75" class="chemWarning75" hidden>Small sample – stats may not be reliable.</div>
+      </section>
+    </div>
+    <section class="chemMatrixSection75"><div class="chemMiniTitle75"><span>CHEMISTRY MATRIX</span><small>Win rate together · hover for match count · select any pair</small></div><div id="chemMatrix75" class="chemMatrixScroll75"></div></section>
+    <section class="chemRankingSection75"><div class="chemMiniTitle75"><span>TOP PARTNERSHIPS</span><small>Minimum 5 shared matches</small></div><div id="chemRanking75" class="chemRanking75"></div></section>
+    <section class="chemRankingSection75"><div class="chemMiniTitle75"><span>BEST TRIOS</span><small>Minimum 5 shared matches</small></div><div id="chemTrios75" class="chemRanking75"></div></section>
   </section>
+  <div id="chemPickerDialog75" class="chemDialogBackdrop75" hidden><div class="chemDialog75" role="dialog" aria-modal="true" aria-labelledby="chemDialogTitle75"><div class="chemDialogHead75"><h3 id="chemDialogTitle75">Choose a player</h3><button type="button" id="chemDialogClose75" aria-label="Close">×</button></div><div id="chemDialogList75" class="chemDialogList75"></div></div></div>
 
-  <section class="miscSection68" id="miscOther68">
+  <section class="miscSection68" id="miscOther68" hidden>
     <div class="miscSectionHead68"><div><span class="kicker">OTHER STATS</span><h3>Clubroom extras</h3><p>Existing fun rankings, superlatives and archive records.</p></div></div>
 
     <section class="miscLegacyBlock68"><div class="funSectionHeader"><div><span>SQUAD SUPERLATIVES</span><h3>Squad awards</h3></div><button id="revealAll30" class="revealAll30">Reveal all</button></div><div id="funAwards" class="superGrid"></div></section>
@@ -215,7 +232,7 @@
     <div class="legacySink" hidden><div id="featuredDuos"></div><div id="goalPartners"></div><div id="featuredSuperlatives"></div><div id="funForm"></div></div>
   </section>
 </section>
-<div id="miscDuoModal68" class="miscDuoModal68" hidden><div class="miscDuoModalCard68"><button type="button" id="miscDuoModalClose68" class="miscDuoModalClose68" aria-label="Close">×</button><div id="miscDuoModalTitle68" class="miscDuoModalTitle68"></div><duo-card id="miscDuoModalCard68"></duo-card><button id="miscDuoModalShare68" class="miscShare68" type="button">Share PNG</button></div></div>
+
 </div>
 <div class="tabPane" data-pane="plus"><section class="plusHero"><span class="kicker">CLUBROOM ARCHIVE</span><h3>Club+</h3><p>Long-term history beyond EA's limited recent window. The longer the club is tracked, the richer the archive becomes.</p><div id="historyStats" class="metricGrid"></div><div id="dbState" class="dbState">DB</div></section>
 <section class="panel"><div class="panelHead"><h3>Club+ Features</h3></div><div class="featureGrid"><article><b>Full History</b><p>Permanent archive of captured matches.</p></article><article><b>Sessions</b><p>Automatic session length, W-D-L and mode splits.</p></article><article><b>Advanced Season</b><p>Second assists, passing, tackles, shots and more event-level data.</p></article><article><b>Records</b><p>Club and player records across the archive.</p></article></div></section></div>
@@ -243,4 +260,4 @@
     <div id="playerTabContent69" class="playerTabContent69"></div>
   </section>
 </section></main>
-<footer id="appFooter51">CLUBROOM FC27 · v74</footer><script src="/cards/characters.js"></script><script src="/charts/playerRadarConfig.generated.js"></script><script src="/matchMetricsConfig.generated.js"></script><script src="/cards/duoCategories.generated.js"></script><script src="/app.js"></script></body></html>
+<footer id="appFooter51" class="legalFooter"><div><strong>CLUBROOM</strong> <nav aria-label="Legal and informational links"><a href="/about">About</a><a href="/terms">Terms</a><a href="/privacy">Privacy</a><a href="/cookies">Cookies</a><a href="/removal">Removal request</a><a href="/pass/checkout">Clubroom Pass</a><button type="button" id="cookieSettingsLink">Cookie settings</button></nav></div><p>CLUBROOM is not affiliated with, endorsed or sponsored by Electronic Arts Inc. EA SPORTS FC is a trademark of Electronic Arts Inc.</p></footer><script src="/legal-client.js" defer></script><script src="/cards/characters.js"></script><script src="/charts/playerRadarConfig.generated.js"></script><script src="/matchMetricsConfig.generated.js"></script><script src="/miscConfig.generated.js"></script><script src="/app.js"></script></body></html>

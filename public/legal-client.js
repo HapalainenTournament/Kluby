@@ -1,0 +1,6 @@
+/* CLUBROOM: optional vendors disabled until certified CMP is configured and audited. */
+(function(){'use strict';
+function settings(){if(typeof window.__tcfapi==='function'){window.__tcfapi('displayConsentUi',2,function(){})}else{alert('Optional analytics and advertising are currently disabled. Certified CMP configuration: [DOPLNIT].')}}
+document.querySelectorAll('#cookieSettingsLink,.cookieSettingsLink,#cookieManagePage').forEach(el=>el.addEventListener('click',settings));
+const form=document.getElementById('removalForm');if(form){form.addEventListener('submit',async e=>{e.preventDefault();const feedback=document.getElementById('removalFeedback');const button=form.querySelector('[type=submit]');button.disabled=true;feedback.textContent='Submitting…';try{const data=Object.fromEntries(new FormData(form));const response=await fetch('/api/privacy/removal',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(data)});const result=await response.json();if(!response.ok)throw Error(result.error||'Submission failed.');feedback.textContent='Request received. Reference: '+result.reference;form.reset()}catch(error){feedback.textContent='Request could not be submitted: '+error.message}finally{button.disabled=false}})}
+})();

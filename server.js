@@ -6,12 +6,83 @@ import {persistClubPayload,history,analytics,buildSessions} from "./storage.js";
 import {dueClubs,rescheduleClub} from "./collector.js";
 
 const app = express();
+app.use(express.json({limit:"16kb"}));
 const DIR = path.dirname(fileURLToPath(import.meta.url));
 const PORT = process.env.PORT || 3000;
 const EA = "https://proclubs.ea.com/api/fc";
 const cache = new Map();
+const consentVersion="clubroom-immediate-access-v0.1-draft";
+const consentText="I request immediate access to Clubroom Pass and acknowledge that I thereby lose my right to withdraw from the contract once access begins.";
+// The checkbox is evidence of a request, NOT proof that statutory rights were lost.
+const safeText=(v,n=160)=>String(v??"").trim().slice(0,n);
+const validEmail=v=>/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(v)&&v.length<=254;
+const safePlatform=p=>["common-gen5","common-gen4","nx"].includes(p)?p:null;
+const escapePattern=x=>x.replace(/[.*+?^${}()|[\]\\]/g,"\\$&");
+async function hiddenNames(clubId,platform){
+ if(!dbEnabled)return [];
+ const {rows}=await query(`SELECT gamertag FROM privacy_hidden_players WHERE club_id=$1 AND platform=$2 AND active=true`,[clubId,platform]);
+ return rows.map(r=>r.gamertag).filter(Boolean);
+}
+function maskObject(data,names){
+ if(!names?.length)return data;
+ const secrets=new Set(names.map(x=>x.toLocaleLowerCase()));
+ function sanitize(v,k=""){
+  if(typeof v==='string')return secrets.has(v.trim().toLocaleLowerCase())?'Hidden player':v;
+  if(Array.isArray(v))return v.map(x=>sanitize(x,k));
+  if(v&&typeof v==='object')return Object.fromEntries(Object.entries(v).map(([a,b])=>[a,sanitize(b,a)]));
+  return v;
+ }
+ return sanitize(data);
+}
+async function scopedJson(data,clubId,platform){return maskObject(data,await hiddenNames(clubId,platform));}
+async function notifyOperator(record){
+ const url=process.env.REMOVAL_WEBHOOK_URL;
+ if(!url)return false;
+ try{const response=await fetch(url,{method:"POST",headers:{"Content-Type":"application/json",...(process.env.REMOVAL_WEBHOOK_BEARER?{Authorization:`Bearer ${process.env.REMOVAL_WEBHOOK_BEARER}`}:{})},body:JSON.stringify({event:"privacy.removal.requested",reference:record.id,club:record.club,platform:record.platform,created_at:new Date().toISOString()})});return response.ok}
+ catch(e){console.warn("Removal webhook failed:",e.message);return false}
+}
+app.post("/api/privacy/removal",async(req,res)=>{
+ if(!dbEnabled)return res.status(503).json({error:"Removal request service requires a configured database. Contact [DOPLNIT privacy email]."});
+ const b=req.body||{};
+ if(b.website)return res.status(400).json({error:"Invalid submission."});
+ const gamertag=safeText(b.gamertag,100),club=safeText(b.club,120),platform=safePlatform(b.platform),email=safeText(b.email,254),reason=safeText(b.reason,2000);
+ if(!gamertag||!club||!platform||!validEmail(email)||!reason||b.privacyAcknowledged!=='on')return res.status(400).json({error:"Complete all required fields."});
+ try{
+  const {rows}=await query(`INSERT INTO privacy_removal_requests (gamertag,club,platform,email,reason) VALUES ($1,$2,$3,$4,$5) RETURNING id`,[gamertag,club,platform,email,reason]);
+  const id=rows[0].id; const notificationSent=await notifyOperator({id,club,platform});
+  if(notificationSent)await query(`UPDATE privacy_removal_requests SET notified_at=now() WHERE id=$1`,[id]);
+  return res.status(202).json({reference:id});
+ }catch(e){console.error("Removal request storage failed",e.message);return res.status(500).json({error:"Could not store request."})}
+});
+// Administrative approval is explicitly protected by a server-only secret.
+app.post("/api/admin/privacy/removal/:id/approve",async(req,res)=>{
+ const expected=process.env.PRIVACY_ADMIN_TOKEN;
+ if(!dbEnabled||!expected)return res.status(503).json({error:"Administrative processing is not configured."});
+ const provided=req.get("x-privacy-admin-token")||"";
+ if(provided.length!==expected.length||!(await import('node:crypto')).timingSafeEqual(Buffer.from(provided),Buffer.from(expected)))return res.status(403).json({error:"Forbidden"});
+ const clubId=safeText(req.body?.clubId,80).replace(/[^0-9]/g,'');
+ if(!clubId)return res.status(400).json({error:"A verified numeric club ID is required."});
+ try{const {rows}=await query(`SELECT * FROM privacy_removal_requests WHERE id=$1 FOR UPDATE`,[req.params.id]);if(!rows.length)return res.status(404).json({error:"Not found"});
+  const r=rows[0];await query(`INSERT INTO privacy_hidden_players(club_id,platform,gamertag,active) VALUES($1,$2,$3,true) ON CONFLICT(club_id,platform,gamertag) DO UPDATE SET active=true`,[clubId,r.platform,r.gamertag]);
+  await query(`UPDATE privacy_removal_requests SET status='approved',resolved_at=now(),verified_club_id=$2 WHERE id=$1`,[r.id,clubId]);
+  clubCache.delete(`${r.platform}:${clubId}`);
+  return res.json({ok:true,clubId,platform:r.platform});
+ }catch(e){console.error("Removal approval failed",e.message);res.status(500).json({error:"Could not approve request"})}
+});
+app.get("/api/pass/config",(_,res)=>res.json({checkoutEnabled:false,provider:"Paddle (proposed)",status:"Legal review, pricing, merchant account and webhook verification required.",consentVersion,consentText}));
+app.post("/api/pass/checkout",async(req,res)=>{
+ const b=req.body||{};
+ if(b.consent!==true||b.consentVersion!==consentVersion)return res.status(400).json({error:"Explicit current-version consent is required."});
+ const email=safeText(b.email,254),clubId=safeText(b.clubId,80).replace(/[^0-9]/g,'');
+ if(!validEmail(email)||!clubId)return res.status(400).json({error:"A valid billing email and club ID are required."});
+ // Intentionally disabled: never redirect to an unverified merchant or activate Pass from client claims.
+ // Before launch, create a server-side checkout session, persist consent (payer account, time,
+ // exact text+version, club ID and transaction ID), verify webhook signatures and manage entitlements.
+ return res.status(503).json({error:"Clubroom Pass checkout is not active. The merchant-of-record agreement, price, withdrawal text, subscription portal, signed webhooks and confirmation emails are not yet configured."});
+});
 
-app.use(express.static(path.join(DIR, "public")));
+
+app.use(express.static(path.join(DIR, "public"),{extensions:["html"]}));
 
 const validPlatform = p => ["common-gen5","common-gen4","nx"].includes(p) ? p : "common-gen5";
 
@@ -58,7 +129,7 @@ app.get("/api/club-card/:id", async (req,res)=>{
     const [infoR,statsR]=await Promise.allSettled([ea("/clubs/info",{platform,clubIds:id},4500),ea("/clubs/overallStats",{platform,clubIds:id},4500)]);
     const info=infoR.status==="fulfilled"?((infoR.value&&infoR.value[id])||Object.values(infoR.value||{})[0]||{}):{};
     const stats=statsR.status==="fulfilled"?((statsR.value&&statsR.value[id])||Object.values(statsR.value||{})[0]||statsR.value||{}):{};
-    res.json({...stats,...info,clubId:id});
+    res.json(await scopedJson({...stats,...info,clubId:id},id,platform));
   }catch(e){res.status(502).json({error:"EA club card failed.",detail:e.message})}
 });
 
@@ -87,12 +158,12 @@ app.get("/api/club/:id", async (req,res)=>{
  const started=Date.now();const id=String(req.params.id).replace(/[^\d]/g,"");const p=validPlatform(req.query.platform);if(!id)return res.status(400).json({error:"Invalid club ID."});
  const key=`${p}:${id}`,hit=clubCache.get(key),age=hit?Date.now()-hit.at:Infinity;
  try{
-  if(hit&&age<30000){console.log(`[CLUB] ${id} memory fresh ${Date.now()-started}ms`);return res.json({...hit.data,_cache:"fresh"})}
-  if(hit&&age<300000){console.log(`[CLUB] ${id} memory stale ${Date.now()-started}ms`);archiveInBackground(id,p);return res.json({...hit.data,_cache:"stale"})}
+  if(hit&&age<30000){console.log(`[CLUB] ${id} memory fresh ${Date.now()-started}ms`);return res.json({...await scopedJson(hit.data,id,p),_cache:"fresh"})}
+  if(hit&&age<300000){console.log(`[CLUB] ${id} memory stale ${Date.now()-started}ms`);archiveInBackground(id,p);return res.json({...await scopedJson(hit.data,id,p),_cache:"stale"})}
   const d=await loadClubFast(id,p);clubCache.set(key,{data:d,at:Date.now()});
   console.log(`[CLUB] ${id} response ${Date.now()-started}ms · errors=${Object.keys(d.errors||{}).join(",")||"none"}`);
-  res.json({...d,_cache:"miss"});setImmediate(()=>archiveInBackground(id,p,d));
- }catch(e){console.warn(`[CLUB] ${id} FAIL ${Date.now()-started}ms · ${e.message}`);if(hit)return res.json({...hit.data,_cache:"fallback",_refreshError:e.message});res.status(502).json({error:"EA club load failed.",detail:e.message})}
+  res.json({...await scopedJson(d,id,p),_cache:"miss"});setImmediate(()=>archiveInBackground(id,p,d));
+ }catch(e){console.warn(`[CLUB] ${id} FAIL ${Date.now()-started}ms · ${e.message}`);if(hit)return res.json({...await scopedJson(hit.data,id,p),_cache:"fallback",_refreshError:e.message});res.status(502).json({error:"EA club load failed.",detail:e.message})}
 });
 
 app.get("/api/event-probe/:id",async(req,res)=>{
@@ -139,7 +210,7 @@ app.get("/api/db-export", async (req,res)=>{
     }
     const payload={
       format:"clubroom-postgres-json-backup",
-      version:"73.0.0",
+      version:"75.1.0",
       exportedAt:new Date().toISOString(),
       counts,
       data
@@ -155,11 +226,15 @@ app.get("/api/db-export", async (req,res)=>{
   }
 });
 
-app.get("/api/history/:id",async(req,res)=>{try{res.json(await history(String(req.params.id).replace(/[^\d]/g,"")))}catch(e){res.status(500).json({error:e.message})}});
-app.get("/api/analytics/:id",async(req,res)=>{try{res.json(await analytics(String(req.params.id).replace(/[^\d]/g,"")))}catch(e){res.status(500).json({error:e.message})}});
-app.get("/api/sessions/:id",async(req,res)=>{try{const id=String(req.params.id).replace(/[^\d]/g,"");const gap=Math.max(30,Math.min(240,Number(req.query.gap||90)));res.json(await buildSessions(id,{gapMinutes:gap,activeMinutes:45}))}catch(e){res.status(500).json({error:e.message})}});
-app.get("/api/health",(_,res)=>res.json({ok:true,version:"73.0.0",database:dbEnabled,collectorEnabled:dbEnabled && process.env.COLLECTOR_ENABLED!=="false",collectorIntervalMs:Number(process.env.COLLECTOR_INTERVAL_MS||300000),collectorBatch:Number(process.env.COLLECTOR_BATCH||20),time:new Date().toISOString()}));
+app.get("/api/history/:id",async(req,res)=>{try{res.json(await scopedJson(await history(String(req.params.id).replace(/[^\d]/g,"")),String(req.params.id).replace(/[^\d]/g,""),validPlatform(req.query.platform)))}catch(e){res.status(500).json({error:e.message})}});
+app.get("/api/analytics/:id",async(req,res)=>{try{res.json(await scopedJson(await analytics(String(req.params.id).replace(/[^\d]/g,"")),String(req.params.id).replace(/[^\d]/g,""),validPlatform(req.query.platform)))}catch(e){res.status(500).json({error:e.message})}});
+app.get("/api/sessions/:id",async(req,res)=>{try{const id=String(req.params.id).replace(/[^\d]/g,"");const gap=Math.max(30,Math.min(240,Number(req.query.gap||90)));res.json(await scopedJson(await buildSessions(id,{gapMinutes:gap,activeMinutes:45}),id,validPlatform(req.query.platform)))}catch(e){res.status(500).json({error:e.message})}});
+app.get("/api/health",(_,res)=>res.json({ok:true,version:"75.1.0",database:dbEnabled,collectorEnabled:dbEnabled && process.env.COLLECTOR_ENABLED!=="false",collectorIntervalMs:Number(process.env.COLLECTOR_INTERVAL_MS||300000),collectorBatch:Number(process.env.COLLECTOR_BATCH||20),time:new Date().toISOString()}));
 
+for(const route of ["about","terms","privacy","cookies","removal"]){
+ app.get('/'+route,(_,res)=>res.sendFile(path.join(DIR,'public',route+'.html')));
+}
+app.get("/pass/checkout",(_,res)=>res.sendFile(path.join(DIR,"public","pass","checkout.html")));
 app.get("/fun",(_,res)=>res.redirect(302,"/misc"));
 app.get("/club/:id/fun",(req,res)=>res.redirect(302,`/club/${req.params.id}/misc`));
 app.get("/{*splat}",(_,res)=>res.sendFile(path.join(DIR,"public","index.html")));
@@ -170,4 +245,4 @@ if(dbEnabled && process.env.COLLECTOR_ENABLED!=="false"){
  const runCollector=async()=>{try{for(const c of await dueClubs(Number(process.env.COLLECTOR_BATCH||20))){try{const d=await loadClubFull(String(c.club_id),validPlatform(c.platform));const saved=await persistClubPayload(String(c.club_id),validPlatform(c.platform),d);await rescheduleClub(String(c.club_id),validPlatform(c.platform),Number(saved?.newMatches||0));}catch(e){console.warn("collector",c.club_id,e.message)}}}catch(e){console.warn("collector batch",e.message)}};
  setTimeout(runCollector,15000);setInterval(runCollector,Number(process.env.COLLECTOR_INTERVAL_MS||300000));
 }
-app.listen(PORT,()=>console.log(`Clubroom FC27 v73 running on ${PORT} · DB ${dbEnabled?"ON":"OFF"}`));
+app.listen(PORT,()=>console.log(`CLUBROOM running on ${PORT} · DB ${dbEnabled?"ON":"OFF"}`));

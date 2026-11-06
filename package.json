@@ -1,6 +1,6 @@
 {
-  "name": "clubroom-fc27-v74-card-layers-step1",
-  "version": "74.0.0",
+  "name": "clubroom",
+  "version": "75.1.0",
   "private": true,
   "type": "module",
   "scripts": {
