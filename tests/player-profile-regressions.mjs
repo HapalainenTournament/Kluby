@@ -13,7 +13,7 @@ test('back state stores tab and scroll',app.includes("clubroomScroll:window.scro
 test('popstate restores scroll',app.includes("window.scrollTo({top:Number(e.state?.clubroomScroll)||0"));
 
 test('hero uses existing player-card component',html.includes('id="playerHeroCardMount69"')&&app.includes("cardOnly69(p)"));
-test('hero has Share and Change character',html.includes('id="playerShare69"')&&html.includes('id="playerCharacter69"'));
+test('hero has Share without obsolete Change character',html.includes('id="playerShare69"')&&!html.includes('id="playerCharacter69"'));
 test('role badges reuse Key Threats metric definitions',app.includes("TOP SCORER")&&app.includes("CLINICAL")&&app.includes("CREATOR")&&app.includes("DEFENSIVE"));
 test('hero has five requested metrics',app.includes("['MATCHES',a.matches]")&&app.includes("['G+A',a.ga]")&&app.includes("['AVG RATING'")&&app.includes("['MOTM',a.motm]")&&app.includes("['PASS %'"));
 test('last-five form is archive result data',app.includes("rows.slice(0,5)")&&app.includes("playerForm69"));

@@ -1,0 +1,31 @@
+import fs from 'node:fs';
+import path from 'node:path';
+import vm from 'node:vm';
+const root=path.resolve(process.argv[2]||'.');
+const read=p=>fs.readFileSync(path.join(root,p),'utf8');
+let failed=0;const test=(ok,name)=>{console.log(`${ok?'PASS':'FAIL'} ${name}`);if(!ok)failed++};
+const app=read('public/app.js'),playerCard=read('public/cards/player-card.js'),avatar=read('public/cards/player-avatar.js');
+const characterCode=read('public/cards/characters.js');
+const win={};vm.runInNewContext(characterCode,{window:win,console});
+const chars=win.ClubroomCharacters;
+const player={id:'hapalainen-test-01',name:'Hapalainen',position:'FWD'};
+chars.registerPlayers([player]);
+const aliases=[player,{id:player.id},{name:player.name},{player_id:player.id},{name:player.name.toLowerCase()}];
+const resolved=aliases.map(p=>chars.getCharacterForPlayer(p)?.src);
+test(resolved.every(x=>x&&x===resolved[0]),'same Hapalainen image from Players, Compare, Profile, Partnerships, Pick a pair');
+test(aliases.map(p=>chars.getMaskForPlayer(p)).every(x=>x&&x===chars.getMaskForPlayer(player)),'same Hapalainen jersey mask in all five views');
+for(const c of Object.values(chars.registry).flat()){
+  test(fs.existsSync(path.join(root,'public',chars.getMaskForPlayer({id:c.id,position:c.id.split('-')[0]}).replace(/^\//,''))) || fs.existsSync(path.join(root,'public/cards/characters/masks',c.id+'.png')),`character ${c.id} has aligned mask`);
+}
+test(playerCard.includes('<player-avatar')&&!/class="player" src/.test(playerCard),'Players/Profile use shared avatar inside PlayerCard');
+test(!app.includes('comparePortrait62(')&&app.includes("avatarMarkup(p,'bust')"),'Compare uses shared avatar');
+test(!app.includes('squadCharacter70(')&&app.includes("avatarMarkup(p,'mini')"),'Squad Board uses shared avatar');
+test(/partnershipPlayer75.*?avatarMarkup\(a,'bust'\)/s.test(app),'Partnerships spotlight uses shared avatar');
+test(/chemPickPortrait75.*?avatarMarkup\(p,'bust'\)/s.test(app),'Pick a pair uses shared avatar');
+test(!/Change (first|second) player|Change character|data-character-change/.test(app),'all manual character links removed');
+test(!/playerCharacter69/.test(read('public/index.html')),'profile no longer exposes character switching');
+test(/canonicalOvr\(p\)/.test(app)&&/playerOvr=p=>canonicalOvr\(p\)/.test(app),'Players and Chemistry use identical OVR resolver');
+test(/\.avatarLayer.*transform-origin/.test(avatar)&&/getMaskForPlayer/.test(avatar),'art and mask share one transformed wrapper');
+test(read('public/cards/cardShared.js').includes('querySelectorAll(\'player-avatar\')'),'PNG export embeds avatar assets');
+test(read('public/index.html').includes('/cards/player-avatar.js'),'PlayerAvatar registered on every main page');
+process.exit(failed?1:0);

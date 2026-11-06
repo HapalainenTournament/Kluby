@@ -1097,3 +1097,13 @@ club-crest.clubCrestComponent .clubCrestFallback{display:grid;place-items:center
 .legalFooter{margin:48px auto 0;max-width:1380px;padding:26px clamp(20px,4vw,46px);border-top:1px solid rgba(148,163,184,.25);color:#94a3b8;font:500 13px/1.6 Inter,system-ui,sans-serif}
 .legalFooter>div{display:flex;align-items:center;justify-content:space-between;gap:16px;flex-wrap:wrap}.legalFooter strong{letter-spacing:.12em;color:#e2e8f0}.legalFooter nav{display:flex;gap:16px;flex-wrap:wrap}.legalFooter a,.legalFooter button{color:#a5f3fc;text-decoration:underline;background:none;border:0;padding:0;font:inherit;cursor:pointer}.legalFooter p{margin:14px 0 0;max-width:1000px;font-size:12px}
 .legalPage{max-width:920px;margin:42px auto 64px;padding:0 24px;color:#dbeafe;font:400 16px/1.75 Inter,system-ui,sans-serif}.legalPage h1{font-size:clamp(30px,4vw,46px);margin:8px 0 14px;color:#fff;line-height:1.15}.legalPage h2{font-size:21px;color:#fff;margin:32px 0 8px}.legalPage a{color:#5eead4}.legalPage .legalDraft{color:#2dd4bf;font-size:12px;font-weight:900;letter-spacing:.1em}.legalPage .legalNotice{border:1px solid rgba(45,212,191,.35);padding:12px 16px;background:#102438;border-radius:12px}.legalPage ul{padding-left:22px}.legalPage label{display:block;margin:15px 0 5px;color:#e2e8f0}.legalPage input,.legalPage select,.legalPage textarea{width:100%;padding:11px 13px;color:#fff;background:#101e33;border:1px solid #44536a;border-radius:9px;font:inherit}.legalPage button[type=submit]{padding:12px 22px;border:none;border-radius:10px;background:#2dd4bf;color:#07101b;font-weight:850;cursor:pointer}.legalPage button:disabled{opacity:.4;cursor:not-allowed}.legalPage .legalFeedback{min-height:25px;color:#5eead4}.passGate{background:#101e33;border:1px solid #43546a;border-radius:14px;padding:20px;margin:28px 0}.passGate .ack{display:flex;align-items:flex-start;gap:12px}.passGate input[type=checkbox]{width:auto;margin-top:8px}.passGate a{color:#5eead4}
+
+/* v77: all footballer art is rendered by PlayerAvatar, never view-specific <img>. */
+.partnershipPlayer75 player-avatar{flex:1 1 0;min-height:0;width:100%;height:100%;filter:drop-shadow(0 6px 13px #000a)}
+.chemPickPortrait75 player-avatar{width:100%;height:100%}
+.chemDialogList75 player-avatar{flex:0 0 48px;width:48px;height:54px}
+.comparePickInner62 player-avatar{flex:0 0 auto;width:clamp(74px,8vw,112px);height:118px}
+.comparePickerItem62 player-avatar{flex:0 0 48px;width:48px;height:65px}
+.squadPlayerCell70 player-avatar{display:inline-block;vertical-align:middle;flex:0 0 36px;width:36px;height:40px}
+.motmCard73 player-avatar{display:inline-block;width:72px;height:84px}
+.playerCollectibleMeta{grid-template-columns:1fr auto}

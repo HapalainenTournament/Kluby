@@ -16,7 +16,7 @@ ok(/state\.window=Number\(win\.dataset\.window37\)\|\|20;\s*draw\(\)/.test(app),
 ok(/state\.selectedPlayers=.*draw\(\)/s.test(app),'BUG1 player click updates selected players and redraws');
 
 // BUG2 static wiring.
-ok(/ClubroomCharacters\?\.getCharacterForPlayer/.test(app),'BUG2 PlayerCard markup uses character resolver');
+ok(/avatarMarkup\(/.test(app) && /<player-avatar/.test(fs.readFileSync(path.join(root,'public/cards/player-card.js'),'utf8')),'BUG2 all player surfaces render PlayerAvatar');
 const charsPath=path.join(root,'public/cards/characters.js');
 ok(fs.existsSync(charsPath),'BUG2 character registry module exists');
 if(fs.existsSync(charsPath)){
@@ -30,9 +30,11 @@ if(fs.existsSync(charsPath)){
   ok(auto && auto.id.startsWith('mid-'),'BUG2 automatic selection uses position pool');
   const other=C.getCharactersForPosition('midfielder').find(x=>x.id!==auto.id);
   ok(!!other,'BUG2 midfielder pool has alternate character');
-  if(other){C.setCharacterForPlayer(p.id,other.id); const chosen=C.getCharacterForPlayer(p);ok(chosen?.id===other.id,'BUG2 manual override is read before automatic selection');
-    // simulate reload by reevaluating module against same localStorage
-    const context2={window:{},localStorage:context.localStorage,console}; vm.createContext(context2); vm.runInContext(fs.readFileSync(charsPath,'utf8'),context2);ok(context2.window.ClubroomCharacters.getCharacterForPlayer(p)?.id===other.id,'BUG2 manual override survives reload');}
+  if(other){C.setCharacterForPlayer(p.id,other.id);ok(C.getCharacterForPlayer(p)?.id===auto.id,'BUG2 manual overrides cannot change character');
+    const context2={window:{},console};vm.createContext(context2);vm.runInContext(fs.readFileSync(charsPath,'utf8'),context2);
+    ok(context2.window.ClubroomCharacters.getCharacterForPlayer(p)?.id===auto.id,'BUG2 automatic archetype survives reload');}
+  C.registerPlayers([{id:'123',name:'Hapalainen',position:'midfielder'}]);
+  ok(C.getCharacterForPlayer({id:'123'}).id===C.getCharacterForPlayer({name:'Hapalainen'}).id,'BUG2 alias resolves to same character');
   for(const list of Object.values(C.registry))for(const c of list)ok(fs.existsSync(path.join(root,'public',c.src.replace(/^\//,''))),`BUG2 asset exists ${c.src}`);
 }
 process.exit(failed?1:0);

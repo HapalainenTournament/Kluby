@@ -1,5 +1,5 @@
 (function(){
-  const STORAGE_PREFIX='clubroom:character:';
+  // Identity is deterministic and shared by every avatar; legacy manual overrides are ignored.
   const registry={
     FWD:[
       {id:'fwd-1',name:'Forward 01',src:'/cards/characters/fwd-1.png'},
@@ -26,22 +26,27 @@
     return'FWD';
   };
   const hash=s=>{let h=2166136261;for(const ch of String(s||'')){h^=ch.charCodeAt(0);h=Math.imul(h,16777619)}return h>>>0};
-  const storage={
-    get(id){try{return localStorage.getItem(STORAGE_PREFIX+id)}catch{return null}},
-    set(id,v){try{localStorage.setItem(STORAGE_PREFIX+id,v);return true}catch{return false}},
-    remove(id){try{localStorage.removeItem(STORAGE_PREFIX+id);return true}catch{return false}}
-  };
   const all=()=>Object.values(registry).flat();
   const byId=id=>all().find(c=>c.id===id)||null;
   function getCharactersForPosition(pos){return registry[positionCategory(pos)].slice()}
-  function getCharacterForPlayer(player){
-    const id=String(player?.id??player?.player_id??'');
-    const override=id?storage.get(id):null;
-    if(override){const c=byId(override);if(c)return c}
-    const pool=getCharactersForPosition(player?.position);
-    return pool[hash(id||player?.name||player?.player_name||'player')%pool.length]||null;
+  const roster=new Map();
+  const key=v=>String(v??'').trim().toLocaleLowerCase();
+  function registerPlayers(players){for(const p of (players||[])){
+    const candidate={id:String(p?.id??p?.player_id??''),name:String(p?.name??p?.pro_name??p?.player_name??''),position:p?.position??p?.pos??''};
+    if(candidate.id)roster.set(key(candidate.id),candidate);
+    if(candidate.name)roster.set(key(candidate.name),candidate);
+  }}
+  function resolvePlayer(player){
+    const ref=typeof player==='string'?{id:player,name:player}:player||{};
+    return roster.get(key(ref.id))||roster.get(key(ref.player_id))||roster.get(key(ref.name))||roster.get(key(ref.player_name))||ref;
   }
-  function setCharacterForPlayer(playerId,characterId){if(!byId(characterId))return false;return storage.set(String(playerId),characterId)}
-  function clearCharacterForPlayer(playerId){return storage.remove(String(playerId))}
-  window.ClubroomCharacters={registry,positionCategory,getCharactersForPosition,getCharacterForPlayer,setCharacterForPlayer,clearCharacterForPlayer};
+  function getCharacterForPlayer(player){
+    const p=resolvePlayer(player),seed=String(p?.id||p?.player_id||p?.name||p?.player_name||'player').toLocaleLowerCase();
+    const pool=getCharactersForPosition(p?.position||p?.pos);
+    return pool[hash(seed)%pool.length]||null;
+  }
+  function getMaskForPlayer(player){const c=getCharacterForPlayer(player);return c?`/cards/characters/masks/${c.id}.png`:''}
+  function setCharacterForPlayer(){return false} // Deprecated. No per-view mutations.
+  function clearCharacterForPlayer(){return false}
+  window.ClubroomCharacters={registry,positionCategory,registerPlayers,resolvePlayer,getCharactersForPosition,getCharacterForPlayer,getMaskForPlayer,setCharacterForPlayer,clearCharacterForPlayer};
 })();

@@ -13,7 +13,7 @@ const slotStyle = key => {
 
 class PlayerCard extends HTMLElement {
   static get observedAttributes(){
-    return ['player-name','player-id','position','overall','tier','crest-url','jersey-color','stat-1-label','stat-1-value','stat-2-label','stat-2-value','stat-3-label','stat-3-value','stat-4-label','stat-4-value','stat-5-label','stat-5-value','stat-6-label','stat-6-value','matches','goals','assists','motm','player-image'];
+    return ['player-name','player-id','position','overall','tier','crest-url','jersey-color','stat-1-label','stat-1-value','stat-2-label','stat-2-value','stat-3-label','stat-3-value','stat-4-label','stat-4-value','stat-5-label','stat-5-value','stat-6-label','stat-6-value','matches','goals','assists','motm'];
   }
   constructor(){ super(); this.attachShadow({mode:'open'}); }
   connectedCallback(){ this.render(); }
@@ -24,15 +24,11 @@ class PlayerCard extends HTMLElement {
     const card=root?.querySelector('.card'), style=root?.querySelector('style');
     return rasterizeCardElement({card,style,width,height,scale,assetReplacer:async(clone,css)=>{
       const frameData=await cardUrlToDataUrl('/cards/frames/frame.png');
-      const maskData=await cardUrlToDataUrl('/cards/masks/jersey-mask.png');
-      const playerEl=root.querySelector('.player'), crestEl=root.querySelector('.crest img');
-      const playerData=await cardUrlToDataUrl(playerEl?.currentSrc||playerEl?.getAttribute('src')||'/cards/players/default.png') || await cardUrlToDataUrl('/cards/players/default.png');
+      const crestEl=root.querySelector('.crest img');
       const crestData=crestEl ? await cardUrlToDataUrl(crestEl.currentSrc||crestEl.getAttribute('src')||'') : '';
-      const cp=clone.querySelector('.player'); if(cp) cp.setAttribute('src',playerData||'');
       const cf=clone.querySelector('.frame'); if(cf) cf.setAttribute('src',frameData||'');
       const cc=clone.querySelector('.crest img'); if(cc){ if(crestData) cc.setAttribute('src',crestData); else cc.replaceWith(Object.assign(document.createElement('div'),{className:'crestFallback'})); }
       if(frameData) css=css.replaceAll("url('/cards/frames/frame.png')",`url('${frameData}')`);
-      if(maskData) css=css.replaceAll("url('/cards/masks/jersey-mask.png')",`url('${maskData}')`);
       return {css};
     }});
   }
@@ -45,9 +41,8 @@ class PlayerCard extends HTMLElement {
   render(){
     const name=this.a('player-name')||'PLAYER NAME';
     const id=this.a('player-id');
-    const playerImage=this.a('player-image') || (id?`/cards/players/${encodeURIComponent(id)}/base.png`:'/cards/players/default.png');
     const crest=this.a('crest-url');
-    const jersey=this.a('jersey-color')||'#d9dde3';
+    const jersey=this.a('jersey-color')||window.ClubroomAvatars?.getClubColor?.()||'#2f679e';
     const { tier, tierStyle }=resolveCardTier(this.a('overall'),this.a('tier'));
     const stats=[1,2,3,4,5,6].map(i=>({label:this.a(`stat-${i}-label`)||'—',value:this.a(`stat-${i}-value`)}));
     const statKeys=['statLeft1','statLeft2','statLeft3','statRight1','statRight2','statRight3'];
@@ -59,8 +54,8 @@ class PlayerCard extends HTMLElement {
         .layer{position:absolute;inset:0;width:100%;height:100%}.frame{z-index:1;width:100%;height:100%;object-fit:fill;filter:${tierStyle.frameFilter};pointer-events:none}
         .tierWash{z-index:2;background:${tierStyle.bg};mix-blend-mode:color;opacity:.22;pointer-events:none}
         .portraitClip{position:absolute;inset:0;z-index:3;clip-path:polygon(${portraitPolygon()});overflow:hidden;-webkit-mask-image:linear-gradient(to bottom,#000 0%,#000 84%,rgba(0,0,0,.88) 90%,rgba(0,0,0,.35) 97%,transparent 100%);mask-image:linear-gradient(to bottom,#000 0%,#000 84%,rgba(0,0,0,.88) 90%,rgba(0,0,0,.35) 97%,transparent 100%)}
-        .player{position:absolute;inset:0;width:100%;height:100%;object-fit:contain;object-position:center bottom;filter:contrast(1.03) saturate(.88) drop-shadow(0 2cqw 3cqw rgba(0,0,0,.45))}
-        .jerseyTint{position:absolute;inset:0;width:100%;height:100%;background:${jersey};-webkit-mask:url('/cards/masks/jersey-mask.png') center/100% 100% no-repeat;mask:url('/cards/masks/jersey-mask.png') center/100% 100% no-repeat;mix-blend-mode:multiply;opacity:.86}
+        ${window.CLUBROOM_AVATAR_CSS||''}
+        .portraitClip player-avatar{width:100%;height:100%}
         .ui{z-index:5;position:absolute;inset:0}.slot{position:absolute;display:flex;align-items:center;justify-content:center;min-width:0}
         .overall{${slotStyle('overall')}flex-direction:column;align-items:flex-start;justify-content:center;text-shadow:0 .35cqw 1.1cqw #000}.overall small{font-size:3.45cqw;line-height:1;font-weight:900;letter-spacing:.08em;white-space:nowrap}.overall b{font-size:10.3cqw;line-height:.9;font-weight:950;white-space:nowrap}
         .position{${slotStyle('position')}font-size:4.35cqw;font-weight:900;border:.35cqw solid ${tierStyle.accent};border-radius:1cqw;background:rgba(2,8,16,.66);text-shadow:0 .3cqw .7cqw #000}
@@ -73,8 +68,7 @@ class PlayerCard extends HTMLElement {
         <img class="layer frame" src="/cards/frames/frame.png" alt="">
         <div class="layer tierWash"></div>
         <div class="portraitClip" data-portrait-window>
-          <img class="player" src="${playerImage}" alt="" onerror="this.onerror=null;this.src='/cards/players/default.png'">
-          <div class="jerseyTint"></div>
+          <player-avatar player-id="${escapeCardText(id)}" player-name="${escapeCardText(name)}" position="${escapeCardText(this.a('position'))}" jersey-color="${escapeCardText(jersey)}" variant="card"></player-avatar>
         </div>
         <div class="ui">
           <div class="slot overall" data-slot="overall"><small>OVR</small><b>${this.a('overall')||'--'}</b></div>

@@ -53,7 +53,16 @@ export async function rasterizeCardElement({card,style,width=1200,height=1800,sc
   if(!card||!style) throw new Error('Card export source is incomplete.');
   const clone=card.cloneNode(true);
   clone.querySelectorAll('[onerror]').forEach(el=>el.removeAttribute('onerror'));
+  // PlayerAvatar is light DOM, so its child layers export without nested shadow roots.
+  // In SVG foreignObject, embed character and mask resources as data URLs.
+  for(const avatar of clone.querySelectorAll('player-avatar')){
+    const artwork=avatar.querySelector('.avatarArt');
+    if(artwork){const data=await cardUrlToDataUrl(artwork.getAttribute('src'));if(data)artwork.setAttribute('src',data)}
+    const mask=avatar.style.getPropertyValue('--avatar-mask').match(/url\(["']?([^"')]+)["']?\)/)?.[1];
+    if(mask){const data=await cardUrlToDataUrl(mask);if(data)avatar.style.setProperty('--avatar-mask',`url("${data}")`)}
+  }
   let css=style.textContent||'';
+  css += '\n' + (window.CLUBROOM_AVATAR_CSS||'');
   css=css.replace(/:host/g,'.exportHost');
   if(assetReplacer){ const result=await assetReplacer(clone,css); if(result?.css!==undefined) css=result.css; }
   const html=`<div xmlns="http://www.w3.org/1999/xhtml" class="exportHost"><style>${css}</style>${clone.outerHTML}</div>`;
