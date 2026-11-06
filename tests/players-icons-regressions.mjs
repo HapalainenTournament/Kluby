@@ -1,0 +1,12 @@
+import fs from 'node:fs';import path from 'node:path';
+const root=process.argv[2]||process.cwd();let failed=0;const ok=(c,m)=>{console.log(c?'PASS':'FAIL',m);if(!c)failed++};
+const app=fs.readFileSync(path.join(root,'public/app.js'),'utf8');const idx=fs.readFileSync(path.join(root,'public/index.html'),'utf8');const icons=fs.readFileSync(path.join(root,'public/icons/badges/index.js'),'utf8');
+for(const name of ['goalkeeper','defender','midfielder','forward','topScorer','clinical','creator','defensive','featureClubStats','featurePlayerAnalytics','featureSessions','creativity'])ok(new RegExp('\\b'+name+'\\s*:').test(icons),`ICON ${name} exists`);
+ok(/stroke-width="1\.75"/.test(icons),'ICON API uses 1.75 stroke');ok(/stroke-linecap="round"/.test(icons),'ICON API uses rounded caps');ok(/stroke="currentColor"/.test(icons),'ICON API uses currentColor');
+ok(/data-position67/.test(app)&&/playerPositionFilter67/.test(app),'PLAYERS segmented position filter wired');
+ok(/if\(playerPositionFilter67!==\'all\'\)list=list\.filter/.test(app),'PLAYERS filter changes card list');
+ok(/rankDropdown67/.test(idx)&&/playersNativeState67/.test(idx),'PLAYERS custom rank dropdown replaces visible native select');
+ok(/creativityCard67/.test(app)&&/appBadgeIcon67\('creativity'/.test(app),'PLAYERS creativity cards use custom icon');
+ok(/data-home-icon67="featureClubStats"/.test(idx)&&/data-home-icon67="featurePlayerAnalytics"/.test(idx)&&/data-home-icon67="featureSessions"/.test(idx),'HOME feature cards use custom icons');
+ok(/icon:'topScorer'/.test(app)&&/icon:'clinical'/.test(app)&&/icon:'creator'/.test(app)&&/icon:'defensive'/.test(app),'KEY THREATS use custom icon IDs');
+process.exit(failed?1:0);

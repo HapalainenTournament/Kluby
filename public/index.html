@@ -1,9 +1,9 @@
-<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Clubroom FC27 v64</title><link rel="icon" type="image/png" href="/assets/clubroom-favicon.png"><link rel="stylesheet" href="/style.css"><script type="module" src="/cards/player-card.js"></script><script type="module" src="/cards/duo-card.js"></script>
+<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Clubroom FC27 v69</title><link rel="icon" type="image/png" href="/assets/clubroom-favicon.png"><link rel="stylesheet" href="/style.css"><script type="module" src="/cards/player-card.js"></script><script type="module" src="/cards/duo-card.js"></script><script type="module" src="/components/club-crest.js"></script><script type="module" src="/icons/badges/index.js"></script><script type="module" src="/charts/player-radar.js"></script>
 </head><body>
 <header class="topbar overviewTopbar44">
   <a class="brand" href="/" aria-label="Clubroom homepage"><img class="brandMark" src="/assets/clubroom-mark.png" alt="" aria-hidden="true"><b>CLUBROOM</b><em>FC27</em></a>
   <nav class="clubTabs topNav44" id="clubTabs" hidden>
-    <button data-tab="stats" class="active">Overview</button><button data-tab="players">Players</button><button data-tab="compare">Compare</button><button data-tab="matches">Matches</button><button data-tab="sessions">Sessions</button><button data-tab="analytics">Analytics</button><button data-tab="fun">Fun</button><button data-tab="plus" class="clubPlusNav44">♛ Club+</button>
+    <button data-tab="stats" class="active">Overview</button><button data-tab="players">Players</button><button data-tab="compare">Compare</button><button data-tab="matches">Matches</button><button data-tab="sessions">Sessions</button><button data-tab="analytics">Analytics</button><button data-tab="misc">Misc</button><button data-tab="plus" class="clubPlusNav44">♛ Club+</button>
   </nav>
   <div class="topActions"><button id="openSearch" class="iconBtn" title="Search club" aria-label="Search club">⌕</button></div>
 </header>
@@ -47,15 +47,15 @@
   <div id="results" class="results searchResults"></div>
   <section class="homeFeatures51" aria-label="Clubroom features">
     <article class="homeFeatureCard51">
-      <div class="homeFeatureIcon51">◫</div>
+      <div class="homeFeatureIcon51" data-home-icon67="featureClubStats"></div>
       <div><span class="kicker">CLUB INTELLIGENCE</span><h3>Club stats & form</h3><p>Track club record, recent form, match history and performance trends from captured EA data.</p></div>
     </article>
     <article class="homeFeatureCard51">
-      <div class="homeFeatureIcon51">◇</div>
+      <div class="homeFeatureIcon51" data-home-icon67="featurePlayerAnalytics"></div>
       <div><span class="kicker">PLAYER INSIGHTS</span><h3>Player cards & analytics</h3><p>Compare player output, ratings and match-level statistics with collectible Clubroom cards.</p></div>
     </article>
     <article class="homeFeatureCard51">
-      <div class="homeFeatureIcon51">◎</div>
+      <div class="homeFeatureIcon51" data-home-icon67="featureSessions"></div>
       <div><span class="kicker">LONG-TERM TRACKING</span><h3>Sessions & Misc stats</h3><p>Review playing sessions, streaks, records, duo cards and other archive-driven club insights.</p></div>
     </article>
   </section>
@@ -64,7 +64,7 @@
 <section class="clubHero overviewHero44">
   <div class="heroIdentity44 heroIdentityProfile61">
     <div class="heroCrestStack61">
-      <div id="clubLogo" class="clubLogo heroCrest44"><img id="clubCrest" alt="Club crest" hidden><span id="clubFallback">C</span></div>
+      <div id="clubLogo" class="clubLogo heroCrest44"><club-crest id="clubCrest61" club-name="Club"></club-crest></div>
       <div id="clubColors61" class="clubColors61" aria-label="Club colors" hidden></div>
     </div>
     <div class="heroClubCopy44 heroClubCopy61">
@@ -74,7 +74,7 @@
       <div class="clubInfoStrip61" aria-label="Club information">
         <div id="divisionCell61" class="clubInfoCell61"><b id="divisionBadge">—</b><span>DIVISION</span></div>
         <div class="clubInfoCell61"><b id="skillBadge">—</b><span>SKILL RATING</span></div>
-        <button id="clubIdBadge" class="clubInfoCell61 clubIdCopy44" type="button" title="Copy club ID"><b id="clubIdValue61">—</b><span>CLUB ID <i aria-hidden="true">⧉</i></span></button>
+        <button id="clubIdBadge" class="clubInfoCell61 clubIdCopy44" type="button" title="Copy club ID"><div class="clubInfoValue61"><b id="clubIdValue61">—</b><i aria-hidden="true">⧉</i></div><span>CLUB ID</span></button>
       </div>
     </div>
   </div>
@@ -96,7 +96,7 @@
 <div class="overviewGrid44">
   <div class="overviewLeft44">
     <section class="overviewSection44 threatSection44">
-      <div class="overviewSectionHead44"><div><span class="kicker">SQUAD SIGNALS</span><h3>Key Threats</h3></div><button class="overviewLink44" data-goto="players">View squad →</button></div>
+      <div class="overviewSectionHead44"><div><span class="kicker">SQUAD SIGNALS</span><h3>Key Threats</h3></div><button class="overviewLink44" data-goto="players" data-scroll-target="squadBoard">Full squad board →</button></div>
       <div id="overviewThreats44" class="threatGrid44"><div class="msg">Player data is loading.</div></div>
     </section>
     <section class="overviewSection44 sessionsOverview44">
@@ -120,8 +120,36 @@
 </div>
 <div class="overviewLegacySink44" hidden><div id="clubStats"></div><div id="performanceStats"></div><div id="skillHistory"></div><div id="overviewMatches"></div><div id="overviewLeaders"></div></div>
 </div>
-<div class="tabPane" data-pane="players"><section class="playersPage"><div id="positionSummary" class="positionSummary"></div><section class="creativityPanel"><div><span class="lockDot">✦</span><div><b>Creativity ranking</b><small>Completed dribbles + second assists per 90 from captured match data.</small></div></div><div id="creativityRanking" class="creativityRanking"></div></section><div class="playersToolbar"><span>Rank by</span><select id="playerRank"><option value="squad">Squad order</option><option value="rating">Avg rating</option><option value="goals">Goals</option><option value="assists">Assists</option><option value="ga">G+A</option><option value="passRate">Pass %</option><option value="shotRate">Shot %</option><option value="creativity">Creativity</option></select><span id="playerCount"></span></div><div id="playerCards" class="playerCards"></div></section></div>
-<div class="tabPane" data-pane="compare"><section class="panel comparePanel"><div class="panelHead"><h3>Player Compare</h3><span>career + Clubroom archive</span></div><div class="compareHeader62" id="compareHeader62"></div><div class="compareControls compareControlsLegacy62" aria-hidden="true"><select id="cmpA" aria-label="Player A"></select><b>VS</b><select id="cmpB" aria-label="Player B"></select></div><div id="compareCoverage" class="compareCoverage compareCoverageLegacy62"></div><div id="compareBody"></div><section class="duoCompare54"><div class="duoCompareHead54"><div><span>DUO CARD</span><h4>Shared performance</h4><p>Only matches captured for both selected players are used.</p></div><small id="duoCoverage54">--</small></div><div class="duoCardStage54"><duo-card id="compareDuoCard54"></duo-card></div></section></section></div>
+<div class="tabPane" data-pane="players"><section class="playersPage">
+  <section id="squadBoard" class="squadBoard70">
+    <div class="squadBoardHead70">
+      <div><span class="kicker">SQUAD OVERVIEW</span><h3>Squad Board</h3><p>Compare every squad member across the stats Clubroom has captured.</p></div>
+      <div class="squadBoardHeadActions71"><div class="squadBoardMode71" id="squadBoardMode71" aria-label="Squad Board value mode"><button type="button" data-squad-mode71="total" class="active">Total</button><button type="button" data-squad-mode71="perMatch">Per match</button></div><span id="squadBoardSort70" class="squadBoardSort70">Squad order</span></div>
+    </div>
+    <div id="squadBoardGroups70" class="squadBoardGroups70" aria-label="Squad Board metric groups"></div>
+    <div class="squadBoardScroller70">
+      <table class="squadBoardTable70">
+        <thead id="squadBoardHead70"></thead>
+        <tbody id="squadBoardBody70"><tr><td>Player data is loading.</td></tr></tbody>
+      </table>
+    </div>
+  </section>
+  <div class="playersControlRow67">
+    <div id="positionSummary" class="positionSummary67" aria-label="Filter players by position"></div>
+    <div class="playersRank67">
+      <span class="playersControlLabel67">RANK BY</span>
+      <div class="rankDropdown67" id="rankDropdown67">
+        <button type="button" id="rankButton67" aria-haspopup="listbox" aria-expanded="false"><span id="rankButtonLabel67">Squad order</span><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M7 9l5 5 5-5"/></svg></button>
+        <div id="rankMenu67" class="rankMenu67" role="listbox" hidden></div>
+      </div>
+      <select id="playerRank" class="playersNativeState67" aria-hidden="true" tabindex="-1"><option value="squad">Squad order</option><option value="rating">Avg rating</option><option value="goals">Goals</option><option value="assists">Assists</option><option value="ga">G+A</option><option value="passRate">Pass %</option><option value="shotRate">Shot %</option><option value="creativity">Creativity</option></select>
+      <span id="playerCount" class="playersCount67"></span>
+    </div>
+  </div>
+  <section class="creativityPanel67"><div class="creativityHead67"><span id="creativityIcon67" class="creativityIcon67"></span><div><span class="kicker">SQUAD SIGNAL</span><h3>Creativity ranking</h3><small>Completed dribbles + second assists per 90 from captured match data.</small></div></div><div id="creativityRanking" class="creativityRanking67"></div></section>
+  <div id="playerCards" class="playerCards"></div>
+</section></div>
+<div class="tabPane" data-pane="compare"><section class="panel comparePanel"><div class="panelHead"><h3>Player Compare</h3><span>career + Clubroom archive</span></div><div class="compareHeader62" id="compareHeader62"></div><div class="compareControls compareControlsLegacy62" aria-hidden="true"><select id="cmpA" aria-label="Player A"></select><b>VS</b><select id="cmpB" aria-label="Player B"></select></div><div id="compareCoverage" class="compareCoverage compareCoverageLegacy62"></div><div id="compareBody"></div></section></div>
 <div class="tabPane" data-pane="matches"><div id="matchList"></div></div>
 
 <div class="tabPane" data-pane="sessions">
@@ -159,43 +187,52 @@
 <section class="analyticsPane37" data-analytics-pane="improvement"><div class="analyticsCard37"><div class="analyticsTitle37"><div><span>PLAYER DEVELOPMENT</span><h3>Improvement Tips</h3></div><small>ARCHIVE BASED</small></div><div id="improvementTips" class="tipGrid"></div></div></section>
 <div class="legacySink" hidden><div id="analyticsCards"></div><div id="chemistry"></div></div>
 </div>
-<div class="tabPane" data-pane="fun">
-<section class="funHero funHero30"><div><span class="kicker">CLUBROOM FUN</span><h3>Fun without the endless scroll.</h3><p>Rankings, duo cards, superlatives and club chaos — organised into clean sections instead of one long wall.</p></div></section>
-<nav class="funSubnav" id="funSubnav">
-<button class="active" data-fun-tab="featured">★ Featured</button>
-<button data-fun-tab="duos">🔗 Duo Cards</button>
-<button data-fun-tab="superlatives">🏆 Superlatives</button>
-<button data-fun-tab="ghost">👻 Ghost</button>
-<button data-fun-tab="lmerchant">📉 L Merchant</button>
-<button data-fun-tab="selfglazer">✨ Self-Glazer</button>
-<button data-fun-tab="maincharacter">♛ Main Character</button>
-<button data-fun-tab="statpadder">▥ Stat Padder</button>
-<button data-fun-tab="extras">＋ Extras</button>
-</nav>
-<section class="funSubPane active" data-fun-pane="featured">
-  <div class="funSectionHeader featureHeader34"><div><span>★ FEATURED</span><h3>Clubroom Rankings</h3></div><button class="textButton" data-open-fun="ghost">View all rankings →</button></div>
-  <div id="viralRankings" class="featuredRankings"></div>
-  <div class="funSectionHeader compact"><div><span>🔗 DUO CARDS</span><h3>Best partnerships</h3></div><button class="textButton" data-open-fun="duos">View all duo cards →</button></div>
-  <div id="featuredDuos" class="duoGrid compact"></div>
-  <div class="funSectionHeader compact"><div><span>🏆 SQUAD SUPERLATIVES</span><h3>Tap to reveal</h3></div><button class="textButton" data-open-fun="superlatives">Reveal all →</button></div>
-  <div id="featuredSuperlatives" class="featuredSuperlatives"></div>
+<div class="tabPane" data-pane="misc">
+<section class="miscPage68">
+  <section class="miscIntro68"><div><span class="kicker">CLUBROOM LAB</span><h3>Misc</h3><p>Duo cards, squad superlatives, rankings and archive-driven extras.</p></div></section>
+
+  <section class="miscSection68" id="miscDuos68">
+    <div class="miscSectionHead68"><div><span class="kicker">DUO CARDS</span><h3>Best partnerships</h3><p>Automatically selected from matches captured for both players.</p></div><small id="miscDuoCoverage68">ARCHIVE DATA</small></div>
+    <div id="miscDuoCategories68" class="miscDuoGrid68"><div class="msg">Duo categories load from the archive.</div></div>
+    <section class="miscBuilder68">
+      <div class="miscSectionHead68 compact"><div><span class="kicker">BUILD YOUR OWN DUO</span><h3>Create a Duo Card</h3><p>Choose two different players. Only their shared archived matches are used.</p></div></div>
+      <div class="miscBuilderControls68"><label><span>PLAYER A</span><select id="miscDuoA68"></select></label><span class="miscVs68">VS</span><label><span>PLAYER B</span><select id="miscDuoB68"></select></label></div>
+      <div id="miscBuilderMeta68" class="miscBuilderMeta68"></div>
+      <div class="miscBuilderStage68"><duo-card id="miscCustomDuo68"></duo-card></div>
+      <button id="miscCustomShare68" class="miscShare68" type="button">Share PNG</button>
+    </section>
+  </section>
+
+  <section class="miscSection68" id="miscOther68">
+    <div class="miscSectionHead68"><div><span class="kicker">OTHER STATS</span><h3>Clubroom extras</h3><p>Existing fun rankings, superlatives and archive records.</p></div></div>
+
+    <section class="miscLegacyBlock68"><div class="funSectionHeader"><div><span>SQUAD SUPERLATIVES</span><h3>Squad awards</h3></div><button id="revealAll30" class="revealAll30">Reveal all</button></div><div id="funAwards" class="superGrid"></div></section>
+    <section class="miscLegacyBlock68"><div class="funSectionHeader"><div><span>RANKINGS</span><h3>Clubroom rankings</h3></div></div><div id="viralRankings" class="featuredRankings"></div><div class="miscRankGrid68"><div id="viralGhost" class="rankingSolo"></div><div id="viralLmerchant" class="rankingSolo"></div><div id="viralSelfglazer" class="rankingSolo"></div><div id="viralMaincharacter" class="rankingSolo"></div></div></section>
+    <section class="miscLegacyBlock68"><div class="funSectionHeader"><div><span>STAT PADDER</span><h3>Output vs. efficiency</h3></div><small>fun index, not a serious verdict</small></div><div id="statPadder"></div></section>
+    <section class="miscLegacyBlock68"><div class="panel funSection"><div class="panelHead"><h3>Best Front 4</h3><span>FORMATION</span></div><div id="bestFront" class="frontFour"></div></div></section>
+    <section class="miscLegacyBlock68"><div class="panel funSection clutch"><div class="panelHead"><h3>Mr. Clutch</h3><span>BIG MOMENTS</span></div><div id="clutchStats"></div></div></section>
+    <section class="miscLegacyBlock68"><div class="panel funSection"><div class="panelHead"><h3>Player Milestones</h3><span>CAREER</span></div><div id="milestones" class="milestoneGrid"></div></div></section>
+    <div class="legacySink" hidden><div id="featuredDuos"></div><div id="goalPartners"></div><div id="featuredSuperlatives"></div><div id="funForm"></div></div>
+  </section>
 </section>
-<section class="funSubPane" data-fun-pane="duos"><div class="funSectionHeader"><div><span>🔗 DUO CARDS</span><h3>Best & worst partnerships</h3></div><small>shared matches in the archive</small></div><div id="goalPartners" class="duoGrid"></div></section>
-<section class="funSubPane" data-fun-pane="superlatives"><div class="funSectionHeader"><div><span>🏆 SQUAD SUPERLATIVES</span><h3>Tap a card to reveal the winner</h3></div><button id="revealAll30" class="revealAll30">Reveal all</button></div><div id="funAwards" class="superGrid"></div></section>
-<section class="funSubPane" data-fun-pane="ghost"><div id="viralGhost" class="rankingSolo"></div></section>
-<section class="funSubPane" data-fun-pane="lmerchant"><div id="viralLmerchant" class="rankingSolo"></div></section>
-<section class="funSubPane" data-fun-pane="selfglazer"><div id="viralSelfglazer" class="rankingSolo"></div></section>
-<section class="funSubPane" data-fun-pane="maincharacter"><div id="viralMaincharacter" class="rankingSolo"></div></section>
-<section class="funSubPane" data-fun-pane="statpadder"><div class="funSectionHeader"><div><span>▥ STAT PADDER</span><h3>Output vs. efficiency</h3></div><small>fun index, not a serious verdict</small></div><div id="statPadder"></div></section>
-<section class="funSubPane" data-fun-pane="extras">
- <section class="panel funSection"><div class="panelHead"><h3>🔥 Best Front 4</h3><span>FORMATION</span></div><div id="bestFront" class="frontFour"></div></section>
- <section class="panel funSection clutch"><div class="panelHead"><h3>🧊 Mr. Clutch</h3><span>BIG MOMENTS</span></div><div id="clutchStats"></div></section>
- <section class="panel funSection"><div class="panelHead"><h3>🏅 Player Milestones</h3><span>CAREER</span></div><div id="milestones" class="milestoneGrid"></div></section>
-</section>
-<div class="legacySink" hidden><div id="funForm"></div></div>
+<div id="miscDuoModal68" class="miscDuoModal68" hidden><div class="miscDuoModalCard68"><button type="button" id="miscDuoModalClose68" class="miscDuoModalClose68" aria-label="Close">×</button><div id="miscDuoModalTitle68" class="miscDuoModalTitle68"></div><duo-card id="miscDuoModalCard68"></duo-card><button id="miscDuoModalShare68" class="miscShare68" type="button">Share PNG</button></div></div>
 </div>
 <div class="tabPane" data-pane="plus"><section class="plusHero"><span class="kicker">CLUBROOM ARCHIVE</span><h3>Club+</h3><p>Long-term history beyond EA's limited recent window. The longer the club is tracked, the richer the archive becomes.</p><div id="historyStats" class="metricGrid"></div><div id="dbState" class="dbState">DB</div></section>
 <section class="panel"><div class="panelHead"><h3>Club+ Features</h3></div><div class="featureGrid"><article><b>Full History</b><p>Permanent archive of captured matches.</p></article><article><b>Sessions</b><p>Automatic session length, W-D-L and mode splits.</p></article><article><b>Advanced Season</b><p>Second assists, passing, tackles, shots and more event-level data.</p></article><article><b>Records</b><p>Club and player records across the archive.</p></article></div></section></div>
+</section>
+<section id="playerPage69" class="playerPage69" hidden aria-live="polite">
+  <div class="playerPageTop69"><button id="playerBack69" class="playerBack69" type="button">← Back</button><span id="playerCoverage69"></span></div>
+  <section class="playerHero69">
+    <div class="playerHeroCard69"><div id="playerHeroCardMount69"></div><div class="playerHeroActions69"><button id="playerShare69" type="button">Share</button><button id="playerCharacter69" type="button">Change character</button></div></div>
+    <div class="playerHeroInfo69"><span class="kicker">PLAYER PROFILE</span><h1 id="playerName69">--</h1><p id="playerIdentity69">--</p><div id="playerRoleBadges69" class="playerRoleBadges69"></div><div id="playerKeyMetrics69" class="playerKeyMetrics69"></div><div class="playerFormBlock69"><span>RECENT FORM</span><div id="playerForm69" class="playerForm69"></div></div></div>
+  </section>
+  <section class="playerRadarSection69">
+    <div class="playerSectionHead69"><div><span class="kicker">TEAM PERCENTILES</span><h2>Player profile radar</h2><p>Per-match performance relative to this squad.</p></div></div>
+    <div class="playerRadarLayout69"><div id="playerRadar69" class="playerRadar69"><div class="msg">Radar requires archived player-match data.</div></div><aside id="playerStrengths69" class="playerStrengths69"></aside></div>
+  </section>
+  <section class="playerDetail69">
+    <div id="playerTabs69" class="playerTabs69" role="tablist"><button class="active" data-player-tab69="overview">Overview</button><button data-player-tab69="attacking">Attacking</button><button data-player-tab69="passing">Passing</button><button data-player-tab69="defending">Defending</button><button data-player-tab69="trends">Trends</button><button data-player-tab69="matches">Match Log</button></div>
+    <div id="playerTabContent69" class="playerTabContent69"></div>
+  </section>
 </section></main>
-<section id="playerView" class="overlay" hidden><button class="close" data-close="playerView">×</button><div id="playerContent"></div></section>
-<footer id="appFooter51">CLUBROOM FC27 · v64</footer><script src="/app.js"></script></body></html>
+<footer id="appFooter51">CLUBROOM FC27 · v71</footer><script src="/cards/characters.js"></script><script src="/charts/playerRadarConfig.generated.js"></script><script src="/cards/duoCategories.generated.js"></script><script src="/app.js"></script></body></html>

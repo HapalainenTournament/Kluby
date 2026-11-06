@@ -1,0 +1,15 @@
+import fs from 'node:fs';
+import assert from 'node:assert/strict';
+import {SQUAD_BOARD_GROUPS70,SQUAD_BOARD_METRICS70} from '../public/squadBoardConfig.generated.js';
+const app=fs.readFileSync(new URL('../public/app.js',import.meta.url),'utf8');
+const html=fs.readFileSync(new URL('../public/index.html',import.meta.url),'utf8');
+const pass=(name,fn)=>{try{fn();console.log('PASS',name)}catch(e){console.error('FAIL',name,'-',e.message);process.exitCode=1}};
+pass('Squad Board is above player cards',()=>assert.ok(html.indexOf('id="squadBoard"')<html.indexOf('id="playerCards"')));
+pass('metric groups are General/Attack/Creation/Defense/Passing',()=>assert.deepEqual(SQUAD_BOARD_GROUPS70.map(x=>x.id),['general','attack','creation','defense','passing']));
+pass('all approved step-2 metrics exist',()=>{for(const id of ['matches','rating','motm','overall','goals','shots','shotRate','ga','assists','secondAssists','throughBalls','dribbles','tacklesWon','tackleRate','interceptions','cleanSheets','passRate','passes','passAttempts'])assert.ok(SQUAD_BOARD_METRICS70.some(x=>x.id===id),id)});
+pass('board rows use CharacterLayer resolver',()=>assert.match(app,/getCharacterForPlayer\?\.\(p\)/));
+pass('board row opens dedicated player profile flow',()=>assert.match(app,/data-squad-player70[\s\S]*showPlayer/));
+pass('board header updates shared sort state and player cards',()=>assert.match(app,/function setSquadSort70\(key,dir=-1\)[\s\S]*renderSquadBoard70\(\);renderPlayerCards\(\)/));
+pass('Rank by updates shared board sort state',()=>assert.match(app,/squadBoardSort70=\{key:select\.value,dir:-1\}/));
+pass('player cards read shared board sort state',()=>assert.match(app,/const rank=squadBoardSort70\.key/));
+pass('Key Threats links directly to squad board',()=>assert.match(html,/Full squad board →[\s\S]*|data-scroll-target="squadBoard"/));
