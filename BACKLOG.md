@@ -39,6 +39,26 @@
 - **2026-11-06 — WEB-013 — ❌ otevřeno:** homepage promo Clubroom Pass (zlatá karta, 3–4 výhody s vlastními SVG ikonami, navržená cena 4 € měsíčně za celý klub, tlačítko See Clubroom Pass), PASS štítky v recent/favorites a přejmenování navigace na Clubroom Pass s tiketovou ikonou.
 - **2026-11-06 — WORKFLOW-001 — 🟡 trvalé pravidlo:** číst BACKLOG před každou další prací, nové úkoly zapisovat před implementací, dokončení značit ✅ a datem; aktualizovaný soubor přibalovat do každého dalšího kompletního ZIP. Zavedené nyní, dodržování budoucích úkolů se bude potvrzovat průběžně.
 
+
+## v78 aktualizace (2026-11-06)
+
+| ID | Stav | Co je hotové / co zbývá | Dokončeno |
+|---|---|---|---|
+| 02 | ✅ | Hráčská karta: postava usazená do portrait slotu (stejná velikost a výška u všech), kódem kreslený panel statistik překrývá zapečené čáry rámu, SVG ikony ve spodní řadě. | 2026-11-06 |
+| 03 | 🟡 | Beze změny logiky – `canonicalOvr()` sdílí Players i Chemistry; `--` jen když EA OVR nepošle. Ověřit na reálném klubu. | — |
+| 04 | ✅ | Fallback: když hero ukáže `--`, dohledá se `currentDivision` přes `/api/search` podle ID klubu a uloží do Recent. | 2026-11-06 |
+| 05 | ✅ | Všech 8 podzáložek viditelných a funkčních (Records, Streaks, Habits, Lucky Charm, Milestones, Awards s reveal/losováním a týdenním resetem, Wrapped se sdílením PNG). Jen archivní data, min. vzorky v `CFG`. | 2026-11-06 |
+| 06 | ✅ | Club Pulse (série, Last 10, postupy/sestupy) + Trophy Cabinet (vlastní SVG trofeje, EA playoff achievements přes `/api/club-honours/:id`, 13 Clubroom achievementů s progress barem, NEW štítek, detail dialog). | 2026-11-06 |
+| 07 | 🟡 | Hotovo: přejmenování na Clubroom Pass, stránka `/pass`, Pass záložka (Free vs Pass), homepage promo, PASS štítky v Recent/Favorites, zlatý premium vzhled, placeholder ad gates (vypnuté, `?gates=1`), `/api/pass/status` přes `PASS_ACTIVE_CLUBS`. **Chybí:** skutečný platební provider + webhooky, reálné reklamy, CMP. | — |
+| 09 | ✅ | Filtr typů League / Playoff (/ Friendly) místo Live/Archive; iniciály a odkazy na skutečná loga (Wikipedia) nahrazeny neutrálním template erbem. | 2026-11-06 |
+| 12 | ✅ | Tab Creativity v Analytics (archiv, min. 5 zápasů, #1 zlatě, popis vzorce jednou). | 2026-11-06 |
+| 13 | ✅ | Homepage promo karta Pass (4 výhody, 4 €/měsíc za klub, CTA), PASS štítky, navigace s ikonou vstupenky. | 2026-11-06 |
+| 14 | 🟡 | Nové části používají vlastní SVG sadu (`ClubroomIcons78`), hráčská karta bez emoji. Zbývá ⇄ a drobné Unicode znaky ve starších částech. | — |
+
+- **2026-11-06 — V78-001 — ✅ dokončeno 2026-11-06:** Misc podzáložky, Club Pulse, Trophy Cabinet, Clubroom Pass UI, Creativity tab, divize fallback, template erby, oprava hero na mobilu (recent form přetékal stránku). Testy: `tests/v78-regressions.mjs` (součást `npm run test:regressions`). Vizuálně ověřeno přes Playwright na **syntetických testovacích datech** (ne reálný klub).
+- **Pozn.:** `tests/squad-board-step2.mjs` a `tests/card-layers-step1.mjs` padaly už ve v77 (zastaralé aserce z dřívějších verzí, nejsou v `test:regressions`).
+- **Konfigurace:** `PASS_ACTIVE_CLUBS=142426,...` zapne Pass pro dané kluby do doby, než budou webhooky. `?passPreview=1` = jen náhled vzhledu. `?gates=1` = náhled zámků za reklamu.
+
 ## Auditní omezení
 
 Toto je audit zdrojového ZIPu, **ne** test živého provozu. U bodů s ✅ je doložená požadovaná implementace v kódu. Produkční funkčnost, reálné EA odpovědi, platební sandbox a UI screenshoty z tohoto auditu nevyplývají.

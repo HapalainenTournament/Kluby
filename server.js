@@ -70,6 +70,21 @@ app.post("/api/admin/privacy/removal/:id/approve",async(req,res)=>{
  }catch(e){console.error("Removal approval failed",e.message);res.status(500).json({error:"Could not approve request"})}
 });
 app.get("/api/pass/config",(_,res)=>res.json({checkoutEnabled:false,provider:"Paddle (proposed)",status:"Legal review, pricing, merchant account and webhook verification required.",consentVersion,consentText}));
+// v78 Clubroom Pass entitlement. Payments are not live: a club is Pass-active only when listed
+// in PASS_ACTIVE_CLUBS (comma separated club IDs) or, later, by a verified provider webhook.
+const passActiveClubs=()=>new Set(String(process.env.PASS_ACTIVE_CLUBS||"").split(",").map(x=>x.replace(/[^0-9]/g,"")).filter(Boolean));
+app.get("/api/pass/status",(req,res)=>{const ids=String(req.query.ids||"").split(",").map(x=>x.replace(/[^0-9]/g,"")).filter(Boolean).slice(0,50);const active=passActiveClubs();res.json({price:{amount:4,currency:"EUR",interval:"month",scope:"club"},checkoutEnabled:false,clubs:Object.fromEntries(ids.map(id=>[id,{active:active.has(id)}]))})});
+// v78 Club honours for the Trophy Cabinet: EA playoff achievements + overall stats, cached 30 min.
+const honoursCache=new Map();
+app.get("/api/club-honours/:id",async(req,res)=>{
+ const id=String(req.params.id).replace(/[^\d]/g,"");const p=validPlatform(req.query.platform);if(!id)return res.status(400).json({error:"Invalid club ID."});
+ const key=`${p}:${id}`,hit=honoursCache.get(key);if(hit&&Date.now()-hit.at<1800000)return res.json(hit.data);
+ const [achR,ovR]=await Promise.allSettled([ea("/club/playoffAchievements",{platform:p,clubId:id},1800000),ea("/clubs/overallStats",{platform:p,clubIds:id},300000)]);
+ const ach=achR.status==="fulfilled"?achR.value:null,ov=ovR.status==="fulfilled"?((ovR.value&&ovR.value[id])||Object.values(ovR.value||{})[0]||ovR.value||{}):{};
+ const honours=Array.isArray(ach)?ach:(ach&&typeof ach==="object"?Object.values(ach).flat().filter(x=>x&&typeof x==="object"):[]);
+ const data={honours,overall:ov,errors:{achievements:achR.status==="rejected"?String(achR.reason?.message||"failed"):null}};
+ honoursCache.set(key,{data,at:Date.now()});res.json(await scopedJson(data,id,p));
+});
 app.post("/api/pass/checkout",async(req,res)=>{
  const b=req.body||{};
  if(b.consent!==true||b.consentVersion!==consentVersion)return res.status(400).json({error:"Explicit current-version consent is required."});
@@ -210,7 +225,7 @@ app.get("/api/db-export", async (req,res)=>{
     }
     const payload={
       format:"clubroom-postgres-json-backup",
-      version:"75.1.0",
+      version:"78.0.0",
       exportedAt:new Date().toISOString(),
       counts,
       data
@@ -229,9 +244,9 @@ app.get("/api/db-export", async (req,res)=>{
 app.get("/api/history/:id",async(req,res)=>{try{res.json(await scopedJson(await history(String(req.params.id).replace(/[^\d]/g,"")),String(req.params.id).replace(/[^\d]/g,""),validPlatform(req.query.platform)))}catch(e){res.status(500).json({error:e.message})}});
 app.get("/api/analytics/:id",async(req,res)=>{try{res.json(await scopedJson(await analytics(String(req.params.id).replace(/[^\d]/g,"")),String(req.params.id).replace(/[^\d]/g,""),validPlatform(req.query.platform)))}catch(e){res.status(500).json({error:e.message})}});
 app.get("/api/sessions/:id",async(req,res)=>{try{const id=String(req.params.id).replace(/[^\d]/g,"");const gap=Math.max(30,Math.min(240,Number(req.query.gap||90)));res.json(await scopedJson(await buildSessions(id,{gapMinutes:gap,activeMinutes:45}),id,validPlatform(req.query.platform)))}catch(e){res.status(500).json({error:e.message})}});
-app.get("/api/health",(_,res)=>res.json({ok:true,version:"75.1.0",database:dbEnabled,collectorEnabled:dbEnabled && process.env.COLLECTOR_ENABLED!=="false",collectorIntervalMs:Number(process.env.COLLECTOR_INTERVAL_MS||300000),collectorBatch:Number(process.env.COLLECTOR_BATCH||20),time:new Date().toISOString()}));
+app.get("/api/health",(_,res)=>res.json({ok:true,version:"78.0.0",database:dbEnabled,collectorEnabled:dbEnabled && process.env.COLLECTOR_ENABLED!=="false",collectorIntervalMs:Number(process.env.COLLECTOR_INTERVAL_MS||300000),collectorBatch:Number(process.env.COLLECTOR_BATCH||20),time:new Date().toISOString()}));
 
-for(const route of ["about","terms","privacy","cookies","removal"]){
+for(const route of ["about","terms","privacy","cookies","removal","pass"]){
  app.get('/'+route,(_,res)=>res.sendFile(path.join(DIR,'public',route+'.html')));
 }
 app.get("/pass/checkout",(_,res)=>res.sendFile(path.join(DIR,"public","pass","checkout.html")));

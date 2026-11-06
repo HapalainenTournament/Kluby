@@ -1,14 +1,15 @@
 {
   "name": "clubroom",
-  "version": "75.1.0",
+  "version": "78.0.0",
   "private": true,
   "type": "module",
   "scripts": {
     "start": "node server.js",
     "dev": "node --watch server.js",
-    "test:regressions": "node tests/regression-bugs.mjs . && node tests/part3-ui-regressions.mjs . && node tests/players-icons-regressions.mjs . && node tests/misc-regressions.mjs . && node tests/player-profile-regressions.mjs . && node tests/avatar-consistency-v77.mjs .",
+    "test:regressions": "node tests/regression-bugs.mjs . && node tests/part3-ui-regressions.mjs . && node tests/players-icons-regressions.mjs . && node tests/misc-regressions.mjs . && node tests/player-profile-regressions.mjs . && node tests/avatar-consistency-v77.mjs . && node tests/v78-regressions.mjs .",
     "test:misc": "node tests/misc-regressions.mjs .",
-    "test:player-profile": "node tests/player-profile-regressions.mjs . && node tests/avatar-consistency-v77.mjs ."
+    "test:player-profile": "node tests/player-profile-regressions.mjs . && node tests/avatar-consistency-v77.mjs .",
+    "test:v78": "node tests/v78-regressions.mjs ."
   },
   "engines": {
     "node": ">=20"

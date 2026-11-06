@@ -1,9 +1,9 @@
-<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>CLUBROOM</title><meta name="description" content="Independent club statistics and match insights for EA SPORTS FC Pro Clubs."><meta property="og:title" content="CLUBROOM"><meta property="og:description" content="Independent club statistics and match insights for EA SPORTS FC Pro Clubs."><meta property="og:image" content="/assets/clubroom-mark.png"><link rel="manifest" href="/manifest.webmanifest"><link rel="icon" type="image/png" href="/assets/clubroom-favicon.png"><link rel="stylesheet" href="/style.css"><script type="module" src="/cards/player-card.js"></script><script type="module" src="/components/club-crest.js"></script><script type="module" src="/icons/badges/index.js"></script><script type="module" src="/charts/player-radar.js"></script>
+<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>CLUBROOM</title><meta name="description" content="Independent club statistics and match insights for EA SPORTS FC Pro Clubs."><meta property="og:title" content="CLUBROOM"><meta property="og:description" content="Independent club statistics and match insights for EA SPORTS FC Pro Clubs."><meta property="og:image" content="/assets/clubroom-mark.png"><link rel="manifest" href="/manifest.webmanifest"><link rel="icon" type="image/png" href="/assets/clubroom-favicon.png"><link rel="stylesheet" href="/style.css"><link rel="stylesheet" href="/v78/v78.css"><script type="module" src="/cards/player-card.js"></script><script type="module" src="/components/club-crest.js"></script><script type="module" src="/icons/badges/index.js"></script><script type="module" src="/charts/player-radar.js"></script>
 </head><body>
 <header class="topbar overviewTopbar44">
   <a class="brand" href="/" aria-label="Clubroom homepage"><img class="brandMark" src="/assets/clubroom-mark.png" alt="" aria-hidden="true"><b>CLUBROOM</b></a>
   <nav class="clubTabs topNav44" id="clubTabs" hidden>
-    <button data-tab="stats" class="active">Overview</button><button data-tab="players">Players</button><button data-tab="compare">Compare</button><button data-tab="matches">Matches</button><button data-tab="sessions">Sessions</button><button data-tab="analytics">Analytics</button><button data-tab="misc">Misc</button><button data-tab="plus" class="clubPlusNav44">♛ Club+</button>
+    <button data-tab="stats" class="active">Overview</button><button data-tab="players">Players</button><button data-tab="compare">Compare</button><button data-tab="matches">Matches</button><button data-tab="sessions">Sessions</button><button data-tab="analytics">Analytics</button><button data-tab="misc">Misc</button><button data-tab="plus" class="clubPlusNav44 passNav78"><svg class="navTicket78" viewBox="0 0 24 24" aria-hidden="true"><path d="M4 7.5A1.5 1.5 0 0 1 5.5 6h13A1.5 1.5 0 0 1 20 7.5v2a2.5 2.5 0 0 0 0 5v2a1.5 1.5 0 0 1-1.5 1.5h-13A1.5 1.5 0 0 1 4 16.5v-2a2.5 2.5 0 0 0 0-5z"/><path d="M14.5 6.5v11" stroke-dasharray="1.6 2"/></svg><span>Clubroom Pass</span></button>
   </nav>
   <div class="topActions"><button id="openSearch" class="iconBtn" title="Search club" aria-label="Search club">⌕</button></div>
 </header>
@@ -33,6 +33,16 @@
         </div>
       </form>
     </div>
+  </section>
+  <section class="passPromo78" aria-labelledby="passPromoTitle78">
+    <div class="passPromoCopy78"><span class="passBadge78">PASS</span><h2 id="passPromoTitle78">Clubroom Pass</h2><p>One pass unlocks the full Clubroom experience for every member of your club.</p>
+      <ul class="passBenefits78">
+        <li><i data-v78-icon="archive"></i><span><b>Full match archive</b><small>Every captured match, not just the last 30 days</small></span></li>
+        <li><i data-v78-icon="unlock"></i><span><b>All Misc insights unlocked</b><small>Awards, Habits, Lucky Charm and Wrapped without ads</small></span></li>
+        <li><i data-v78-icon="share"></i><span><b>Clean shareable cards</b><small>PNG exports without the Clubroom watermark</small></span></li>
+        <li><i data-v78-icon="trophy"></i><span><b>Gold club profile</b><small>PASS badge, gold hero and trophy cabinet</small></span></li>
+      </ul></div>
+    <div class="passPromoPrice78"><strong>4 €</strong><span>/ month for your whole club</span><a class="passCta78" href="/pass">See Clubroom Pass</a><small>Cancel anytime · payments launch soon</small></div>
   </section>
   <section class="homeSavedGrid49" aria-label="Saved clubs">
     <article class="homeSavedCard49">
@@ -93,6 +103,7 @@
   </div>
 </section>
 <div class="tabPane active" data-pane="stats">
+<section id="clubPulse78" class="clubPulse78" aria-label="Club pulse"></section>
 <div class="overviewGrid44">
   <div class="overviewLeft44">
     <section class="overviewSection44 threatSection44">
@@ -118,6 +129,8 @@
     <section id="overviewPerformanceMetrics44" class="performanceMetricStrip44"><div class="msg">Performance metrics are loading.</div></section>
   </div>
 </div>
+<section id="trophyCabinet78" class="overviewSection44 trophyCabinet78"><div class="overviewSectionHead44"><div><span class="kicker">CLUB HONOURS</span><h3>Trophy Cabinet</h3></div><small id="trophyCount78" class="trophyCount78"></small></div><div id="trophyHonours78" class="trophyShelf78"></div><div class="trophySubhead78"><span class="kicker">CLUBROOM ACHIEVEMENTS</span><small>Computed from the Clubroom archive</small></div><div id="trophyAchievements78" class="trophyShelf78"></div></section>
+<div id="trophyDialog78" class="v78Dialog" hidden><div class="v78DialogCard" role="dialog" aria-modal="true" aria-labelledby="trophyDialogTitle78"><button type="button" class="v78DialogClose" data-v78-close aria-label="Close">×</button><div id="trophyDialogBody78"></div></div></div>
 <div class="overviewLegacySink44" hidden><div id="clubStats"></div><div id="performanceStats"></div><div id="skillHistory"></div><div id="overviewMatches"></div><div id="overviewLeaders"></div></div>
 </div>
 <div class="tabPane" data-pane="players"><section class="playersPage">
@@ -169,13 +182,14 @@
 </div>
 <div class="tabPane" data-pane="analytics">
 <section class="analyticsHero analyticsHero37"><div><span class="kicker">PERFORMANCE LAB</span><h3>Analytics</h3><p>Team form, player trends and impact metrics from the Clubroom archive.</p></div></section>
-<section class="creativityPanel67 analyticsCreativity72"><div class="creativityHead67"><span id="creativityIcon67" class="creativityIcon67"></span><div><span class="kicker">SQUAD SIGNAL</span><h3>Creativity ranking</h3><small>Completed dribbles + second assists per match from captured match data.</small></div></div><div id="creativityRanking" class="creativityRanking67"></div></section>
+
 <nav class="analyticsSubnav" id="analyticsSubnav">
   <button class="active" data-analytics-tab="form">Form</button>
   <button data-analytics-tab="match">Match-by-Match</button>
   
   <button data-analytics-tab="clutch">Clutch</button>
   <button data-analytics-tab="carry">Carry</button>
+  <button data-analytics-tab="creativity">Creativity</button>
   <button data-analytics-tab="passing">Passing</button>
   <button data-analytics-tab="improvement">Improvement</button>
 </nav>
@@ -183,6 +197,7 @@
 <section class="analyticsPane37" data-analytics-pane="match"><div class="analyticsCard37"><div class="analyticsTitle37"><div><span>PLAYER TRENDS</span><h3>Match-by-Match</h3></div><small>INTERACTIVE</small></div><div id="analyticsMatchByMatch"></div></div></section>
 <section class="analyticsPane37" data-analytics-pane="clutch"><div class="analyticsCard37"><div class="analyticsTitle37"><div><span>BIG MATCH IMPACT</span><h3>Clutch</h3></div><small>ARCHIVE INDEX</small></div><div id="analyticsClutch"></div></div></section>
 <section class="analyticsPane37" data-analytics-pane="carry"><div class="analyticsCard37"><div class="analyticsTitle37"><div><span>TEAM DEPENDENCY</span><h3>Carry Stats</h3></div><small>OUTPUT SHARE</small></div><div id="analyticsCarry"></div></div></section>
+<section class="analyticsPane37" data-analytics-pane="creativity"><div class="analyticsCard37"><div class="analyticsTitle37"><div><span>SQUAD SIGNAL</span><h3>Creativity</h3></div><small>DRIBBLES + 2× SECOND ASSISTS / MATCH</small></div><div id="analyticsCreativity78"></div><div class="legacySink" hidden><section class="creativityPanel67 analyticsCreativity72"><div class="creativityHead67"><span id="creativityIcon67" class="creativityIcon67"></span><div><span class="kicker">SQUAD SIGNAL</span><h3>Creativity ranking</h3><small>Completed dribbles + second assists per match from captured match data.</small></div></div><div id="creativityRanking" class="creativityRanking67"></div></section></div></div></section>
 <section class="analyticsPane37" data-analytics-pane="passing"><div class="analyticsCard37"><div class="analyticsTitle37"><div><span>PASSING</span><h3>Passing Insights</h3></div><small>ACCURACY + VOLUME</small></div><div id="passingInsights"></div></div></section>
 <section class="analyticsPane37" data-analytics-pane="improvement"><div class="analyticsCard37"><div class="analyticsTitle37"><div><span>PLAYER DEVELOPMENT</span><h3>Improvement Tips</h3></div><small>ARCHIVE BASED</small></div><div id="improvementTips" class="tipGrid"></div></div></section>
 <div class="legacySink" hidden><div id="analyticsCards"></div><div id="chemistry"></div></div>
@@ -193,13 +208,13 @@
 
   <nav class="miscSubtabs75" role="tablist" aria-label="Misc sections">
     <button type="button" role="tab" aria-selected="true" class="active" data-misc-tab="chemistry">Chemistry</button>
-    <button type="button" role="tab" data-misc-tab="records" hidden>Records</button>
-    <button type="button" role="tab" data-misc-tab="streaks" hidden>Streaks</button>
-    <button type="button" role="tab" data-misc-tab="habits" hidden>Habits</button>
-    <button type="button" role="tab" data-misc-tab="lucky-charm" hidden>Lucky Charm</button>
-    <button type="button" role="tab" data-misc-tab="milestones" hidden>Milestones</button>
-    <button type="button" role="tab" data-misc-tab="awards" hidden>Awards</button>
-    <button type="button" role="tab" data-misc-tab="wrapped" hidden>Wrapped</button>
+    <button type="button" role="tab" data-misc-tab="records">Records</button>
+    <button type="button" role="tab" data-misc-tab="streaks">Streaks</button>
+    <button type="button" role="tab" data-misc-tab="habits">Habits</button>
+    <button type="button" role="tab" data-misc-tab="lucky-charm">Lucky Charm</button>
+    <button type="button" role="tab" data-misc-tab="milestones">Milestones</button>
+    <button type="button" role="tab" data-misc-tab="awards">Awards</button>
+    <button type="button" role="tab" data-misc-tab="wrapped">Wrapped</button>
   </nav>
   <section class="miscSection68 chemistry75" data-misc-pane="chemistry" id="chemistry75">
     <div class="miscSectionHead68"><div><span class="kicker">CHEMISTRY LAB</span><h3>Partnerships</h3><p>Only archived matches played together count toward a partnership.</p></div><small id="chemCoverage75">ARCHIVE DATA</small></div>
@@ -218,6 +233,13 @@
     <section class="chemRankingSection75"><div class="chemMiniTitle75"><span>TOP PARTNERSHIPS</span><small>Minimum 5 shared matches</small></div><div id="chemRanking75" class="chemRanking75"></div></section>
     <section class="chemRankingSection75"><div class="chemMiniTitle75"><span>BEST TRIOS</span><small>Minimum 5 shared matches</small></div><div id="chemTrios75" class="chemRanking75"></div></section>
   </section>
+  <section class="miscSection68 miscPane78" data-misc-pane="records" hidden><div class="miscSectionHead68"><div><span class="kicker">HALL OF FAME</span><h3>Records</h3><p>Club records and scorelines from the Clubroom archive.</p></div><small id="recordsCoverage78">ARCHIVE DATA</small></div><div id="miscRecords78"></div></section>
+  <section class="miscSection68 miscPane78" data-misc-pane="streaks" hidden><div class="miscSectionHead68"><div><span class="kicker">MOMENTUM</span><h3>Streaks</h3><p>Who is on fire, who is cold and which runs are still alive.</p></div></div><div id="miscStreaks78"></div></section>
+  <section class="miscSection68 miscPane78" data-misc-pane="habits" hidden><div class="miscSectionHead68"><div><span class="kicker">WHEN YOU PLAY</span><h3>Habits</h3><p>Results by time of day, day of week and match order inside a session.</p></div><small id="habitsTz78"></small></div><div id="miscHabits78"></div></section>
+  <section class="miscSection68 miscPane78" data-misc-pane="lucky-charm" hidden><div class="miscSectionHead68"><div><span class="kicker">WITH vs WITHOUT</span><h3>Lucky Charm</h3><p>Team win rate when a player is in the lineup compared with matches without them.</p></div></div><div id="miscLucky78"></div></section>
+  <section class="miscSection68 miscPane78" data-misc-pane="milestones" hidden><div class="miscSectionHead68"><div><span class="kicker">CAREER</span><h3>Milestones</h3><p>Upcoming and reached milestones for players and the club.</p></div></div><div id="miscMilestones78"></div></section>
+  <section class="miscSection68 miscPane78" data-misc-pane="awards" hidden><div class="miscSectionHead68"><div><span class="kicker">SQUAD SUPERLATIVES</span><h3>Awards</h3><p>Tap a card to draw the winner. Awards reset every week.</p></div><div class="awardsControls78"><div id="awardsPeriod78" class="v78Segment" role="tablist"><button type="button" data-award-period="this" class="active">This week</button><button type="button" data-award-period="last">Last week</button><button type="button" data-award-period="season">Season</button></div><button type="button" id="awardsRevealAll78" class="v78Btn">Reveal all</button></div></div><div id="miscAwards78" class="awardsGrid78"></div></section>
+  <section class="miscSection68 miscPane78" data-misc-pane="wrapped" hidden><div class="miscSectionHead68"><div><span class="kicker">MONTHLY RECAP</span><h3>Wrapped</h3><p>Your club's month as shareable story cards.</p></div><div class="awardsControls78"><select id="wrappedMonth78" class="v78Select" aria-label="Month"></select><button type="button" id="wrappedDownload78" class="v78Btn">Download all</button></div></div><div id="miscWrapped78" class="wrappedRail78"></div></section>
   <div id="chemPickerDialog75" class="chemDialogBackdrop75" hidden><div class="chemDialog75" role="dialog" aria-modal="true" aria-labelledby="chemDialogTitle75"><div class="chemDialogHead75"><h3 id="chemDialogTitle75">Choose a player</h3><button type="button" id="chemDialogClose75" aria-label="Close">×</button></div><div id="chemDialogList75" class="chemDialogList75"></div></div></div>
 
   <section class="miscSection68" id="miscOther68" hidden>
@@ -234,8 +256,15 @@
 </section>
 
 </div>
-<div class="tabPane" data-pane="plus"><section class="plusHero"><span class="kicker">CLUBROOM ARCHIVE</span><h3>Club+</h3><p>Long-term history beyond EA's limited recent window. The longer the club is tracked, the richer the archive becomes.</p><div id="historyStats" class="metricGrid"></div><div id="dbState" class="dbState">DB</div></section>
-<section class="panel"><div class="panelHead"><h3>Club+ Features</h3></div><div class="featureGrid"><article><b>Full History</b><p>Permanent archive of captured matches.</p></article><article><b>Sessions</b><p>Automatic session length, W-D-L and mode splits.</p></article><article><b>Advanced Season</b><p>Second assists, passing, tackles, shots and more event-level data.</p></article><article><b>Records</b><p>Club and player records across the archive.</p></article></div></section></div>
+<div class="tabPane" data-pane="plus"><section class="passHero78"><div><span class="passBadge78">PASS</span><h3>Clubroom Pass</h3><p>One subscription for the whole club. Everyone who opens this club gets the Pass benefits – no member accounts needed.</p><div class="passHeroPrice78"><strong>4 €</strong><span>/ month · whole club · cancel anytime</span></div><a class="passCta78" href="/pass">See all benefits</a> <span id="passStatus78" class="passStatus78">Not active for this club</span></div><div class="passArchiveBox78"><span class="kicker">CLUBROOM ARCHIVE</span><div id="historyStats" class="metricGrid"></div><div id="dbState" class="dbState">DB</div></div></section>
+<section class="panel passCompare78"><div class="panelHead"><h3>Free vs Clubroom Pass</h3></div><table class="passTable78"><thead><tr><th></th><th>Free</th><th class="gold">Pass</th></tr></thead><tbody>
+<tr><td>Overview, players, cards, compare, matches</td><td>✓</td><td>✓</td></tr>
+<tr><td>Match archive</td><td>Last 30 days</td><td>Everything captured</td></tr>
+<tr><td>Misc insights (Awards, Habits, Lucky Charm, Wrapped)</td><td>Short ad unlocks 24 h</td><td>Always unlocked</td></tr>
+<tr><td>Shareable PNG cards</td><td>With watermark</td><td>Clean</td></tr>
+<tr><td>Gold club profile &amp; PASS badge</td><td>—</td><td>✓</td></tr>
+<tr><td>Display banners</td><td>Up to 2 per page</td><td>Max. 1 small banner</td></tr>
+</tbody></table></section></div>
 </section>
 <section id="matchPage73" class="matchPage73" hidden aria-live="polite">
   <div class="matchPageTop73"><button id="matchBack73" class="matchBack73" type="button">← Back to matches</button><span id="matchCoverage73"></span></div>
@@ -260,4 +289,4 @@
     <div id="playerTabContent69" class="playerTabContent69"></div>
   </section>
 </section></main>
-<footer id="appFooter51" class="legalFooter"><div><strong>CLUBROOM</strong> <nav aria-label="Legal and informational links"><a href="/about">About</a><a href="/terms">Terms</a><a href="/privacy">Privacy</a><a href="/cookies">Cookies</a><a href="/removal">Removal request</a><a href="/pass/checkout">Clubroom Pass</a><button type="button" id="cookieSettingsLink">Cookie settings</button></nav></div><p>CLUBROOM is not affiliated with, endorsed or sponsored by Electronic Arts Inc. EA SPORTS FC is a trademark of Electronic Arts Inc.</p></footer><script src="/legal-client.js" defer></script><script src="/cards/characters.js"></script><script src="/cards/player-avatar.js"></script><script src="/charts/playerRadarConfig.generated.js"></script><script src="/matchMetricsConfig.generated.js"></script><script src="/miscConfig.generated.js"></script><script src="/app.js"></script></body></html>
+<footer id="appFooter51" class="legalFooter"><div><strong>CLUBROOM</strong> <nav aria-label="Legal and informational links"><a href="/about">About</a><a href="/terms">Terms</a><a href="/privacy">Privacy</a><a href="/cookies">Cookies</a><a href="/removal">Removal request</a><a href="/pass/checkout">Clubroom Pass</a><button type="button" id="cookieSettingsLink">Cookie settings</button></nav></div><p>CLUBROOM is not affiliated with, endorsed or sponsored by Electronic Arts Inc. EA SPORTS FC is a trademark of Electronic Arts Inc.</p></footer><script src="/legal-client.js" defer></script><script src="/cards/characters.js"></script><script src="/cards/player-avatar.js"></script><script src="/charts/playerRadarConfig.generated.js"></script><script src="/matchMetricsConfig.generated.js"></script><script src="/miscConfig.generated.js"></script><script src="/app.js"></script><script src="/v78/achievements.js"></script><script src="/v78/clubroom-v78.js"></script></body></html>

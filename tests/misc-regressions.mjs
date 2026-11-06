@@ -4,7 +4,7 @@ const root=process.argv[2]||'.';
 const read=f=>fs.readFileSync(path.join(root,f),'utf8');
 const app=read('public/app.js'),html=read('public/index.html'),css=read('public/style.css'),cfg=read('public/miscConfig.generated.js');
 let failed=0;const check=(name,ok)=>{console.log(`${ok?'PASS':'FAIL'} ${name}`);if(!ok)failed++};
-check('Chemistry is the only visible misc subtab',html.includes('data-misc-tab="chemistry"')&&['records','streaks','habits','lucky-charm','milestones','awards','wrapped'].every(t=>html.includes(`data-misc-tab="${t}" hidden`)));
+check('All eight misc subtabs are visible and have panes (v78)',['chemistry','records','streaks','habits','lucky-charm','milestones','awards','wrapped'].every(t=>html.includes(`data-misc-tab="${t}">`)&&html.includes(`data-misc-pane="${t}"`)));
 check('Config exposes ordered tabs and thresholds',cfg.includes('minSharedMatches:5')&&cfg.includes('minTrioMatches:5')&&cfg.includes("'chemistry','records','streaks','habits','lucky-charm','milestones','awards','wrapped'"));
 check('No legacy custom duo component in HTML',!html.includes('<duo-card')&&!html.includes('/cards/duo-card.js'));
 check('Duo component and configs removed',['duo-card.js','duoCardConfig.generated.js','duoCardConfig.ts','duoLayout.generated.js','duoLayout.ts','duoCategories.generated.js','duoCategories.ts'].every(f=>!fs.existsSync(path.join(root,'public/cards',f))));
