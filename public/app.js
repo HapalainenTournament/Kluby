@@ -11,18 +11,75 @@ async function fetchJSON(url,timeoutMs=10000){
 }
 let playerSortState={key:"rating",dir:-1,position:"all",minGames:0};
 
+const RECENT_CLUBS_KEY49="clubroomRecentClubs49",FAVORITE_CLUBS_KEY49="clubroomFavoriteClubs49";
+let currentClubBookmark49=null;
+function localRead49(key){try{const v=JSON.parse(localStorage.getItem(key)||"[]");return Array.isArray(v)?v:[]}catch{return[]}}
+function localWrite49(key,value){try{localStorage.setItem(key,JSON.stringify(value));return true}catch{return false}}
+function normalizeSavedClub49(c){if(!c)return null;const id=String(c.clubId||c.clubid||c.id||"").trim();if(!id)return null;return {id,name:String(c.clubName||c.name||`Club ${id}`),platform:String(c.platform||$("#platform")?.value||"common-gen5"),crestAssetId:c.crestAssetId??P(c?.customKit,["crestAssetId"],null)}}
+function platformLabel49(p){return p==="common-gen4"?"PS4 / Xbox One":"PS5 / Xbox Series / PC"}
+function readableRegion61(v){const s=String(v??"").trim();return s&&/[A-Za-zÀ-ž]/.test(s)&&!/^\d+$/.test(s)?s:""}
+function safeClubColor61(v){if(v==null||v==="")return null;const c=eaKitColor(v,"");return /^#[0-9a-f]{6}$/i.test(c)?c.toUpperCase():null}
+function uniqueColors61(colors){const out=[];for(const c of colors.filter(Boolean)){if(!out.some(x=>x.toLowerCase()===c.toLowerCase()))out.push(c)}return out.slice(0,3)}
+function crestColorCacheKey61(crestId){return `clubroomCrestColors61:${crestId||"none"}`}
+function readCrestColors61(crestId){try{const v=JSON.parse(localStorage.getItem(crestColorCacheKey61(crestId))||"null");return Array.isArray(v)?v.filter(x=>/^#[0-9a-f]{6}$/i.test(x)).slice(0,3):[]}catch{return[]}}
+function writeCrestColors61(crestId,colors){try{localStorage.setItem(crestColorCacheKey61(crestId),JSON.stringify(colors.slice(0,3)))}catch{}}
+function rgbHex61(r,g,b){return `#${[r,g,b].map(x=>Math.max(0,Math.min(255,Math.round(x))).toString(16).padStart(2,"0")).join("")}`.toUpperCase()}
+function extractCrestColors61(img,crestId){return new Promise(resolve=>{try{const c=document.createElement("canvas"),ctx=c.getContext("2d",{willReadFrequently:true});c.width=64;c.height=64;ctx.drawImage(img,0,0,64,64);const d=ctx.getImageData(0,0,64,64).data,bins=new Map();for(let i=0;i<d.length;i+=16){const a=d[i+3];if(a<150)continue;const r=d[i],g=d[i+1],b=d[i+2],mx=Math.max(r,g,b),mn=Math.min(r,g,b);if(mx<28||mn>235||mx-mn<18)continue;const q=[r,g,b].map(v=>Math.round(v/32)*32);const k=q.join(",");bins.set(k,(bins.get(k)||0)+1)}const colors=[...bins.entries()].sort((a,b)=>b[1]-a[1]).map(([k])=>rgbHex61(...k.split(",").map(Number)));const picked=[];for(const c of colors){const [r,g,b]=[1,3,5].map(i=>parseInt(c.slice(i,i+2),16));if(!picked.some(p=>{const [pr,pg,pb]=[1,3,5].map(i=>parseInt(p.slice(i,i+2),16));return Math.hypot(r-pr,g-pg,b-pb)<70}))picked.push(c);if(picked.length===3)break}if(picked.length)writeCrestColors61(crestId,picked);resolve(picked)}catch{resolve([])}})}
+function setClubColors61(colors){const host=$("#clubColors61"),hero=$(".overviewHero44");const clean=uniqueColors61(colors);if(host){host.innerHTML=clean.map(c=>`<button class="clubColorSwatch61" type="button" style="--swatch:${c}" aria-label="Club color ${c}" data-hex="${c}"><span>${c}</span></button>`).join("");host.hidden=!clean.length}if(hero){if(clean[0])hero.style.setProperty("--club-primary",clean[0]);else hero.style.removeProperty("--club-primary")}}
+function divisionTone61(v){const n=Number(v);if(!Number.isFinite(n))return"neutral";if(n<=2)return"gold";if(n<=5)return"cyan";if(n<=8)return"green";return"neutral"}
+function clubMetaIcon61(type){const icons={stadium:'<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M3 10h18M5 10l2-5h10l2 5M5 10v8m14-8v8M8 14h8M9 18h6"/></svg>',region:'<svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="M3 12h18M12 3c3 3 4 6 4 9s-1 6-4 9c-3-3-4-6-4-9s1-6 4-9z"/></svg>',platform:'<svg viewBox="0 0 24 24" aria-hidden="true"><rect x="3" y="6" width="18" height="12" rx="3"/><path d="M8 10v4m-2-2h4m5-1h.01M18 13h.01"/></svg>'};return icons[type]||""}
+function renderClubMeta61(stadium,region,platform){const meta=$("#clubMeta44");if(!meta)return;const bits=[{type:"stadium",text:stadium||"Tier 1 Stadium"},{type:"region",text:readableRegion61(region)},{type:"platform",text:platform}].filter(x=>x.text);meta.innerHTML=bits.map(x=>`<span>${clubMetaIcon61(x.type)}<em>${escapeHtml(String(x.text))}</em></span>`).join('<i aria-hidden="true"></i>');meta.hidden=!bits.length}
+function setPlatform49(value){const v=value==="common-gen4"?"common-gen4":"common-gen5";const sel=$("#platform");if(sel)sel.value=v;document.querySelectorAll("#platformSegment44 [data-platform]").forEach(x=>{const active=x.dataset.platform===v;x.classList.toggle("active",active);x.setAttribute("aria-pressed",active?"true":"false")})}
+function addRecent49(c){const n=normalizeSavedClub49(c);if(!n)return;const next=[n,...localRead49(RECENT_CLUBS_KEY49).filter(x=>String(x.id)!==n.id)].slice(0,5);localWrite49(RECENT_CLUBS_KEY49,next);renderSavedClubs49()}
+function isFavorite49(id){return localRead49(FAVORITE_CLUBS_KEY49).some(x=>String(x.id)===String(id))}
+function updateFavoriteButton49(){const b=$("#favoriteClub44");if(!b||!currentClubBookmark49)return;const active=isFavorite49(currentClubBookmark49.id);b.textContent=active?"★":"☆";b.classList.toggle("active",active);b.setAttribute("aria-label",active?"Remove club from favorites":"Add club to favorites");b.title=active?"Remove from favorites":"Add to favorites"}
+function toggleFavorite49(){if(!currentClubBookmark49)return;const n=normalizeSavedClub49(currentClubBookmark49);let list=localRead49(FAVORITE_CLUBS_KEY49);if(list.some(x=>String(x.id)===n.id))list=list.filter(x=>String(x.id)!==n.id);else list=[n,...list.filter(x=>String(x.id)!==n.id)];localWrite49(FAVORITE_CLUBS_KEY49,list);updateFavoriteButton49();renderSavedClubs49()}
+function savedClubRow49(c){const logo=crestUrl(c.crestAssetId),fallback=(String(c.name||"C").match(/[A-Z0-9]/ig)||["C"]).slice(0,2).join("").toUpperCase();return `<button class="homeSavedRow49" type="button" data-saved-club49="${escapeHtml(String(c.id))}" data-saved-platform49="${escapeHtml(String(c.platform||"common-gen5"))}"><span class="homeSavedCrest49"><span>${fallback}</span>${logo?`<img src="${logo}" alt="" onload="this.previousElementSibling.hidden=true" onerror="this.remove()">`:""}</span><span class="homeSavedCopy49"><b>${escapeHtml(c.name||`Club ${c.id}`)}</b><small>${platformLabel49(c.platform)}</small></span><span class="homeSavedArrow49" aria-hidden="true">→</span></button>`}
+function renderSavedClubs49(){const recent=localRead49(RECENT_CLUBS_KEY49),fav=localRead49(FAVORITE_CLUBS_KEY49);const r=$("#recentSearches49"),f=$("#favoriteClubs49");if(r)r.innerHTML=recent.length?recent.map(savedClubRow49).join(""):'<div class="homeSavedEmpty49">Your recent clubs will show up here</div>';if(f)f.innerHTML=fav.length?fav.map(savedClubRow49).join(""):'<div class="homeSavedEmpty49">Star a club to pin it here</div>';document.querySelectorAll("[data-saved-club49]").forEach(el=>el.onclick=()=>{setPlatform49(el.dataset.savedPlatform49);const source=[...recent,...fav].find(x=>String(x.id)===String(el.dataset.savedClub49));load(el.dataset.savedClub49,source||null)})}
+
 function crestUrl(crestId){return crestId?`https://eafc24.content.easports.com/fifa/fltOnlineAssets/24B23FDE-7835-41C2-87A2-F453DFDB2E82/2024/fcweb/crests/256x256/l${crestId}.png`:""}
 function searchCard(c){
- const id=c.clubId||c.clubid||c.id,name=c.clubName||c.name||"Klub";
- const w=N(P(c,["wins","gamesWon"],0)),d=N(P(c,["ties","draws","gamesDrawn"],0)),l=N(P(c,["losses","gamesLost"],0)),games=N(P(c,["gamesPlayed"],0))||(w+d+l);
- const gf=N(P(c,["goals","goalsFor","goalsScored"],0)),ga=N(P(c,["goalsAgainst","goalsConceded"],0)),gd=N(P(c,["goalDiff","goalDifference"],gf-ga));
- const div=P(c,["currentDivision","division","divisionNumber","div"],"—"),tier=P(c,["tier","currentTier"],0),wr=games?(w/games*100):0;
+ const id=c.clubId||c.clubid||c.id,name=c.clubName||c.name||"Club";
+ const div=P(c,["currentDivision","division","divisionNumber","div"],null);
+ const sr=P(c,["skillRating","skill","clubSkillRating","sr"],null);
  const crestId=P(c?.customKit,["crestAssetId"],P(c,["crestAssetId"],null)),logo=crestUrl(crestId),fallback=(String(name).match(/[A-Z0-9]/ig)||["C"]).slice(0,2).join("").toUpperCase();
- return `<article class="searchClubCard result" data-id="${id}"><div class="searchClubTop"><div class="searchClubIdentity"><div class="searchClubCrest" data-crest><span>${fallback}</span>${logo?`<img src="${logo}" alt="" onload="this.previousElementSibling.hidden=true" onerror="this.remove()">`:""}</div><div><h3>${escapeHtml(name)}</h3><p>Division ${div}</p></div></div><span class="tierBadge">Tier ${tier}</span></div><div class="searchRecord"><div><b>${w}</b><span>Wins</span></div><div><b>${d}</b><span>Draws</span></div><div><b>${l}</b><span>Losses</span></div></div><div class="searchClubBottom"><div><span>Win Rate</span><b>${games?wr.toFixed(1)+"%":"—"}</b></div><div><span>Goal Diff</span><b class="${gd>=0?"positive":"negative"}">${games?(gd>=0?"+":"")+gd:"—"}</b></div><strong>${games} games</strong></div></article>`
+ const platform=platformLabel49($("#platform")?.value||"common-gen5");
+ const divText=div!=null&&String(div).trim()!==""?`Division ${escapeHtml(String(div))}`:"Division --";
+ const srText=sr!=null&&String(sr).trim()!==""?`SR ${escapeHtml(String(sr))}`:"SR --";
+ return `<button class="searchClubCard50" type="button" data-id="${escapeHtml(String(id))}"><span class="searchClubCrest50"><span>${fallback}</span>${logo?`<img src="${logo}" alt="" onload="this.previousElementSibling.hidden=true" onerror="this.remove()">`:""}</span><span class="searchClubMain50"><strong>${escapeHtml(name)}</strong><span class="searchClubMeta50"><em>${divText}</em><i aria-hidden="true">•</i><em>${srText}</em></span></span><span class="searchClubPlatform50">${escapeHtml(platform)}</span><span class="searchClubArrow50" aria-hidden="true">→</span></button>`
 }
-async function enrichSearchCards(cards){for(const c of cards.slice(0,6)){const id=c.clubId||c.clubid||c.id;try{const x=await fetchJSON(`/api/club-card/${id}?platform=${$("#platform").value}`,4500);Object.assign(c,x||{});const el=document.querySelector(`.searchClubCard[data-id="${CSS.escape(String(id))}"]`);if(el){const wrap=document.createElement("div");wrap.innerHTML=searchCard(c);el.replaceWith(wrap.firstElementChild)}}catch{}} bindSearchCards(cards)}
-function bindSearchCards(cards){document.querySelectorAll(".searchClubCard").forEach(x=>x.onclick=()=>{const c=cards.find(z=>String(z.clubId||z.clubid||z.id)===String(x.dataset.id));load(x.dataset.id,c||null)})}
-$("#search").onsubmit=async e=>{e.preventDefault();$("#results").innerHTML='<div class="msg searchLoading">Hledám kluby…</div>';try{let d=await fetchJSON(`/api/search?q=${encodeURIComponent($("#q").value)}&platform=${$("#platform").value}`,9000);let a=A(d).flatMap(x=>Array.isArray(x)?x:[x]).filter(x=>x.clubId||x.clubid||x.id);const shown=a.slice(0,15);$("#results").innerHTML=shown.length?`<div class="searchFound">Nalezeno ${shown.length} ${shown.length===1?"klub":"klubů"} pro „${escapeHtml($("#q").value)}“</div><div class="searchCardGrid">${shown.map(searchCard).join("")}</div>`:'<div class="msg">Nic nenalezeno.</div>';bindSearchCards(shown);enrichSearchCards(shown)}catch(e){$("#results").innerHTML=`<div class="msg">${escapeHtml(e.message)}</div>`}};
+async function enrichSearchCards(cards){for(const c of cards.slice(0,6)){const id=c.clubId||c.clubid||c.id;try{const x=await fetchJSON(`/api/club-card/${id}?platform=${$("#platform").value}`,4500);Object.assign(c,x||{});const el=document.querySelector(`.searchClubCard50[data-id="${CSS.escape(String(id))}"]`);if(el){const wrap=document.createElement("div");wrap.innerHTML=searchCard(c);el.replaceWith(wrap.firstElementChild)}}catch{}} bindSearchCards(cards)}
+function bindSearchCards(cards){document.querySelectorAll(".searchClubCard50").forEach(x=>x.onclick=()=>{const c=cards.find(z=>String(z.clubId||z.clubid||z.id)===String(x.dataset.id));load(x.dataset.id,c||null)})}
+const homeSearchSubmit44=$("#homeSearchSubmit44"),homeSearchButtonText44=document.querySelector(".homeSearchButtonText44"),homeSearchInput44=$("#q"),platformSelect44=$("#platform");
+function syncHomeSearchButton44(){if(homeSearchSubmit44)homeSearchSubmit44.classList.toggle("is-empty",!String(homeSearchInput44?.value||"").trim())}
+function setHomeSearchLoading44(on){if(!homeSearchSubmit44)return;homeSearchSubmit44.classList.toggle("is-loading",!!on);homeSearchSubmit44.disabled=!!on;if(homeSearchButtonText44)homeSearchButtonText44.textContent=on?"Searching…":"Search"}
+document.querySelectorAll("#platformSegment44 [data-platform]").forEach(btn=>btn.addEventListener("click",()=>{document.querySelectorAll("#platformSegment44 [data-platform]").forEach(x=>{const active=x===btn;x.classList.toggle("active",active);x.setAttribute("aria-pressed",active?"true":"false")});if(platformSelect44)platformSelect44.value=btn.dataset.platform||"common-gen5"}));
+homeSearchInput44?.addEventListener("input",syncHomeSearchButton44);syncHomeSearchButton44();
+$("#clearRecent49")?.addEventListener("click",()=>{localWrite49(RECENT_CLUBS_KEY49,[]);renderSavedClubs49()});
+$("#favoriteClub44")?.addEventListener("click",toggleFavorite49);
+renderSavedClubs49();
+let lastSearch50={q:"",platform:"common-gen5"};
+function searchLoadingState50(){return `<div class="searchState50 loading"><span class="searchStateSpinner50" aria-hidden="true"></span><div><b>Searching clubs…</b><small>Checking EA Pro Clubs for matching clubs.</small></div></div>`}
+function searchEmptyState50(){return `<div class="searchState50 empty"><span class="searchStateIcon50" aria-hidden="true">⌕</span><div><b>No clubs found</b><small>Check the club name and make sure the correct platform generation is selected.</small></div></div>`}
+function searchErrorState50(message){return `<div class="searchState50 error"><span class="searchStateIcon50" aria-hidden="true">!</span><div class="searchStateCopy50"><b>Search unavailable</b><small>${escapeHtml(message||"EA search could not be completed.")}</small></div><button id="retrySearch50" type="button">Try again</button></div>`}
+async function runSearch50(){
+ const q=String($("#q")?.value||"").trim();
+ const platform=$("#platform")?.value||"common-gen5";
+ lastSearch50={q,platform};
+ setHomeSearchLoading44(true);$("#results").innerHTML=searchLoadingState50();
+ try{
+  let d=await fetchJSON(`/api/search?q=${encodeURIComponent(q)}&platform=${platform}`,9000);
+  let a=A(d).flatMap(x=>Array.isArray(x)?x:[x]).filter(x=>x.clubId||x.clubid||x.id);
+  const shown=a.slice(0,15);
+  if(!shown.length){$("#results").innerHTML=searchEmptyState50();return}
+  $("#results").innerHTML=`<section class="searchResultsPanel50"><div class="searchResultsHead50"><div><span class="kicker">SEARCH RESULTS</span><h2>${shown.length} ${shown.length===1?"club":"clubs"} found</h2></div><small>${escapeHtml(platformLabel49(platform))}</small></div><div class="searchResultsList50">${shown.map(searchCard).join("")}</div></section>`;
+  bindSearchCards(shown);enrichSearchCards(shown)
+ }catch(e){
+  $("#results").innerHTML=searchErrorState50(e.message);
+  $("#retrySearch50")?.addEventListener("click",()=>{setPlatform49(lastSearch50.platform);if($("#q"))$("#q").value=lastSearch50.q;runSearch50()})
+ }finally{setHomeSearchLoading44(false);syncHomeSearchButton44()}
+}
+$("#search").onsubmit=e=>{e.preventDefault();runSearch50()};
 async function load(id,searchClub=null){$("#results").innerHTML='<div class="msg">Načítám klub…</div>';try{const d=await fetchJSON(`/api/club/${id}?platform=${$("#platform").value}`,12000);render(id,d,searchClub);$("#results").innerHTML="";history.replaceState(null,"",`/club/${id}`)}catch(e){$("#results").innerHTML=`<div class="msg errorMsg"><b>Klub se nepodařilo načíst.</b><br>${escapeHtml(e.message)}<br><small>Zkus hledání znovu. Stránka už nebude viset donekonečna.</small></div>`}}
 
 function first(...vals){for(const v of vals)if(v!=null&&v!=="")return v;return 0}
@@ -121,15 +178,24 @@ function render(id,d,searchClub=null){
  let division=P(searchClub,["currentDivision","division","divisionNumber","div"],P(o,["currentDivision","division","divisionNumber","div"],P(info,["division","currentDivision"],"—")));
  let bestDivision=P(searchClub,["bestDivision"],P(o,["bestDivision"],"—"));
  let crestId=P(info?.customKit,["crestAssetId"],P(info,["crestAssetId"],null));
+ currentClubBookmark49={id:String(id),name,platform:$("#platform")?.value||"common-gen5",crestAssetId:crestId};
+ if(searchClub)addRecent49({...searchClub,id:String(id),name,platform:currentClubBookmark49.platform,crestAssetId:crestId??searchClub?.crestAssetId});
+ updateFavoriteButton49();
  const stadium=P(info?.customKit,["stadName"],P(info,["stadName","stadiumName"],""));
  const regionText=P(info,["regionName","region","regionText"],P(o,["regionName","region","regionText"],""));
+ const platformText61=platformLabel49($("#platform")?.value||"common-gen5");
+ const kit61=info?.customKit||{};
+ const eaColors61=uniqueColors61([safeClubColor61(P(kit61,["kitColor1"],null)),safeClubColor61(P(kit61,["kitColor2"],null)),safeClubColor61(P(kit61,["kitColor3"],null)),safeClubColor61(P(kit61,["crestColor"],null))]);
  $("#clubName").textContent=name;
  const fallback=(name.match(/[A-Z0-9]/ig)||["C"]).slice(0,2).join("").toUpperCase();$("#clubFallback").textContent=fallback;
  const crest=$("#clubCrest"); crest.hidden=true; $("#clubFallback").hidden=false;
- if(crestId){ crest.src=`https://eafc24.content.easports.com/fifa/fltOnlineAssets/24B23FDE-7835-41C2-87A2-F453DFDB2E82/2024/fcweb/crests/256x256/l${crestId}.png`; crest.onload=()=>{crest.hidden=false;$("#clubFallback").hidden=true}; crest.onerror=()=>{crest.hidden=true;$("#clubFallback").hidden=false}; }
- $("#divisionBadge").textContent=`DIV ${division}`;$("#skillBadge").textContent=`SR ${skill}`;
- const idBadge=$("#clubIdBadge"); if(idBadge){idBadge.childNodes[0].nodeValue=`ID ${id} `;idBadge.onclick=async()=>{try{await navigator.clipboard.writeText(String(id));idBadge.classList.add("copied");setTimeout(()=>idBadge.classList.remove("copied"),900)}catch{}}}
- const meta44=$("#clubMeta44"); if(meta44){const bits=[regionText,stadium?`⌂ ${stadium}`:""] .filter(Boolean);meta44.textContent=bits.join(" · ");meta44.hidden=!bits.length}
+ setClubColors61(eaColors61.length?eaColors61:readCrestColors61(crestId));
+ if(crestId){ crest.crossOrigin="anonymous";crest.src=crestUrl(crestId);crest.onload=async()=>{crest.hidden=false;$("#clubFallback").hidden=true;if(!eaColors61.length){const cached=readCrestColors61(crestId);if(cached.length)setClubColors61(cached);else setClubColors61(await extractCrestColors61(crest,crestId))}}; crest.onerror=()=>{crest.hidden=true;$("#clubFallback").hidden=false}; }
+ const divEl=$("#divisionBadge");if(divEl){divEl.textContent=division!=="—"?String(division):"--";divEl.dataset.tone=divisionTone61(division)}
+ const skillEl=$("#skillBadge");if(skillEl)skillEl.textContent=skill!=="—"?String(skill):"--";
+ const idValue61=$("#clubIdValue61");if(idValue61)idValue61.textContent=String(id);
+ const idBadge=$("#clubIdBadge"); if(idBadge){idBadge.onclick=async()=>{try{await navigator.clipboard.writeText(String(id));idBadge.classList.add("copied");const oldTitle=idBadge.title;idBadge.title="Copied";const toast=document.createElement("span");toast.className="clubCopyToast61";toast.textContent="Copied";idBadge.appendChild(toast);setTimeout(()=>{toast.remove();idBadge.classList.remove("copied");idBadge.title=oldTitle},900)}catch{}}}
+ renderClubMeta61(stadium,regionText,platformText61);
  $("#recW").textContent=`${w}W`;$("#recD").textContent=`${dr}D`;$("#recL").textContent=`${l}L`;
  let form=ms.slice(0,10).map(m=>m.result);$("#formPills").innerHTML=form.map(x=>`<span class="formPill ${x.toLowerCase()}">${x}</span>`).join("");let fw=form.filter(x=>x==="W").length,fd=form.filter(x=>x==="D").length,fl=form.filter(x=>x==="L").length;$("#formSummary").textContent=form.length?`${fw}W · ${fd}D · ${fl}L`:"—";
  let wr=g?(w/g*100):0,gd=gf-ga,winStreak=N(P(o,["wstreak","winStreak"],0)),unbeaten=N(P(o,["unbeatenstreak","unbeatenStreak"],0)),promotions=N(P(o,["promotions"],0)),relegations=N(P(o,["relegations"],0)),cleanSheets=N(P(searchClub||{},["cleanSheets"],P(o,["cleanSheets"],0)));
@@ -216,7 +282,13 @@ function showMatchLegacy(i){
  let m=S.matches[i],ps=m.players.map(matchPlayer);
  $("#matchContent").innerHTML=`<div class="profile"><small>${m.type.toUpperCase()} · ${m.date?m.date.toLocaleDateString("cs-CZ"):""}</small><h2>${m.ours} ${m.og}:${m.tg} ${m.opp}</h2><div class="stats">${stat("RESULT",m.result)}${stat("OUR GOALS",m.og)}${stat("OPP GOALS",m.tg)}${stat("PLAYERS",ps.length)}</div><h3 class="sectionTitle">PLAYER MATCH STATS</h3>${ps.length?matchStatsTable(ps):'<div class="msg">EA v tomto zápase neposlalo hráčské statistiky.</div>'}</div>`;$("#matchView").hidden=false
 }
-function fillCompare(){let opts=S.players.map(p=>`<option value="${p.id}">${p.name}</option>`).join("");$("#cmpA").innerHTML=opts;$("#cmpB").innerHTML=opts;if(S.players[1])$("#cmpB").value=S.players[1].id;compare()}
+function fillCompare(){
+ const aSel=$("#cmpA"),bSel=$("#cmpB");if(!(aSel&&bSel))return;
+ let opts=S.players.map(p=>`<option value="${escapeHtml(String(p.id))}">${escapeHtml(String(p.name))}</option>`).join("");
+ aSel.innerHTML=opts;bSel.innerHTML=opts;
+ if(S.players[1])bSel.value=S.players[1].id;
+ enforceDistinctCompare54('a');compare();
+}
 function samePlayer(x,p){
  const vals=[p.id,p.name,p.accountName].filter(Boolean).map(v=>String(v).trim().toLowerCase());
  const xvals=[x.id,x.name,x.raw?.personaName,x.raw?.playername,x.raw?.gamertag,x.raw?.displayName].filter(Boolean).map(v=>String(v).trim().toLowerCase());
@@ -239,15 +311,88 @@ function advancedFor(p){
  }
  return {...p,secondAssists:live.secondAssists||null,shots:live.shots||null,passes:live.passAttempts?live.passes:null,passAttempts:live.passAttempts||null,passRate:live.passRate,tackles:live.tackleAttempts?live.tackles:null,tackleAttempts:live.tackleAttempts||null,tackleRate:live.tackleRate,saves:live.saves||null,dribbles:live.dribbles||null,interceptions:live.interceptions||null,trackedMatches:live.matches};
 }
+function samePlayer54(x,p){
+ if(!x||!p)return false;
+ const ids=[x.id,x.player_id,x.personaId,x.playerId].filter(v=>v!==undefined&&v!==null&&v!=='').map(v=>String(v));
+ if(ids.includes(String(p.id)))return true;
+ const names=[x.name,x.player_name,x.playername,x.proName].filter(Boolean).map(v=>String(v).trim().toLowerCase());
+ return [p.name,p.accountName].filter(Boolean).some(v=>names.includes(String(v).trim().toLowerCase()));
+}
+function compareCapturedRows54(p){
+ const hist=Array.isArray(S.history?.playerMatches)?S.history.playerMatches.filter(x=>samePlayer54(x,p)):[];
+ if(hist.length)return hist.map(x=>({matchId:String(x.match_id),rating:N(x.rating),goals:N(x.goals),assists:N(x.assists),motm:N(x.motm)}));
+ return (S.matches||[]).map(m=>{const q=(m.players||[]).map(matchPlayer).find(x=>samePlayer54(x,p));return q?{matchId:String(m.id||m.matchId||m.raw?.matchId||''),rating:N(q.rating),goals:N(q.goals),assists:N(q.assists),motm:N(q.motm)}:null}).filter(x=>x&&x.matchId);
+}
+function duoData54(a,b){
+ const ar=compareCapturedRows54(a),br=compareCapturedRows54(b),bm=new Map(br.map(x=>[x.matchId,x])),pairs=ar.map(x=>[x,bm.get(x.matchId)]).filter(x=>x[1]);
+ const side=i=>{const rows=pairs.map(x=>x[i]),matches=rows.length,ratings=rows.map(x=>N(x.rating)).filter(v=>v>0);return {avgRating:ratings.length?ratings.reduce((s,v)=>s+v,0)/ratings.length:undefined,goalsPerGame:matches?rows.reduce((s,x)=>s+N(x.goals),0)/matches:undefined,assistsPerGame:matches?rows.reduce((s,x)=>s+N(x.assists),0)/matches:undefined}};
+ const goals=pairs.reduce((s,[x,y])=>s+N(x.goals)+N(y.goals),0),motm=pairs.reduce((s,[x,y])=>s+N(x.motm)+N(y.motm),0);
+ return {a:side(0),b:side(1),shared:{matches:pairs.length,goals,motm,linkUps:undefined}};
+}
+function updateCompareOptions54(){
+ const aSel=$("#cmpA"),bSel=$("#cmpB");if(!(aSel&&bSel))return;
+ [...aSel.options].forEach(o=>o.disabled=o.value===bSel.value);
+ [...bSel.options].forEach(o=>o.disabled=o.value===aSel.value);
+}
+function enforceDistinctCompare54(changed){
+ const aSel=$("#cmpA"),bSel=$("#cmpB");if(!(aSel&&bSel))return;
+ if(aSel.value&&aSel.value===bSel.value){
+  const target=changed==='a'?bSel:aSel,blocked=changed==='a'?aSel.value:bSel.value;
+  const alt=[...target.options].find(o=>o.value!==blocked&&!o.disabled);
+  if(alt)target.value=alt.value;
+ }
+ updateCompareOptions54();
+}
+function renderCompareDuo54(aa,bb){
+ const card=$("#compareDuoCard54"),coverage=$("#duoCoverage54");if(!card||!aa||!bb)return;
+ const duo=duoData54(aa,bb),crest=cardCrestUrl();
+ card.playerA={name:aa.name,overall:P(aa.raw,["proOverall","overall"],aa.overall),position:cardPos(aa.position),crestUrl:crest};
+ card.playerB={name:bb.name,overall:P(bb.raw,["proOverall","overall"],bb.overall),position:cardPos(bb.position),crestUrl:crest};
+ card.duoStats=duo;
+ if(coverage)coverage.textContent=duo.shared.matches?`${duo.shared.matches} shared captured match${duo.shared.matches===1?'':'es'}`:'No shared captured matches';
+}
+
+let comparePickerSide62='a';
+function comparePortrait62(p){return p?.id?`/cards/players/${encodeURIComponent(String(p.id))}/base.png`:'/cards/players/default.png'}
+function comparePlayerMeta62(p){const a=advancedFor(p);return {position:cardPos(p.position)||'--',matches:N(a.trackedMatches)||N(a.games)||N(p.games)||0}}
+function comparePlayerCard62(p,side){
+ const m=comparePlayerMeta62(p),accent=side==='a'?'left':'right';
+ return `<button type="button" class="comparePick62 ${accent}" data-compare-pick62="${side}" aria-label="Choose ${side==='a'?'left':'right'} player"><span class="comparePickGlow62"></span><span class="comparePickHint62">Choose player</span><span class="comparePickInner62"><img class="comparePortrait62" src="${cardAttr(comparePortrait62(p))}" alt="" onerror="this.onerror=null;this.src='/cards/players/default.png'"><span class="comparePickMeta62"><small>${side==='a'?'PLAYER A':'PLAYER B'}</small><strong>${escapeHtml(String(p.name||'--'))}</strong><span><b>${escapeHtml(String(m.position))}</b><i>·</i>${m.matches} matches</span></span></span></button>`;
+}
+function renderCompareHeader62(a,b){
+ const host=$('#compareHeader62');if(!host||!a||!b)return;
+ host.innerHTML=`${comparePlayerCard62(a,'a')}<div class="compareCenter62"><div class="compareVsBadge62">VS</div><button type="button" class="compareSwap62" data-compare-swap62 aria-label="Swap players">⇄</button></div>${comparePlayerCard62(b,'b')}`;
+}
+function ensureComparePicker62(){
+ let modal=$('#comparePicker62');if(modal)return modal;
+ modal=document.createElement('div');modal.id='comparePicker62';modal.className='comparePickerBackdrop62';modal.hidden=true;
+ modal.innerHTML=`<section class="comparePickerModal62" role="dialog" aria-modal="true" aria-labelledby="comparePickerTitle62"><div class="comparePickerHead62"><div><small>PLAYER COMPARE</small><h4 id="comparePickerTitle62">Choose player</h4></div><button type="button" class="comparePickerClose62" aria-label="Close">×</button></div><input class="comparePickerSearch62" type="search" placeholder="Search players…" autocomplete="off" aria-label="Search players"><div class="comparePickerGrid62"></div></section>`;
+ document.body.appendChild(modal);
+ modal.addEventListener('click',e=>{if(e.target===modal||e.target.closest('.comparePickerClose62'))closeComparePicker62();const item=e.target.closest('[data-compare-player62]');if(item&&!item.disabled){chooseComparePlayer62(item.dataset.comparePlayer62)}});
+ modal.querySelector('.comparePickerSearch62').addEventListener('input',()=>renderComparePicker62());
+ return modal;
+}
+function renderComparePicker62(){
+ const modal=ensureComparePicker62(),grid=modal.querySelector('.comparePickerGrid62'),q=String(modal.querySelector('.comparePickerSearch62').value||'').trim().toLowerCase();
+ const current=$(`#cmp${comparePickerSide62==='a'?'A':'B'}`)?.value||'',other=$(`#cmp${comparePickerSide62==='a'?'B':'A'}`)?.value||'';
+ const list=(S.players||[]).filter(p=>!q||String(p.name||'').toLowerCase().includes(q)||String(p.accountName||'').toLowerCase().includes(q));
+ grid.innerHTML=list.length?list.map(p=>{const m=comparePlayerMeta62(p),id=String(p.id),blocked=id===String(other),active=id===String(current);return `<button type="button" class="comparePickerItem62${active?' active':''}" data-compare-player62="${cardAttr(id)}" ${blocked?'disabled':''}><img src="${cardAttr(comparePortrait62(p))}" alt="" onerror="this.onerror=null;this.src='/cards/players/default.png'"><span><strong>${escapeHtml(String(p.name||'--'))}</strong><span>${escapeHtml(String(m.position))} · ${m.matches} matches</span></span><em>${blocked?'Selected on other side':active?'Selected':'Choose'}</em></button>`}).join(''):'<div class="msg">No players found.</div>';
+}
+function openComparePicker62(side){comparePickerSide62=side==='b'?'b':'a';const modal=ensureComparePicker62();modal.hidden=false;const input=modal.querySelector('.comparePickerSearch62');input.value='';modal.querySelector('#comparePickerTitle62').textContent=`Choose ${comparePickerSide62==='a'?'left':'right'} player`;renderComparePicker62();setTimeout(()=>input.focus(),0)}
+function closeComparePicker62(){const modal=$('#comparePicker62');if(modal)modal.hidden=true}
+function chooseComparePlayer62(id){const sel=$(`#cmp${comparePickerSide62==='a'?'A':'B'}`);if(!sel)return;sel.value=id;enforceDistinctCompare54(comparePickerSide62);closeComparePicker62();compare()}
+function swapComparePlayers62(){const a=$('#cmpA'),b=$('#cmpB');if(!(a&&b))return;const av=a.value;a.value=b.value;b.value=av;updateCompareOptions54();compare()}
+if(!window.__compareHeaderBound62){window.__compareHeaderBound62=true;document.addEventListener('click',e=>{const pick=e.target.closest('[data-compare-pick62]');if(pick)openComparePicker62(pick.dataset.comparePick62);if(e.target.closest('[data-compare-swap62]'))swapComparePlayers62()});document.addEventListener('keydown',e=>{if(e.key==='Escape')closeComparePicker62()})}
 function compare(){
- let aa=S.players.find(x=>x.id===$("#cmpA").value),bb=S.players.find(x=>x.id===$("#cmpB").value);if(!aa||!bb)return;let a=advancedFor(aa),b=advancedFor(bb);
+ let aa=S.players.find(x=>x.id===$("#cmpA").value),bb=S.players.find(x=>x.id===$("#cmpB").value);if(!aa||!bb)return;renderCompareHeader62(aa,bb);let a=advancedFor(aa),b=advancedFor(bb);
  const rows=[["Matches","games"],["Goals","goals"],["Assists","assists"],["Second assists","secondAssists"],["G+A","ga"],["Avg rating","rating"],["MOTM","motm"],["Shots","shots"],["Passes completed","passes"],["Pass accuracy","passRate"],["Tackles","tackles"],["Tackle success","tackleRate"],["Dribbles","dribbles"],["Interceptions","interceptions"],["Saves","saves"]];
  const fmt=(k,v)=>v==null?"—":k.includes("Rate")?pct(v):k==="rating"&&v?Number(v).toFixed(2):v;
  const score=(x,y)=>x==null||y==null?"":Number(x)>Number(y)?"winner":"";
  $("#compareCoverage").innerHTML=`<div class="comparePlayerHead"><strong>${escapeHtml(a.name)}</strong><span>${a.trackedMatches||0} match-level zápasů</span></div><div class="compareVs">VS</div><div class="comparePlayerHead right"><strong>${escapeHtml(b.name)}</strong><span>${b.trackedMatches||0} match-level zápasů</span></div>`;
  $("#compareBody").innerHTML=`<div class="compareCards">${rows.map(([label,k])=>`<div class="compareRow"><div class="compareValue ${score(a[k],b[k])}">${fmt(k,a[k])}</div><div class="compareLabel">${label}</div><div class="compareValue ${score(b[k],a[k])}">${fmt(k,b[k])}</div></div>`).join("")}</div><div class="compareFoot">Career totals používají EA career data. Detailní metriky se automaticky skládají z uložené historie a aktuálně dostupných zápasů. Jakmile databáze zachytí další zápasy, rozsah se sám rozšiřuje.</div>`;
+ renderCompareDuo54(aa,bb);
 }
-$("#cmpA").onchange=compare;$("#cmpB").onchange=compare;document.querySelectorAll("[data-close]").forEach(b=>b.onclick=()=>$("#"+b.dataset.close).hidden=true);
+$("#cmpA").onchange=()=>{enforceDistinctCompare54('a');compare()};$("#cmpB").onchange=()=>{enforceDistinctCompare54('b');compare()};document.querySelectorAll("[data-close]").forEach(b=>b.onclick=()=>$("#"+b.dataset.close).hidden=true);
 function escapeHtml(s){return s.replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#039;"}[c]))}
 
 async function loadHistory(id){
@@ -818,23 +963,114 @@ function v37RenderMatchByMatch(h){
  const pm=(h?.playerMatches||[]).slice();
  const players=[...new Map(pm.filter(x=>x.player_name).map(x=>[v37PlayerKey(x),{id:v37PlayerKey(x),name:x.player_name}])).values()];
  if(!players.length){host.innerHTML='<div class="msg">Match-by-match needs archived player match stats.</div>';return}
- let state={mode:'rating',player:players[0].id};
+ const state={mode:'rating',window:20,selectedPlayers:[players[0].id]};
+ const primary=()=>state.selectedPlayers[0]||players[0].id;
+ const rowsFor=(playerId)=>pm.filter(x=>v37PlayerKey(x)===playerId)
+   .map(row=>({row,meta:v39MatchMeta(h,row)}))
+   .sort((a,b)=>new Date(a.meta?.played_at||a.row?.played_at||0)-new Date(b.meta?.played_at||b.row?.played_at||0))
+   .slice(-state.window);
+ const palette=['var(--cyan)','var(--gold)','var(--blue)'];
+ const resultClass=(entry)=>{const r=String(entry?.meta?.result||entry?.row?.result||'').toUpperCase();return r==='W'?'w':r==='L'?'l':r==='D'?'d':'u'};
+ const scoreText=(entry)=>{const m=entry?.meta||{},r=entry?.row||{};const gf=m.goals??r.goals_for??r.team_goals,ga=m.opponent_goals??r.goals_against??r.opponent_goals;return Number.isFinite(Number(gf))&&Number.isFinite(Number(ga))?`${Number(gf)}–${Number(ga)}`:'—'};
+ const dateLong=(v)=>{if(!v)return '—';const d=new Date(v);return Number.isNaN(d.getTime())?'—':d.toLocaleDateString('en-GB',{day:'2-digit',month:'short',year:'numeric'})};
  const draw=()=>{
-   const meta=v37MetricMeta(state.mode), rows=pm.filter(x=>v37PlayerKey(x)===state.player).slice(0,20).reverse();
-   const vals=rows.map(x=>v37MetricValue(x,state.mode)); const valid=vals.filter(v=>v!=null&&Number.isFinite(v));
-   let min=0,max=10;if(state.mode==='rating'){min=5;max=10}else if(state.mode==='passing'){min=0;max=100}else{max=Math.max(1,...valid);min=0}
-   const W=1000,H=250,pad=28; const pts=vals.map((v,i)=>v==null?null:[pad+i*((W-pad*2)/Math.max(1,vals.length-1)),H-pad-((v-min)/Math.max(.0001,max-min))*(H-pad*2)]);
-   const segments=[];let seg=[];pts.forEach(p=>{if(!p){if(seg.length)segments.push(seg),seg=[]}else seg.push(p)});if(seg.length)segments.push(seg);
-   const avg=valid.length?valid.reduce((a,b)=>a+b,0)/valid.length:null,best=valid.length?Math.max(...valid):null,worst=valid.length?Math.min(...valid):null;
-   $('#analyticsMatchGraph37').innerHTML=`<div class="mbmHead37"><div><small>${escapeHtml(players.find(p=>p.id===state.player)?.name||'Player')}</small><h4>${meta[0]}</h4></div><div class="mbmStats37"><span><b>${avg==null?'—':meta[2](avg)}</b>Average</span><span><b>${best==null?'—':meta[2](best)}</b>Best</span><span><b>${worst==null?'—':meta[2](worst)}</b>Worst</span></div></div><div class="mbmPlot37"><svg viewBox="0 0 ${W} ${H}" preserveAspectRatio="none">${[0,.25,.5,.75,1].map(q=>`<line x1="${pad}" y1="${pad+q*(H-pad*2)}" x2="${W-pad}" y2="${pad+q*(H-pad*2)}"/>`).join('')}${segments.map(a=>`<polyline points="${a.map(p=>p.join(',')).join(' ')}"/>`).join('')}${pts.map((p,i)=>p?`<circle cx="${p[0]}" cy="${p[1]}" r="4"><title>${v37FmtDate(rows[i]?.played_at)} · ${meta[2](vals[i])}</title></circle>`:'').join('')}</svg></div><div class="mbmDates37">${rows.map((x,i)=>`<span>${i+1}</span>`).join('')}</div>`;
+   const meta=v37MetricMeta(state.mode), primaryId=primary(), primaryEntries=rowsFor(primaryId), primaryRows=primaryEntries.map(x=>x.row);
+   if(primaryRows.length<2){
+     $('#analyticsMatchGraph37').innerHTML='<div class="mbmEmpty58"><b>Not enough match data</b><span>At least two captured matches are needed for this trend.</span></div>';
+     return;
+   }
+   const series=state.selectedPlayers.slice(0,3).map((id,index)=>{
+     const entries=rowsFor(id), vals=entries.map(x=>v37MetricValue(x.row,state.mode));
+     const valid=vals.filter(v=>v!=null&&Number.isFinite(v));
+     return {id,index,name:players.find(p=>p.id===id)?.name||'Player',entries,vals,valid};
+   });
+   const allValid=series.flatMap(s=>s.valid);
+   let min=0,max=10;
+   if(state.mode==='rating'){min=5;max=10}
+   else if(state.mode==='passing'){min=0;max=100}
+   else {max=Math.max(1,...allValid);min=0}
+   const W=1000,H=360,padL=62,padR=74,padT=34,padB=92,plotBottom=H-padB;
+   const maxPoints=Math.max(2,...series.map(s=>s.vals.length));
+   const x=(i,n)=>padL+i*((W-padL-padR)/Math.max(1,n-1));
+   const y=v=>padT+(max-v)/Math.max(.0001,max-min)*(plotBottom-padT);
+   const fmt=v=>v==null||!Number.isFinite(v)?'--':meta[2](v);
+   const ticks=[0,.25,.5,.75,1].map(q=>max-(max-min)*q);
+   const primarySeries=series[0], primaryValid=primarySeries.valid;
+   const avg=primaryValid.length?primaryValid.reduce((a,b)=>a+b,0)/primaryValid.length:null;
+   let bestIdx=-1,worstIdx=-1;
+   primarySeries.vals.forEach((v,i)=>{if(v==null||!Number.isFinite(v))return;if(bestIdx<0||v>primarySeries.vals[bestIdx])bestIdx=i;if(worstIdx<0||v<primarySeries.vals[worstIdx])worstIdx=i});
+   const renderSegments=(s)=>{
+     const pts=s.vals.map((v,i)=>v==null||!Number.isFinite(v)?null:[x(i,s.vals.length),y(v)]),segments=[];let seg=[];
+     pts.forEach(p=>{if(!p){if(seg.length)segments.push(seg),seg=[]}else seg.push(p)});if(seg.length)segments.push(seg);
+     return {pts,segments};
+   };
+   const built=series.map(s=>({...s,...renderSegments(s)}));
+   const primaryBuilt=built[0];
+   const area=primaryBuilt.segments.length===1&&primaryBuilt.segments[0].length>1?`${primaryBuilt.segments[0].map(p=>p.join(',')).join(' ')} ${primaryBuilt.segments[0][primaryBuilt.segments[0].length-1][0]},${plotBottom} ${primaryBuilt.segments[0][0][0]},${plotBottom}`:'';
+   const lines=built.map((s,si)=>{
+     if(!s.valid.length)return `<line class="mbmMissingLine58" x1="${padL}" y1="${(padT+plotBottom)/2}" x2="${W-padR}" y2="${(padT+plotBottom)/2}"/><text class="mbmMissingText58" x="${W-padR}" y="${(padT+plotBottom)/2-7}" text-anchor="end">${escapeHtml(s.name)} · --</text>`;
+     return s.segments.map(seg=>`<polyline class="mbmSeries58 mbmSeries${si}58 ${si===0?'primary':''}" style="--series:${palette[si]}" points="${seg.map(p=>p.join(',')).join(' ')}"/>`).join('');
+   }).join('');
+   const points=built.map((s,si)=>s.pts.map((p,i)=>{
+     if(!p)return'';
+     const e=s.entries[i],matchId=String(e?.row?.match_id||e?.meta?.match_id||'');
+     const cls=si===0?(i===bestIdx?' best':i===worstIdx?' worst':''):'';
+     return `<circle class="mbmNeutralPoint58${cls}" style="--series:${palette[si]}" cx="${p[0]}" cy="${p[1]}" r="${si===0?4.5:3.5}" tabindex="0" data-chart-point37="1" data-match37="${escapeHtml(matchId)}" data-player37-name="${escapeHtml(s.name)}" data-opponent37="${escapeHtml(v39Opponent(e?.meta,e?.row))}" data-score37="${escapeHtml(scoreText(e))}" data-date37="${escapeHtml(dateLong(e?.meta?.played_at||e?.row?.played_at))}" data-value37="${escapeHtml(fmt(s.vals[i]))}"></circle>`;
+   }).join('')).join('');
+   const badges=[['BEST',bestIdx,'best'],['WORST',worstIdx,'worst']].map(([label,idx,cls])=>{
+     if(idx<0||(label==='WORST'&&worstIdx===bestIdx))return'';const p=primaryBuilt.pts[idx];if(!p)return'';
+     const yy=Math.max(15,p[1]-21);return `<g class="mbmBadge58 ${cls}"><rect x="${p[0]-26}" y="${yy-12}" width="52" height="20" rx="10"/><text x="${p[0]}" y="${yy+2}" text-anchor="middle">${label}</text></g>`;
+   }).join('');
+   const avgY=avg==null?null:y(avg);
+   const avgLine=avgY==null?'':`<line class="mbmAvgLine58" x1="${padL}" y1="${avgY}" x2="${W-padR}" y2="${avgY}"/><g class="mbmAvgLabel58"><rect x="${W-padR+8}" y="${avgY-12}" width="58" height="24" rx="12"/><text x="${W-padR+37}" y="${avgY+4}" text-anchor="middle">${fmt(avg)}</text></g>`;
+   const resultStrip=primaryEntries.map((e,i)=>`<span class="${resultClass(e)}" title="${escapeHtml(v39Opponent(e.meta,e.row))} · ${escapeHtml(scoreText(e))}"></span>`).join('');
+   const legend=built.map((s,i)=>`<span style="--series:${palette[i]}"><i></i>${escapeHtml(s.name)}${i===0?' · PRIMARY':''}</span>`).join('');
+   const summaryAverage=avg;
+   const summaryBest=bestIdx>=0?primarySeries.vals[bestIdx]:null;
+   const summaryWorst=worstIdx>=0?primarySeries.vals[worstIdx]:null;
+   const validChronological=primarySeries.vals.filter(v=>v!=null&&Number.isFinite(v));
+   const trend=validChronological.length>=10?(()=>{const recent=validChronological.slice(-5),prev=validChronological.slice(-10,-5),a=recent.reduce((s,v)=>s+v,0)/5,b=prev.reduce((s,v)=>s+v,0)/5;return a-b})():null;
+   const trendClass=trend==null?'neutral':trend>0?'up':trend<0?'down':'neutral';
+   const trendText=trend==null?'--':`${trend>0?'↑ ':trend<0?'↓ ':''}${Math.abs(trend).toFixed(state.mode==='rating'?2:state.mode==='passing'?1:2)}${state.mode==='passing'?' pp':''}`;
+   const sparklineFor=(id)=>{
+     const vals=rowsFor(id).map(e=>v37MetricValue(e.row,state.mode));
+     const valid=vals.filter(v=>v!=null&&Number.isFinite(v));
+     if(valid.length<2)return '<span class="mbmSparkMissing59">--</span>';
+     const sw=120,sh=34,pad=3,localMin=Math.min(...valid),localMax=Math.max(...valid),range=Math.max(.0001,localMax-localMin);
+     const coords=valid.map((v,i)=>[pad+i*((sw-pad*2)/Math.max(1,valid.length-1)),sh-pad-((v-localMin)/range)*(sh-pad*2)]);
+     return `<svg class="mbmSpark59" viewBox="0 0 ${sw} ${sh}" preserveAspectRatio="none" aria-hidden="true"><polyline points="${coords.map(p=>p.join(',')).join(' ')}"/></svg>`;
+   };
+   const miniCards=players.slice(0,12).map(p=>{
+     const vals=rowsFor(p.id).map(e=>v37MetricValue(e.row,state.mode));const valid=vals.filter(v=>v!=null&&Number.isFinite(v));const pav=valid.length?valid.reduce((a,b)=>a+b,0)/valid.length:null;
+     const selected=state.selectedPlayers.includes(p.id),si=selected?state.selectedPlayers.indexOf(p.id):-1;
+     return `<button class="mbmMiniPlayer59${selected?' active':''}" data-mini-player37="${escapeHtml(p.id)}" style="--mini-series:${selected?(palette[si]||'var(--cyan)'):'transparent'}" aria-pressed="${selected?'true':'false'}"><span class="mbmMiniTop59"><span><i class="mbmMiniAvatar59">${escapeHtml(initials37(p.name))}</i><b>${escapeHtml(p.name)}</b></span><strong>${pav==null?'--':fmt(pav)}</strong></span>${sparklineFor(p.id)}</button>`;
+   }).join('');
+   $('#analyticsMatchGraph37').innerHTML=`<div class="mbmChartShell58"><div class="mbmChartMeta58"><div><span class="mbmLabel37">MATCH-BY-MATCH</span><h4>${escapeHtml(meta[0])}</h4></div><div class="mbmSeriesLegend58">${legend}</div></div><div class="mbmPlot37 mbmPlot58"><svg viewBox="0 0 ${W} ${H}" preserveAspectRatio="xMidYMid meet" role="img" aria-label="${escapeHtml(meta[0])} player trends"><defs><linearGradient id="mbmPrimaryArea58" x1="0" y1="0" x2="0" y2="1"><stop offset="0%" stop-color="#2DD4BF" stop-opacity=".20"/><stop offset="100%" stop-color="#2DD4BF" stop-opacity="0"/></linearGradient></defs>${ticks.map((t,i)=>{const yy=padT+i*((plotBottom-padT)/(ticks.length-1));return `<line class="mbmGrid58" x1="${padL}" y1="${yy}" x2="${W-padR}" y2="${yy}"/><text class="mbmAxis58" x="${padL-12}" y="${yy+4}" text-anchor="end">${fmt(t)}</text>`}).join('')}<line class="mbmAxisLine58" x1="${padL}" y1="${plotBottom}" x2="${W-padR}" y2="${plotBottom}"/>${area?`<polygon class="mbmPrimaryArea58" points="${area}"/>`:''}${avgLine}${lines}${points}${badges}${primaryRows.map((r,i)=>`<text class="mbmXAxis58" x="${x(i,primaryRows.length)}" y="${plotBottom+24}" text-anchor="middle">${i+1}</text>`).join('')}</svg><div class="mbmTooltip58" hidden></div></div><div class="mbmResultRow58"><span class="mbmLabel37">RESULTS</span><div class="mbmResultStrip58" style="--result-count:${primaryEntries.length}">${resultStrip}</div><div class="mbmResultLegend58"><span><i class="w"></i>W</span><span><i class="d"></i>D</span><span><i class="l"></i>L</span></div></div><div class="mbmSummaryGrid59"><article><span>AVERAGE</span><strong>${summaryAverage==null?'--':fmt(summaryAverage)}</strong></article><article><span>BEST</span><strong>${summaryBest==null?'--':fmt(summaryBest)}</strong></article><article><span>WORST</span><strong>${summaryWorst==null?'--':fmt(summaryWorst)}</strong></article><article class="trend ${trendClass}"><span>TREND</span><strong>${trendText}</strong><small>LAST 5 VS PREV 5</small></article></div><div class="mbmMiniSection59"><div class="mbmMiniHeader59"><span class="mbmLabel37">PLAYER TRENDS</span><small>Click to add or remove · max 3</small></div><div class="mbmMiniGrid59">${miniCards}</div></div></div>`;
    host.querySelectorAll('[data-metric37]').forEach(b=>b.classList.toggle('active',b.dataset.metric37===state.mode));
-   host.querySelectorAll('[data-player37]').forEach(b=>b.classList.toggle('active',b.dataset.player37===state.player));
+   host.querySelectorAll('[data-window37]').forEach(b=>b.classList.toggle('active',Number(b.dataset.window37)===state.window));
+   host.querySelectorAll('[data-player37]').forEach((b,i)=>{const selected=state.selectedPlayers.includes(b.dataset.player37);b.classList.toggle('active',selected);b.style.setProperty('--player-line',selected?palette[state.selectedPlayers.indexOf(b.dataset.player37)]||'var(--cyan)':'transparent')});
  };
- host.innerHTML=`<div class="mbmToolbar37"><div class="metricSwitch37"><button class="active" data-metric37="rating">Rating</button><button data-metric37="tackles">Tackles</button><button data-metric37="passing">Pass accuracy</button><button data-metric37="contrib">Goal contributions</button></div><div class="playerSwitch37">${players.slice(0,10).map((p,i)=>`<button class="${i?'':'active'}" data-player37="${escapeHtml(p.id)}">${escapeHtml(p.name)}</button>`).join('')}</div></div><div id="analyticsMatchGraph37"></div>`;
- host.querySelectorAll('[data-metric37]').forEach(b=>b.onclick=()=>{state.mode=b.dataset.metric37;draw()});
- host.querySelectorAll('[data-player37]').forEach(b=>b.onclick=()=>{state.player=b.dataset.player37;draw()});
+ const mbmIcon37=(kind)=>({rating:`<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 3l2.7 5.5 6.1.9-4.4 4.3 1 6.1L12 17l-5.4 2.8 1-6.1-4.4-4.3 6.1-.9L12 3z"/></svg>`,tackles:`<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 19l4.2-4.2M7 4l5.5 5.5M12.5 9.5l4-4M10 12l4 4M14 16l5-5"/></svg>`,passing:`<svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="6" cy="12" r="2.5"/><circle cx="18" cy="6" r="2.5"/><circle cx="18" cy="18" r="2.5"/><path d="M8.5 11l7-4M8.5 13l7 4"/></svg>`,contrib:`<svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="7"/><path d="M12 5l2.1 3.2 3.9.8-2.7 2.8.5 4-3.8-1.7-3.8 1.7.5-4L6 9l3.9-.8L12 5z"/></svg>`})[kind]||'';
+ const initials37=name=>String(name||'?').trim().split(/\s+/).slice(0,2).map(x=>x[0]||'').join('').toUpperCase();
+ host.innerHTML=`<div class="mbmToolbar37 mbmToolbarClubroom37"><div class="mbmTopRow37"><div><span class="mbmLabel37">METRIC</span><div class="metricSwitch37 metricSwitchClubroom37"><button class="active" data-metric37="rating">${mbmIcon37('rating')}<span>Match Rating</span></button><button data-metric37="tackles">${mbmIcon37('tackles')}<span>Tackles</span></button><button data-metric37="passing">${mbmIcon37('passing')}<span>Pass Accuracy</span></button><button data-metric37="contrib">${mbmIcon37('contrib')}<span>Goal Contributions</span></button></div></div><div><span class="mbmLabel37">WINDOW</span><div class="mbmWindowFix37" aria-label="Match window"><button data-window37="5">5</button><button data-window37="10">10</button><button class="active" data-window37="20">20</button></div></div></div><div class="mbmPlayersBlock37"><span class="mbmLabel37">PLAYERS · UP TO 3</span><div class="playerSwitch37 playerChips37">${players.slice(0,12).map((p,i)=>`<button class="${i?'':'active'}" data-player37="${escapeHtml(p.id)}" aria-pressed="${i?'false':'true'}"><span class="mbmAvatar37">${escapeHtml(initials37(p.name))}</span><span>${escapeHtml(p.name)}</span></button>`).join('')}</div></div></div><div id="analyticsMatchGraph37"></div>`;
+ const hideTooltip=()=>{const t=host.querySelector('.mbmTooltip58');if(t)t.hidden=true};
+ const showTooltip=(point,ev)=>{const t=host.querySelector('.mbmTooltip58');const plot=host.querySelector('.mbmPlot58');if(!t||!plot)return;const r=plot.getBoundingClientRect(),pr=point.getBoundingClientRect();t.innerHTML=`<b>${escapeHtml(point.dataset.player37Name||'Player')}</b><span>${escapeHtml(point.dataset.opponent37||'Opponent')} · ${escapeHtml(point.dataset.score37||'—')}</span><span>${escapeHtml(point.dataset.date37||'—')} · <strong>${escapeHtml(point.dataset.value37||'--')}</strong></span>`;const cx=(ev?.clientX??(pr.left+pr.width/2))-r.left,cy=(ev?.clientY??pr.top)-r.top;t.style.left=`${Math.max(8,Math.min(r.width-190,cx+12))}px`;t.style.top=`${Math.max(8,cy-72)}px`;t.hidden=false};
+ const openMatchFromPoint=(point)=>{const id=point?.dataset?.match37;if(!id)return;openTab('matches');requestAnimationFrame(()=>{let row=[...document.querySelectorAll('.match.archive[data-am]')].find(x=>String(x.dataset.am)===String(id));if(!row){const idx=(S.matches||[]).findIndex(m=>String(P(m.raw,['matchId','matchid','id'],'')||m.matchId||'')===String(id));if(idx>=0)row=document.querySelector(`.match[data-m="${idx}"]`)}if(row){row.scrollIntoView({behavior:'smooth',block:'center'});if(!row.classList.contains('open'))row.click()}})};
+ host.onclick=e=>{
+   const point=e.target.closest('[data-chart-point37]');if(point){openMatchFromPoint(point);return}
+   const metric=e.target.closest('[data-metric37]');if(metric){state.mode=metric.dataset.metric37;draw();return}
+   const win=e.target.closest('[data-window37]');if(win){state.window=Number(win.dataset.window37)||20;draw();return}
+   const mini=e.target.closest('[data-mini-player37]');if(mini){const id=mini.dataset.miniPlayer37,has=state.selectedPlayers.includes(id);if(has){if(state.selectedPlayers.length>1)state.selectedPlayers=state.selectedPlayers.filter(x=>x!==id)}else if(state.selectedPlayers.length<3)state.selectedPlayers=[...state.selectedPlayers,id];else state.selectedPlayers=[...state.selectedPlayers.slice(0,2),id];host.querySelectorAll('[data-player37]').forEach(b=>b.setAttribute('aria-pressed',state.selectedPlayers.includes(b.dataset.player37)?'true':'false'));draw();return}
+   const player=e.target.closest('[data-player37]');if(player){const id=player.dataset.player37,has=state.selectedPlayers.includes(id);if(has){if(state.selectedPlayers.length>1)state.selectedPlayers=state.selectedPlayers.filter(x=>x!==id)}else if(state.selectedPlayers.length<3)state.selectedPlayers=[...state.selectedPlayers,id];else state.selectedPlayers=[...state.selectedPlayers.slice(0,2),id];host.querySelectorAll('[data-player37]').forEach(b=>b.setAttribute('aria-pressed',state.selectedPlayers.includes(b.dataset.player37)?'true':'false'));draw()}
+ };
+ host.onpointerover=e=>{const p=e.target.closest('[data-chart-point37]');if(p)showTooltip(p,e)};
+ host.onpointermove=e=>{const p=e.target.closest('[data-chart-point37]');if(p)showTooltip(p,e)};
+ host.onpointerout=e=>{if(e.target.closest('[data-chart-point37]'))hideTooltip()};
+ host.onfocusin=e=>{const p=e.target.closest('[data-chart-point37]');if(p)showTooltip(p)};
+ host.onfocusout=e=>{if(e.target.closest('[data-chart-point37]'))hideTooltip()};
  draw();
 }
+
 function v37RenderForm(h){
  const host=$('#analyticsForm');if(!host)return;const ms=(h?.matches||[]).slice(0,20).reverse();
  if(!ms.length){host.innerHTML='<div class="msg">No archived matches yet.</div>';return}
@@ -883,25 +1119,8 @@ const __renderAnalyticsV37=renderAnalytics;renderAnalytics=function(h,a){__rende
  if(fnav){fnav.addEventListener('click',function(e){const b=e.target.closest('[data-fun-tab]');if(!b)return;e.preventDefault();e.stopPropagation();const tab=b.dataset.funTab;fnav.querySelectorAll('[data-fun-tab]').forEach(x=>x.classList.toggle('active',x===b));document.querySelectorAll('[data-fun-pane]').forEach(p=>{const on=p.dataset.funPane===tab;p.classList.toggle('active',on);p.hidden=!on;});},true);document.querySelectorAll('[data-fun-pane]').forEach(p=>p.hidden=!p.classList.contains('active'));}
 })();
 
-v37RenderMatchByMatch = function(h){
- const host=$('#analyticsMatchByMatch'); if(!host)return;
- const pm=(h?.playerMatches||[]).slice();
- const players=[...new Map(pm.filter(x=>x.player_name).map(x=>[v37PlayerKey(x),{id:v37PlayerKey(x),name:x.player_name}])).values()];
- if(!players.length){host.innerHTML='<div class="msg">Match-by-match needs archived player match stats.</div>';return}
- let state={mode:'rating',player:players[0].id};
- const draw=()=>{
-   const meta=v37MetricMeta(state.mode), rows=pm.filter(x=>v37PlayerKey(x)===state.player).slice(0,16).reverse();
-   const vals=rows.map(x=>v37MetricValue(x,state.mode)); const valid=vals.filter(v=>v!=null&&Number.isFinite(v));
-   let floor=0,ceil=Math.max(1,...valid); if(state.mode==='rating'){floor=5;ceil=10}else if(state.mode==='passing'){floor=0;ceil=100}
-   const fmt=v=>v==null?'—':meta[2](v); const avg=valid.length?valid.reduce((a,b)=>a+b,0)/valid.length:null,best=valid.length?Math.max(...valid):null,worst=valid.length?Math.min(...valid):null;
-   const pname=players.find(p=>p.id===state.player)?.name||'Player';
-   const cards=rows.map((r,i)=>{const v=vals[i],pctH=v==null?4:Math.max(5,Math.min(100,((v-floor)/Math.max(.001,ceil-floor))*100));const result=String(r.result||'').toLowerCase();return `<article class="mbmMatch38 ${result}"><div class="mTop38"><span>${v37FmtDate(r.played_at)}</span><b>${String(r.result||'—')}</b></div><div class="mValue38"><strong>${fmt(v)}</strong><span><i style="--h:${pctH}%"></i></span></div><div class="mBottom38"><b>${escapeHtml(r.opponent||'Opponent')}</b><small>${N(r.goals)}G · ${N(r.assists)}A · ${N(r.rating)?N(r.rating).toFixed(1):'—'} rating</small></div></article>`}).join('');
-   const graph=$('#analyticsMatchGraph37'); if(graph)graph.innerHTML=`<div class="mbmSummary38"><div class="mbmIdentity38"><small>PLAYER TREND</small><h4>${escapeHtml(pname)} · ${meta[0]}</h4></div><div class="mbmKpi38"><b>${fmt(avg)}</b><span>Average</span></div><div class="mbmKpi38"><b>${fmt(best)}</b><span>Best</span></div><div class="mbmKpi38"><b>${fmt(worst)}</b><span>Worst</span></div></div><div class="mbmRail38">${cards||'<div class="msg">No matches for this metric.</div>'}</div>`;
-   host.querySelectorAll('[data-metric37]').forEach(b=>b.classList.toggle('active',b.dataset.metric37===state.mode)); host.querySelectorAll('[data-player37]').forEach(b=>b.classList.toggle('active',b.dataset.player37===state.player));
- };
- host.innerHTML=`<div class="mbm38"><div class="mbmToolbar38"><div class="mbmSwitch38"><button class="active" data-metric37="rating">Rating</button><button data-metric37="tackles">Tackles</button><button data-metric37="passing">Pass accuracy</button><button data-metric37="contrib">G+A</button></div><div class="mbmPlayers38">${players.slice(0,10).map((p,i)=>`<button class="${i?'':'active'}" data-player37="${escapeHtml(p.id)}">${escapeHtml(p.name)}</button>`).join('')}</div></div><div id="analyticsMatchGraph37"></div></div>`;
- host.querySelectorAll('[data-metric37]').forEach(b=>b.addEventListener('click',e=>{e.preventDefault();state.mode=b.dataset.metric37;draw()})); host.querySelectorAll('[data-player37]').forEach(b=>b.addEventListener('click',e=>{e.preventDefault();state.player=b.dataset.player37;draw()})); draw();
-};
+/* v57: removed v38 Match-by-Match override; the stabilized renderer above is authoritative. */
+
 
 v30RankingCard = function(def,compact=false){
  const top=def.ranked[0];if(!top)return '<div class="msg">No data yet.</div>';
@@ -978,33 +1197,8 @@ v37RenderForm=function(h){
   </div>`;
 };
 
-v37RenderMatchByMatch=function(h){
-  const host=$('#analyticsMatchByMatch'); if(!host)return;
-  const pm=(h?.playerMatches||[]).slice();
-  const players=[...new Map(pm.filter(x=>x.player_name).map(x=>[v37PlayerKey(x),{id:v37PlayerKey(x),name:x.player_name}])).values()];
-  if(!players.length){host.innerHTML='<div class="msg">Match-by-match needs archived player match stats.</div>';return}
-  let state={mode:'rating',player:players[0].id};
-  const labels={rating:'Rating',contrib:'G+A',passing:'Pass %',tackles:'Tackles'};
-  const fmt=(mode,v)=>v==null||!Number.isFinite(v)?'—':mode==='rating'?v.toFixed(1):mode==='passing'?`${v.toFixed(0)}%`:String(Math.round(v));
-  function draw(){
-    const rows=pm.filter(x=>v37PlayerKey(x)===state.player).map(x=>({row:x,meta:v39MatchMeta(h,x)})).sort((a,b)=>new Date(a.meta.played_at||a.row.played_at||0)-new Date(b.meta.played_at||b.row.played_at||0)).slice(-20);
-    const values=rows.map(x=>v37MetricValue(x.row,state.mode));
-    const valid=values.filter(v=>v!=null&&Number.isFinite(v));
-    const avg=valid.length?valid.reduce((a,b)=>a+b,0)/valid.length:null;
-    const pname=players.find(p=>p.id===state.player)?.name||'Player';
-    const table=rows.slice().reverse().map((x,j)=>{
-      const r=x.row,m=x.meta,v=v37MetricValue(r,state.mode),res=v39Result(m,r).toLowerCase();
-      const pass=N(r.pass_attempts)?N(r.passes_made)/N(r.pass_attempts)*100:null;
-      return `<div class="mbmRow39 ${res}"><span class="mbmResult39">${v39Result(m,r)}</span><div class="mbmGame39"><b>${escapeHtml(v39Opponent(m,r))}</b><small>${v39Date(m.played_at||r.played_at)}${m.goals!=null?` · ${N(m.goals)}:${N(m.opponent_goals)}`:''}</small></div><strong class="mbmPrimary39">${fmt(state.mode,v)}<small>${labels[state.mode]}</small></strong><span>${N(r.goals)}G</span><span>${N(r.assists)}A</span><span>${N(r.rating)?N(r.rating).toFixed(1):'—'} RTG</span><span>${pass==null?'—':pass.toFixed(0)+'%'} PASS</span></div>`;
-    }).join('');
-    const graph=$('#analyticsMatchGraph37');if(graph)graph.innerHTML=`<div class="mbm39Head"><div><small>PLAYER MATCH LOG</small><h4>${escapeHtml(pname)}</h4></div><div><b>${fmt(state.mode,avg)}</b><span>Average ${labels[state.mode]}</span></div><div><b>${rows.length}</b><span>Captured matches</span></div></div><div class="mbmList39">${table||'<div class="msg">No captured matches for this player.</div>'}</div>`;
-    host.querySelectorAll('[data-metric39]').forEach(b=>b.classList.toggle('active',b.dataset.metric39===state.mode));
-    host.querySelectorAll('[data-player39]').forEach(b=>b.classList.toggle('active',b.dataset.player39===state.player));
-  }
-  host.innerHTML=`<div class="mbm39"><div class="mbmControls39"><div class="mbmModes39"><button data-metric39="rating" class="active">Rating</button><button data-metric39="contrib">G+A</button><button data-metric39="passing">Pass %</button><button data-metric39="tackles">Tackles</button></div><div class="mbmPlayers39">${players.slice(0,12).map((p,i)=>`<button data-player39="${escapeHtml(p.id)}" class="${i?'':'active'}">${escapeHtml(p.name)}</button>`).join('')}</div></div><div id="analyticsMatchGraph37"></div></div>`;
-  host.addEventListener('click',e=>{const m=e.target.closest('[data-metric39]');if(m){state.mode=m.dataset.metric39;draw();return}const p=e.target.closest('[data-player39]');if(p){state.player=p.dataset.player39;draw();}});
-  draw();
-};
+/* v57: removed v39 Match-by-Match override; the stabilized renderer above is authoritative. */
+
 
 v37RenderClutch=function(h){
   const host=$('#analyticsClutch');if(!host)return;
