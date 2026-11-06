@@ -1,5 +1,13 @@
 export const cardLayout = {
   aspectRatio: 2 / 3,
+  portraitWindow: [
+    [17.5, 8.0],
+    [82.5, 8.0],
+    [88.0, 43.5],
+    [78.0, 54.5],
+    [22.0, 54.5],
+    [12.0, 43.5]
+  ],
   slots: {
     overall: { left: 13.5, top: 9.2, width: 17.5, height: 12.2 },
     position: { left: 14.5, top: 20.4, width: 16.5, height: 5.6 },

@@ -3,7 +3,7 @@ import { cardTiers } from './cardTiers.generated.js';
 import { CARD_TYPOGRAPHY_CSS, escapeCardText, cardNameClass, resolveCardTier, cardUrlToDataUrl, rasterizeCardElement, downloadCardBlob } from './cardShared.js';
 
 const pct = v => `${v}%`;
-
+const portraitPolygon = (points=cardLayout.portraitWindow||[]) => points.map(([x,y])=>`${x}% ${y}%`).join(',');
 
 
 const slotStyle = key => {
@@ -56,11 +56,11 @@ class PlayerCard extends HTMLElement {
       <style>
         :host{display:block;position:relative;container-type:inline-size;aspect-ratio:${cardLayout.aspectRatio};min-width:0;user-select:none}
         *{box-sizing:border-box}.card{position:relative;width:100%;height:100%;overflow:hidden;border-radius:7cqw;background:#07101b;isolation:isolate;${CARD_TYPOGRAPHY_CSS}color:white}
-        .layer{position:absolute;inset:0;width:100%;height:100%}.frameBg{z-index:1;background:${tierStyle.bg}}
-        .frameBg:after{content:"";position:absolute;inset:0;background:url('/cards/frames/frame.png') center/100% 100% no-repeat;opacity:.16;mix-blend-mode:screen}
-        .player{z-index:2;object-fit:contain;object-position:center bottom;filter:contrast(1.03) saturate(.88) drop-shadow(0 2cqw 3cqw rgba(0,0,0,.45))}
-        .jerseyTint{z-index:3;background:${jersey};-webkit-mask:url('/cards/masks/jersey-mask.png') center/100% 100% no-repeat;mask:url('/cards/masks/jersey-mask.png') center/100% 100% no-repeat;mix-blend-mode:multiply;opacity:.86}
-        .frame{z-index:4;width:100%;height:100%;object-fit:fill;mix-blend-mode:screen;filter:${tierStyle.frameFilter};pointer-events:none}
+        .layer{position:absolute;inset:0;width:100%;height:100%}.frame{z-index:1;width:100%;height:100%;object-fit:fill;filter:${tierStyle.frameFilter};pointer-events:none}
+        .tierWash{z-index:2;background:${tierStyle.bg};mix-blend-mode:color;opacity:.22;pointer-events:none}
+        .portraitClip{position:absolute;inset:0;z-index:3;clip-path:polygon(${portraitPolygon()});overflow:hidden;-webkit-mask-image:linear-gradient(to bottom,#000 0%,#000 84%,rgba(0,0,0,.88) 90%,rgba(0,0,0,.35) 97%,transparent 100%);mask-image:linear-gradient(to bottom,#000 0%,#000 84%,rgba(0,0,0,.88) 90%,rgba(0,0,0,.35) 97%,transparent 100%)}
+        .player{position:absolute;inset:0;width:100%;height:100%;object-fit:contain;object-position:center bottom;filter:contrast(1.03) saturate(.88) drop-shadow(0 2cqw 3cqw rgba(0,0,0,.45))}
+        .jerseyTint{position:absolute;inset:0;width:100%;height:100%;background:${jersey};-webkit-mask:url('/cards/masks/jersey-mask.png') center/100% 100% no-repeat;mask:url('/cards/masks/jersey-mask.png') center/100% 100% no-repeat;mix-blend-mode:multiply;opacity:.86}
         .ui{z-index:5;position:absolute;inset:0}.slot{position:absolute;display:flex;align-items:center;justify-content:center;min-width:0}
         .overall{${slotStyle('overall')}flex-direction:column;align-items:flex-start;justify-content:center;text-shadow:0 .35cqw 1.1cqw #000}.overall small{font-size:3.45cqw;line-height:1;font-weight:900;letter-spacing:.08em;white-space:nowrap}.overall b{font-size:10.3cqw;line-height:.9;font-weight:950;white-space:nowrap}
         .position{${slotStyle('position')}font-size:4.35cqw;font-weight:900;border:.35cqw solid ${tierStyle.accent};border-radius:1cqw;background:rgba(2,8,16,.66);text-shadow:0 .3cqw .7cqw #000}
@@ -70,11 +70,12 @@ class PlayerCard extends HTMLElement {
         .totals{${slotStyle('totals')}display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:.4cqw;border-top:.12cqw solid rgba(255,255,255,.22);padding-top:.55cqw;align-items:center}.total{display:flex;gap:.42cqw;align-items:center;justify-content:center;white-space:nowrap;min-width:0}.total i{font-style:normal;font-size:2.35cqw;opacity:.88;line-height:1}.total b{font-size:2.65cqw;line-height:1}.total small{font-size:1.55cqw;color:${tierStyle.muted};letter-spacing:.02em;line-height:1}
         .debugSlot{outline:.18cqw solid rgba(45,212,191,.95)!important;background:rgba(45,212,191,.12)!important;cursor:move!important}.debugSlot:before{content:attr(data-slot);position:absolute;left:.3cqw;top:.2cqw;padding:.18cqw .45cqw;background:rgba(2,8,16,.82);color:#fff;font-size:1.35cqw;font-weight:900;line-height:1.2;z-index:30;pointer-events:none}.debugSlot:after{content:"";position:absolute;right:0;bottom:0;width:2.2cqw;height:2.2cqw;background:#2dd4bf;clip-path:polygon(100% 0,100% 100%,0 100%);cursor:nwse-resize}.debugToolbar{position:absolute;z-index:40;left:2cqw;right:2cqw;bottom:1.5cqw;display:flex;justify-content:flex-end;pointer-events:none}.debugToolbar button{pointer-events:auto;border:.16cqw solid rgba(255,255,255,.28);border-radius:1.2cqw;background:#08111f;color:#fff;padding:1.1cqw 1.6cqw;font:900 2cqw/1 ${CARD_TYPOGRAPHY_CSS.includes('font-family')?'inherit':'sans-serif'};cursor:pointer}      </style>
       <div class="card tier-${tier}" part="card" data-tier="${tier}">
-        <div class="tierGlow layer" style="z-index:1;background:linear-gradient(135deg,${tierStyle.accentSoft},transparent 46%);mix-blend-mode:screen;pointer-events:none"></div>
-        <div class="layer frameBg"></div>
-        <img class="player slot" data-slot="player" style="${slotStyle('player')}" src="${playerImage}" alt="" onerror="this.onerror=null;this.src='/cards/players/default.png'">
-        <div class="layer jerseyTint"></div>
         <img class="layer frame" src="/cards/frames/frame.png" alt="">
+        <div class="layer tierWash"></div>
+        <div class="portraitClip" data-portrait-window>
+          <img class="player" src="${playerImage}" alt="" onerror="this.onerror=null;this.src='/cards/players/default.png'">
+          <div class="jerseyTint"></div>
+        </div>
         <div class="ui">
           <div class="slot overall" data-slot="overall"><small>OVR</small><b>${this.a('overall')||'--'}</b></div>
           <div class="slot position" data-slot="position">${this.a('position')||'--'}</div>

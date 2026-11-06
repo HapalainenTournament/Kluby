@@ -1,0 +1,18 @@
+import fs from 'node:fs';
+const app=fs.readFileSync('public/app.js','utf8');
+const html=fs.readFileSync('public/index.html','utf8');
+const css=fs.readFileSync('public/style.css','utf8');
+const checks=[];
+const ok=(name,cond)=>{checks.push([name,!!cond]); console.log(`${cond?'PASS':'FAIL'} ${name}`)};
+ok('html lang is en',/<html\s+lang="en"/i.test(html));
+ok('load enriches missing club metadata from club-card',/api\/club-card\//.test(app.slice(app.indexOf('async function load'),app.indexOf('function rawPlayers'))));
+ok('no visible Czech goal-event fallback',!app.includes('minutu/asistenci eventu'));
+const savedRule=css.slice(css.lastIndexOf('.homeSavedCrest49,.searchClubCrest50')); ok('recent crest wrapper has no decorative border/background/overflow clipping',savedRule.includes('overflow:visible')&&savedRule.includes('border:0')&&savedRule.includes('background:transparent'));
+ok('search crest wrapper uses shared crest without decorative box',savedRule.includes('.searchClubCrest50')&&savedRule.includes('overflow:visible'));
+ok('home content sections share centered margin rule',/\.homeSavedGrid49,\.searchResults,\.homeFeatures51\{[^}]*margin-inline:auto/s.test(css));
+ok('feature copy is at least 13px',/\.homeFeatureCard51 p\{[^}]*font-size:(?:13|14)px/s.test(css));
+ok('shared label utility exists',/\.label\{[^}]*text-transform:uppercase[^}]*letter-spacing:\.08em/s.test(css));
+ok('hero record uses separators not dash glyphs',/recordSep72/.test(html) && !/id="recW"[\s\S]{0,120}<i>–<\/i>/.test(html));
+ok('position filter appears before Squad Board',html.indexOf('id="positionSummary"')<html.indexOf('id="squadBoard"'));
+ok('creativity panel moved into analytics',html.indexOf('creativityPanel67')>html.indexOf('data-pane="analytics"') && html.indexOf('creativityPanel67')<html.indexOf('data-pane="misc"'));
+const failed=checks.filter(x=>!x[1]); if(failed.length) process.exit(1);

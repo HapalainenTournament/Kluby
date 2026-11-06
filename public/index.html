@@ -1,4 +1,4 @@
-<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Clubroom FC27 v69</title><link rel="icon" type="image/png" href="/assets/clubroom-favicon.png"><link rel="stylesheet" href="/style.css"><script type="module" src="/cards/player-card.js"></script><script type="module" src="/cards/duo-card.js"></script><script type="module" src="/components/club-crest.js"></script><script type="module" src="/icons/badges/index.js"></script><script type="module" src="/charts/player-radar.js"></script>
+<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Clubroom FC27 v74</title><link rel="icon" type="image/png" href="/assets/clubroom-favicon.png"><link rel="stylesheet" href="/style.css"><script type="module" src="/cards/player-card.js"></script><script type="module" src="/cards/duo-card.js"></script><script type="module" src="/components/club-crest.js"></script><script type="module" src="/icons/badges/index.js"></script><script type="module" src="/charts/player-radar.js"></script>
 </head><body>
 <header class="topbar overviewTopbar44">
   <a class="brand" href="/" aria-label="Clubroom homepage"><img class="brandMark" src="/assets/clubroom-mark.png" alt="" aria-hidden="true"><b>CLUBROOM</b><em>FC27</em></a>
@@ -81,7 +81,7 @@
   <div class="heroDivider44" aria-hidden="true"></div>
   <div class="heroPerformance44">
     <div class="heroPerformanceTop44">
-      <div class="heroRecord44"><span>RECORD (W-D-L)</span><div><b class="win" id="recW">0W</b><i>–</i><b class="draw" id="recD">0D</b><i>–</i><b class="loss" id="recL">0L</b></div></div>
+      <div class="heroRecord44"><span class="label">RECORD (W-D-L)</span><div class="recordFlex72"><span class="recordPart72 win"><b id="recW">0W</b></span><i class="recordSep72" aria-hidden="true"></i><span class="recordPart72 draw"><b id="recD">0D</b></span><i class="recordSep72" aria-hidden="true"></i><span class="recordPart72 loss"><b id="recL">0L</b></span></div></div>
       <div class="formBlock heroForm44"><span>RECENT FORM</span><div id="formPills" class="formPills"></div><b id="formSummary" hidden></b></div>
     </div>
     <div class="heroMetrics44">
@@ -121,6 +121,7 @@
 <div class="overviewLegacySink44" hidden><div id="clubStats"></div><div id="performanceStats"></div><div id="skillHistory"></div><div id="overviewMatches"></div><div id="overviewLeaders"></div></div>
 </div>
 <div class="tabPane" data-pane="players"><section class="playersPage">
+  <div class="playersPositionRow72"><div id="positionSummary" class="positionSummary67" aria-label="Filter players by position"></div></div>
   <section id="squadBoard" class="squadBoard70">
     <div class="squadBoardHead70">
       <div><span class="kicker">SQUAD OVERVIEW</span><h3>Squad Board</h3><p>Compare every squad member across the stats Clubroom has captured.</p></div>
@@ -135,7 +136,6 @@
     </div>
   </section>
   <div class="playersControlRow67">
-    <div id="positionSummary" class="positionSummary67" aria-label="Filter players by position"></div>
     <div class="playersRank67">
       <span class="playersControlLabel67">RANK BY</span>
       <div class="rankDropdown67" id="rankDropdown67">
@@ -146,7 +146,6 @@
       <span id="playerCount" class="playersCount67"></span>
     </div>
   </div>
-  <section class="creativityPanel67"><div class="creativityHead67"><span id="creativityIcon67" class="creativityIcon67"></span><div><span class="kicker">SQUAD SIGNAL</span><h3>Creativity ranking</h3><small>Completed dribbles + second assists per 90 from captured match data.</small></div></div><div id="creativityRanking" class="creativityRanking67"></div></section>
   <div id="playerCards" class="playerCards"></div>
 </section></div>
 <div class="tabPane" data-pane="compare"><section class="panel comparePanel"><div class="panelHead"><h3>Player Compare</h3><span>career + Clubroom archive</span></div><div class="compareHeader62" id="compareHeader62"></div><div class="compareControls compareControlsLegacy62" aria-hidden="true"><select id="cmpA" aria-label="Player A"></select><b>VS</b><select id="cmpB" aria-label="Player B"></select></div><div id="compareCoverage" class="compareCoverage compareCoverageLegacy62"></div><div id="compareBody"></div></section></div>
@@ -170,6 +169,7 @@
 </div>
 <div class="tabPane" data-pane="analytics">
 <section class="analyticsHero analyticsHero37"><div><span class="kicker">PERFORMANCE LAB</span><h3>Analytics</h3><p>Team form, player trends and impact metrics from the Clubroom archive.</p></div></section>
+<section class="creativityPanel67 analyticsCreativity72"><div class="creativityHead67"><span id="creativityIcon67" class="creativityIcon67"></span><div><span class="kicker">SQUAD SIGNAL</span><h3>Creativity ranking</h3><small>Completed dribbles + second assists per match from captured match data.</small></div></div><div id="creativityRanking" class="creativityRanking67"></div></section>
 <nav class="analyticsSubnav" id="analyticsSubnav">
   <button class="active" data-analytics-tab="form">Form</button>
   <button data-analytics-tab="match">Match-by-Match</button>
@@ -220,6 +220,14 @@
 <div class="tabPane" data-pane="plus"><section class="plusHero"><span class="kicker">CLUBROOM ARCHIVE</span><h3>Club+</h3><p>Long-term history beyond EA's limited recent window. The longer the club is tracked, the richer the archive becomes.</p><div id="historyStats" class="metricGrid"></div><div id="dbState" class="dbState">DB</div></section>
 <section class="panel"><div class="panelHead"><h3>Club+ Features</h3></div><div class="featureGrid"><article><b>Full History</b><p>Permanent archive of captured matches.</p></article><article><b>Sessions</b><p>Automatic session length, W-D-L and mode splits.</p></article><article><b>Advanced Season</b><p>Second assists, passing, tackles, shots and more event-level data.</p></article><article><b>Records</b><p>Club and player records across the archive.</p></article></div></section></div>
 </section>
+<section id="matchPage73" class="matchPage73" hidden aria-live="polite">
+  <div class="matchPageTop73"><button id="matchBack73" class="matchBack73" type="button">← Back to matches</button><span id="matchCoverage73"></span></div>
+  <section id="matchScoreboard73" class="matchScoreboard73"></section>
+  <section class="matchDetail73">
+    <div id="matchTabs73" class="matchTabs73" role="tablist"><button class="active" data-match-tab73="overview">Overview</button><button data-match-tab73="players">Player Stats</button><button data-match-tab73="formations">Formations</button></div>
+    <div id="matchTabContent73" class="matchTabContent73"></div>
+  </section>
+</section>
 <section id="playerPage69" class="playerPage69" hidden aria-live="polite">
   <div class="playerPageTop69"><button id="playerBack69" class="playerBack69" type="button">← Back</button><span id="playerCoverage69"></span></div>
   <section class="playerHero69">
@@ -235,4 +243,4 @@
     <div id="playerTabContent69" class="playerTabContent69"></div>
   </section>
 </section></main>
-<footer id="appFooter51">CLUBROOM FC27 · v71</footer><script src="/cards/characters.js"></script><script src="/charts/playerRadarConfig.generated.js"></script><script src="/cards/duoCategories.generated.js"></script><script src="/app.js"></script></body></html>
+<footer id="appFooter51">CLUBROOM FC27 · v74</footer><script src="/cards/characters.js"></script><script src="/charts/playerRadarConfig.generated.js"></script><script src="/matchMetricsConfig.generated.js"></script><script src="/cards/duoCategories.generated.js"></script><script src="/app.js"></script></body></html>
