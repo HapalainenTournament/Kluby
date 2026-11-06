@@ -121,12 +121,25 @@ function render(id,d,searchClub=null){
  let division=P(searchClub,["currentDivision","division","divisionNumber","div"],P(o,["currentDivision","division","divisionNumber","div"],P(info,["division","currentDivision"],"—")));
  let bestDivision=P(searchClub,["bestDivision"],P(o,["bestDivision"],"—"));
  let crestId=P(info?.customKit,["crestAssetId"],P(info,["crestAssetId"],null));
+ const stadium=P(info?.customKit,["stadName"],P(info,["stadName","stadiumName"],""));
+ const regionText=P(info,["regionName","region","regionText"],P(o,["regionName","region","regionText"],""));
  $("#clubName").textContent=name;
  const fallback=(name.match(/[A-Z0-9]/ig)||["C"]).slice(0,2).join("").toUpperCase();$("#clubFallback").textContent=fallback;
  const crest=$("#clubCrest"); crest.hidden=true; $("#clubFallback").hidden=false;
- if(crestId){ crest.src=`https://eafc24.content.easports.com/fifa/fltOnlineAssets/24B23FDE-7835-41C2-87A2-F453DFDB2E82/2024/fcweb/crests/256x256/l${crestId}.png`; crest.onload=()=>{crest.hidden=false;$("#clubFallback").hidden=true}; crest.onerror=()=>{crest.hidden=true;$("#clubFallback").hidden=false}; }$("#divisionBadge").textContent=`DIV ${division}`;$("#skillBadge").textContent=`SR ${skill}`;$("#clubIdBadge").textContent=`ID ${id}`;$("#recW").textContent=`${w}W`;$("#recD").textContent=`${dr}D`;$("#recL").textContent=`${l}L`;
+ if(crestId){ crest.src=`https://eafc24.content.easports.com/fifa/fltOnlineAssets/24B23FDE-7835-41C2-87A2-F453DFDB2E82/2024/fcweb/crests/256x256/l${crestId}.png`; crest.onload=()=>{crest.hidden=false;$("#clubFallback").hidden=true}; crest.onerror=()=>{crest.hidden=true;$("#clubFallback").hidden=false}; }
+ $("#divisionBadge").textContent=`DIV ${division}`;$("#skillBadge").textContent=`SR ${skill}`;
+ const idBadge=$("#clubIdBadge"); if(idBadge){idBadge.childNodes[0].nodeValue=`ID ${id} `;idBadge.onclick=async()=>{try{await navigator.clipboard.writeText(String(id));idBadge.classList.add("copied");setTimeout(()=>idBadge.classList.remove("copied"),900)}catch{}}}
+ const meta44=$("#clubMeta44"); if(meta44){const bits=[regionText,stadium?`⌂ ${stadium}`:""] .filter(Boolean);meta44.textContent=bits.join(" · ");meta44.hidden=!bits.length}
+ $("#recW").textContent=`${w}W`;$("#recD").textContent=`${dr}D`;$("#recL").textContent=`${l}L`;
  let form=ms.slice(0,10).map(m=>m.result);$("#formPills").innerHTML=form.map(x=>`<span class="formPill ${x.toLowerCase()}">${x}</span>`).join("");let fw=form.filter(x=>x==="W").length,fd=form.filter(x=>x==="D").length,fl=form.filter(x=>x==="L").length;$("#formSummary").textContent=form.length?`${fw}W · ${fd}D · ${fl}L`:"—";
  let wr=g?(w/g*100):0,gd=gf-ga,winStreak=N(P(o,["wstreak","winStreak"],0)),unbeaten=N(P(o,["unbeatenstreak","unbeatenStreak"],0)),promotions=N(P(o,["promotions"],0)),relegations=N(P(o,["relegations"],0)),cleanSheets=N(P(searchClub||{},["cleanSheets"],P(o,["cleanSheets"],0)));
+ const goalsPerGame=g?gf/g:null, concededPerGame=g?ga/g:null, pointsPerGame=g?((w*3+dr)/g):null;
+ const hG=$("#heroGoalsPerGame44"),hC=$("#heroConcededPerGame44"),hP=$("#heroPointsPerGame44"),hW=$("#heroWinRate44");
+ if(hG)hG.textContent=goalsPerGame!=null?goalsPerGame.toFixed(2):"—";
+ if(hC)hC.textContent=concededPerGame!=null?concededPerGame.toFixed(2):"—";
+ if(hP)hP.textContent=pointsPerGame!=null?pointsPerGame.toFixed(2):"—";
+ if(hW)hW.textContent=g?wr.toFixed(1)+"%":"—";
+ const topNav44=$("#clubTabs"); if(topNav44)topNav44.hidden=false;
  $("#clubStats").innerHTML=`
  <div class="clubStatHighlights">
   <div class="heroStat"><small>DIVIZE</small><b>${division!=="—"?division:"—"}</b><span>best ${bestDivision!=="—"?bestDivision:"—"}</span></div>
@@ -148,6 +161,7 @@ function render(id,d,searchClub=null){
  $("#matchList").innerHTML=ms.length?ms.map((m,i)=>`<div class="match" data-m="${i}"><span>${m.date?m.date.toLocaleDateString("cs-CZ"):"—"}</span><span>${m.type}</span><span class="home">${m.ours}</span><span class="score">${m.og}:${m.tg}</span><b>${m.opp}</b><b class="${m.result.toLowerCase()}">${m.result}</b></div>`).join(""):'<div class="msg" style="padding:20px">EA neposlalo historii zápasů.</div>';
  const om=$("#overviewMatches"); if(om)om.innerHTML=ms.length?ms.slice(0,5).map(m=>`<div class="overviewMatch"><span class="resultBadge ${m.result.toLowerCase()}">${m.result}</span><div><strong>${escapeHtml(m.opp||"Soupeř")}</strong><small>${m.type} · ${m.date?m.date.toLocaleDateString("cs-CZ"):"—"}</small></div><b>${m.og}:${m.tg}</b></div>`).join(""):'<div class="msg">Zatím bez zápasů.</div>';
  const ol=$("#overviewLeaders"); if(ol)ol.innerHTML=ps.slice().sort((a,b)=>b.ga-a.ga).slice(0,4).map((p,i)=>`<div class="overviewLeader"><span class="leaderRank">${i+1}</span><div><strong>${escapeHtml(p.name)}</strong><small>${p.games} zápasů · ${p.goals}G + ${p.assists}A</small></div><b>${p.rating?p.rating.toFixed(1):"—"}</b></div>`).join("");
+ renderOverviewThreats44();
  document.querySelectorAll("[data-m]").forEach(x=>x.onclick=()=>showMatch(+x.dataset.m));
  let er=d.errors||{}; const statusEl=$("#status"); if(statusEl) statusEl.innerHTML=["info","overall","career","members","achievements","league","playoff","friendly"].map(k=>`<div class="endpoint"><span>${k}</span><b>${er[k]?"ERROR":"OK"}</b></div>`).join("");
  fillCompare();$("#home").hidden=true;$("#dash").hidden=false;window.scrollTo({top:0,behavior:"smooth"});loadHistory(id)
@@ -246,12 +260,12 @@ async function loadHistory(id){
   const games=h.matches.length,w=h.matches.filter(x=>x.result==="W").length,d=h.matches.filter(x=>x.result==="D").length,l=games-w-d,goals=h.matches.reduce((s,x)=>s+N(x.goals),0),conceded=h.matches.reduce((s,x)=>s+N(x.opponent_goals),0),sa=h.players.reduce((s,x)=>s+N(x.second_assists),0);
   $("#historyStats").innerHTML=metric("STORED MATCHES",games)+metric("DB WIN RATE",games?(w/games*100).toFixed(1)+"%":"—")+metric("W-D-L",`${w}-${d}-${l}`)+metric("STORED GOALS",goals)+metric("GOAL DIFF",`${goals-conceded>=0?"+":""}${goals-conceded}`)+metric("2ND ASSISTS",sa);
   const snaps=[...h.snapshots].reverse().filter(x=>x.skill_rating!=null);$("#skillHistory").innerHTML=snaps.length>1?`<div class="panelHead"><h3>Skill Rating History</h3><span>${snaps.length} snapshots</span></div><div class="chart">${snaps.slice(-80).map(x=>{let vals=snaps.slice(-80).map(y=>N(y.skill_rating)),mn=Math.min(...vals),mx=Math.max(...vals),height=mx===mn?50:10+(N(x.skill_rating)-mn)/(mx-mn)*90;return `<div class="bar" title="${Math.round(N(x.skill_rating))}" style="height:${height}%"></div>`}).join("")}</div>`:"";
-  renderArchiveMatches(h.matches||[]);renderAnalytics(h,a);renderFun(h,a);renderDbPlayers(h);compare();
+  renderArchiveMatches(h.matches||[]);renderAnalytics(h,a);renderFun(h,a);renderDbPlayers(h);renderOverviewThreats44(h);renderOverviewSessions44(a);renderOverviewPerformance44(h);compare();
  }catch(e){$("#dbState").textContent="DB ERROR";$("#chemistry").innerHTML=`<div class="msg">${escapeHtml(e.message)}</div>`}
 }
 function renderDbPlayers(h){
  const db=new Map((h.players||[]).map(x=>[String(x.player_id),x]));
- document.querySelectorAll("[data-p]").forEach(el=>{const p=S.players.find(q=>String(q.id)===String(el.dataset.p)),q=db.get(String(el.dataset.p));if(p&&q?.pro_name)el.innerHTML=`<b>${escapeHtml(q.pro_name)}</b>${p.accountName&&p.accountName!==q.pro_name?`<small class="subname">${escapeHtml(p.accountName)}</small>`:""}`})
+ document.querySelectorAll("[data-p]").forEach(el=>{const p=S.players.find(q=>String(q.id)===String(el.dataset.p)),q=db.get(String(el.dataset.p));if(!(p&&q?.pro_name))return;const card=el.querySelector?.('player-card');if(card){p.accountName=p.accountName||p.name;p.name=q.pro_name;card.setAttribute('player-name',q.pro_name);const meta=el.querySelector('.playerCollectibleMeta b');if(meta)meta.textContent=q.pro_name;return}el.innerHTML=`<b>${escapeHtml(q.pro_name)}</b>${p.accountName&&p.accountName!==q.pro_name?`<small class="subname">${escapeHtml(p.accountName)}</small>`:""}`})
 }
 function renderArchiveMatches(matches){
  if(!matches.length)return;
@@ -340,7 +354,7 @@ function showPlayerLive(id){
 }
 function openTab(tab,push=true){document.querySelectorAll("[data-tab]").forEach(b=>b.classList.toggle("active",b.dataset.tab===tab));document.querySelectorAll("[data-pane]").forEach(p=>p.classList.toggle("active",p.dataset.pane===tab));if(push&&S.club)history.replaceState(null,"",`/club/${S.club.id}/${tab==="stats"?"":tab}`.replace(/\/$/,""))}
 document.querySelectorAll("[data-tab]").forEach(b=>b.onclick=()=>openTab(b.dataset.tab));
-$("#openSearch").onclick=()=>{history.replaceState(null,"","/");$("#dash").hidden=true;$("#home").hidden=false;$("#q").focus()};
+$("#openSearch").onclick=()=>{history.replaceState(null,"","/");$("#dash").hidden=true;$("#home").hidden=false;const nav=$("#clubTabs");if(nav)nav.hidden=true;$("#q").focus()};
 // v13 match detail: three explicit views. Formation is shown only when EA actually provides it.
 function showMatchV20(i){
  const m=S.matches[i],ps=m.players.map(matchPlayer),r=m.oursRaw||{},o=m.oppRaw||{};
@@ -427,6 +441,33 @@ renderFun=function(h,a){
 function posGroup(pos){const p=String(pos||'').toUpperCase();if(/GK|GOAL/.test(p))return'GK';if(/CB|LB|RB|LWB|RWB|DEF/.test(p))return'DEF';if(/CM|CAM|CDM|LM|RM|MID/.test(p))return'MID';return'FWD'}
 function playerAdvancedForCard(p){return advancedFor(p)}
 function creativityScore(p){const a=playerAdvancedForCard(p),m=Math.max(1,N(a.trackedMatches));return ((N(a.dribbles)+N(a.secondAssists)*2)/m)*90/90}
+function cardClubInfo(){return (S.raw?.info&&(S.raw.info[S.club?.id]||A(S.raw.info)[0]))||{}}
+function cardCrestUrl(){const info=cardClubInfo(),crestId=P(info?.customKit,['crestAssetId'],P(info,['crestAssetId'],null));return crestId?crestUrl(crestId):''}
+function eaKitColor(value,fallback='#d9dde3'){const n=Number(value);if(!Number.isFinite(n)||n<0)return fallback;return `#${(n&0xffffff).toString(16).padStart(6,'0')}`}
+function cardJerseyColor(){const info=cardClubInfo();return eaKitColor(P(info?.customKit,['kitColor1'],null))}
+function cardPos(pos){const raw=String(pos||'').trim().toUpperCase();if(raw&&raw.length<=4&&!['FORWARD','MIDFIELDER','DEFENDER','GOALKEEPER'].includes(raw))return raw;return posGroup(pos)}
+function cardAttr(v){return escapeHtml(String(v??'')).replace(/`/g,'&#096;')}
+function playerCardMarkup(p){
+ const a=playerAdvancedForCard(p),games=N(a.games||p.games),hasGames=games>0;
+ const rating=N(a.rating||p.rating),ga=N(a.goals||p.goals)+N(a.assists||p.assists);
+ const shots=a.shots!=null?N(a.shots):(p.shots?N(p.shots):null);
+ const passRate=a.passRate!=null?Number(a.passRate):(p.passRate?Number(p.passRate):null);
+ const shotRate=shots&&shots>0?(N(a.goals||p.goals)/shots*100):(p.shotRate?Number(p.shotRate):null);
+ const value=(v,fmt)=>v==null||!Number.isFinite(Number(v))?'--':fmt(Number(v));
+ const overall=N(p.overall)>0?String(N(p.overall)):'--';
+ const crest=cardCrestUrl(),jersey=cardJerseyColor();
+ const playerImg=`/cards/players/${encodeURIComponent(String(p.id))}/base.png`;
+ const stats=[
+  ['RAT', rating>0?rating:null, v=>v.toFixed(1)],
+  ['G+A/G', hasGames?ga/games:null, v=>v.toFixed(2)],
+  ['G/G', hasGames?N(a.goals||p.goals)/games:null, v=>v.toFixed(2)],
+  ['A/G', hasGames?N(a.assists||p.assists)/games:null, v=>v.toFixed(2)],
+  ['PASS', passRate, v=>`${v.toFixed(1)}%`],
+  ['SHOT', shotRate, v=>`${v.toFixed(1)}%`]
+ ];
+ const attrs=stats.map((x,i)=>`stat-${i+1}-label="${cardAttr(x[0])}" stat-${i+1}-value="${cardAttr(value(x[1],x[2]))}"`).join(' ');
+ return `<article class="playerCollectibleWrap" data-p="${cardAttr(p.id)}"><player-card player-id="${cardAttr(p.id)}" player-name="${cardAttr(p.name)}" position="${cardAttr(cardPos(p.position))}" overall="${cardAttr(overall)}" crest-url="${cardAttr(crest)}" jersey-color="${cardAttr(jersey)}" player-image="${cardAttr(playerImg)}" ${attrs} matches="${cardAttr(hasGames?games:'--')}" goals="${cardAttr(hasGames?N(a.goals||p.goals):'--')}" assists="${cardAttr(hasGames?N(a.assists||p.assists):'--')}" motm="${cardAttr(hasGames?N(a.motm||p.motm):'--')}"></player-card><div class="playerCollectibleMeta"><b>${escapeHtml(p.name)}</b><span>Open profile →</span></div></article>`
+}
 function renderPlayerCards(){
  const host=$('#playerCards');if(!host)return;let list=S.players.slice();const rank=$('#playerRank')?.value||'squad';
  if(rank!=='squad')list.sort((a,b)=>{if(rank==='creativity')return creativityScore(b)-creativityScore(a);return N(playerSortValue(b,rank))-N(playerSortValue(a,rank))});
@@ -434,7 +475,7 @@ function renderPlayerCards(){
  $('#positionSummary').innerHTML=`<span class="posPill gk">🧤 Goalkeepers: ${counts.GK}</span><span class="posPill def">🛡 Defenders: ${counts.DEF}</span><span class="posPill mid">🎯 Midfielders: ${counts.MID}</span><span class="posPill fwd">⚡ Forwards: ${counts.FWD}</span>`;
  const creative=list.map(p=>({p,s:creativityScore(p),a:playerAdvancedForCard(p)})).filter(x=>x.a.trackedMatches).sort((a,b)=>b.s-a.s).slice(0,5);
  $('#creativityRanking').innerHTML=creative.length?creative.map((x,i)=>`<span><b>#${i+1} ${escapeHtml(x.p.name)}</b><em>${x.s.toFixed(2)}</em></span>`).join(''):'<small>Čekám na match-level dribbles / second assists.</small>';
- host.innerHTML=list.map(p=>{const a=playerAdvancedForCard(p),games=Math.max(1,N(p.games)),pr=a.passRate!=null?pct(a.passRate):(p.passRate?pct(p.passRate):'—'),sr=p.shotRate?pct(p.shotRate):(a.shots?`${(N(p.goals)/N(a.shots)*100).toFixed(0)}%`:'—');return `<article class="playerCard" data-p="${p.id}"><div class="pcHead"><span class="pcPos ${posGroup(p.position).toLowerCase()}">${escapeHtml(String(p.position||posGroup(p.position)))}</span><div><h4>${escapeHtml(p.name)}</h4>${p.accountName&&p.accountName!==p.name?`<small>${escapeHtml(p.accountName)}</small>`:''}</div><strong>${p.rating?p.rating.toFixed(1):'—'}<small>Avg Rating</small></strong></div><div class="pcCore"><div><b>${p.games}</b><span>Games</span></div><div><b>${p.goals}</b><span>Goals</span></div><div><b>${p.assists}</b><span>Assists</span></div><div><b>${p.motm}</b><span>MOTM</span></div></div><div class="pcRates"><div><b>${p.winRate?pct(p.winRate):'—'}</b><span>Win Rate</span></div><div><b>${pr}</b><span>Pass %</span></div><div><b>${sr}</b><span>Shot %</span></div></div><div class="pcPer"><div><b>${(p.goals/games).toFixed(2)}</b><span>Goals/Game</span></div><div><b>${(p.assists/games).toFixed(2)}</b><span>Assists/Game</span></div><div><b>${(p.ga/games).toFixed(2)}</b><span>G+A/Game</span></div></div><div class="pcCreative"><span>Creativity</span><b>${a.trackedMatches?creativityScore(p).toFixed(2):'—'}</b><small>${a.trackedMatches||0} captured matches</small></div></article>`}).join('');
+ host.innerHTML=list.map(playerCardMarkup).join('');
  host.querySelectorAll('[data-p]').forEach(x=>x.onclick=()=>showPlayer(x.dataset.p));$('#playerCount').textContent=`${list.length} hráčů`;
 }
 document.addEventListener('change',e=>{if(e.target.id==='playerRank')renderPlayerCards()});
@@ -1043,3 +1084,81 @@ v37RenderPartnerships=function(){};
 })();
 
 const __renderAnalyticsV43=renderAnalytics;renderAnalytics=function(h,a){__renderAnalyticsV43(h,a);v43RenderSessions(a)};
+
+/* v44 step 3 — Overview Key Threats + Recent Sessions. UI only; no new data sources. */
+function overviewPlayerName44(p){return p?.pro_name||p?.player_name||p?.name||'—'}
+function renderOverviewThreats44(h=null){
+ const host=document.getElementById('overviewThreats44'); if(!host)return;
+ const archive=Array.isArray(h?.players)&&h.players.length?h.players:null;
+ const players=(archive||S.players||[]).filter(Boolean);
+ if(!players.length){host.innerHTML='<div class="msg">No player data available.</div>';return}
+ const games=p=>Math.max(0,N(archive?p.matches:p.games));
+ const goals=p=>N(p.goals), assists=p=>N(p.assists), shots=p=>N(p.shots);
+ const named=p=>escapeHtml(String(overviewPlayerName44(p)));
+ const cards=[];
+ const scorer=players.slice().sort((a,b)=>goals(b)-goals(a))[0];
+ if(scorer){const g=games(scorer);cards.push({tone:'cyan',icon:'⚽',label:'TOP SCORER',name:named(scorer),value:g?(goals(scorer)/g).toFixed(2):String(goals(scorer)),metric:g?'Goals / game':'Goals',meta:`${goals(scorer)} goals · ${g||0} matches`})}
+ const clinical=players.filter(p=>shots(p)>0).sort((a,b)=>(goals(b)/shots(b))-(goals(a)/shots(a)))[0];
+ if(clinical){cards.push({tone:'green',icon:'◎',label:'CLINICAL',name:named(clinical),value:(goals(clinical)/shots(clinical)*100).toFixed(1)+'%',metric:'Shot conversion',meta:`${goals(clinical)} goals · ${shots(clinical)} shots`})}
+ const creator=players.filter(p=>games(p)>0).sort((a,b)=>(assists(b)/games(b))-(assists(a)/games(a)))[0];
+ if(creator){const g=games(creator);cards.push({tone:'purple',icon:'⌘',label:'CREATOR',name:named(creator),value:(assists(creator)/g).toFixed(2),metric:'Assists / game',meta:`${assists(creator)} assists · ${g} matches`})}
+ if(archive){
+  const defenders=players.map(p=>({...p,_def:N(p.interceptions)+N(p.tackles_won)})).filter(p=>p._def>0&&games(p)>0).sort((a,b)=>(b._def/games(b))-(a._def/games(a)));
+  const defender=defenders[0];
+  if(defender){cards.push({tone:'gold',icon:'◇',label:'DEFENSIVE',name:named(defender),value:(defender._def/games(defender)).toFixed(2),metric:'Def. actions / game',meta:`${N(defender.interceptions)} interceptions · ${N(defender.tackles_won)} tackles won`})}
+ }
+ host.innerHTML=cards.slice(0,4).map(c=>`<article class="threatCard44 ${c.tone}"><div class="threatLabel44"><span>${c.icon}</span><b>${c.label}</b></div><h4>${c.name}</h4><strong>${c.value}</strong><p>${c.metric}</p><small>${c.meta}</small></article>`).join('')||'<div class="msg">No supported threat metrics available.</div>';
+}
+function overviewDuration44(min){min=Math.max(0,Math.round(N(min)));const h=Math.floor(min/60),m=min%60;return h?`${h}h ${m}m`:`${m}m`}
+function overviewSessionDate44(v){const d=new Date(v);return Number.isNaN(d.getTime())?'—':d.toLocaleDateString('en-GB',{weekday:'short',day:'numeric',month:'short'})}
+function renderOverviewSessions44(a=null){
+ const host=document.getElementById('overviewSessions44'); if(!host)return;
+ const sessions=a?.sessionMeta?.sessions||a?.sessions||[];
+ if(!sessions.length){host.innerHTML='<div class="msg">No archived sessions yet.</div>';return}
+ host.innerHTML=sessions.slice(0,2).map(s=>{const x=s.all||{},tp=x.topPlayer,ms=s.matches||[];return `<button class="overviewSessionCard44 ${s.active?'activeRun':''}" data-goto="sessions"><div class="overviewSessionTop44"><div><span>▣</span><b>${overviewSessionDate44(s.startedAt)}</b></div><small>${overviewDuration44(s.durationMinutes)}</small></div><div class="overviewSessionBody44"><div class="overviewSessionRecord44"><strong>${N(x.wins)}-${N(x.draws)}-${N(x.losses)}</strong><span>Record</span></div><div class="overviewSessionMini44"><div><b>${N(x.goals)}</b><span>Goals</span></div><div><b>${N(x.pointsPerMatch).toFixed(2)}</b><span>Avg pts</span></div><div><b>${N(x.teamRating)>0?N(x.teamRating).toFixed(2):'—'}</b><span>Team rtg</span></div></div></div><div class="overviewSessionTimeline44">${ms.slice(0,8).map(m=>`<i class="${String(m.result||'').toLowerCase()}" title="${escapeHtml(String(m.opponent||'Opponent'))} ${N(m.goals)}:${N(m.opponent_goals)}"><span>${m.result||'—'}</span><small>${N(m.goals)}:${N(m.opponent_goals)}</small></i>`).join('')}</div><div class="overviewSessionLeader44">${tp?`<span>★ ${escapeHtml(String(tp.player_name||'Player'))}</span><b>${N(tp.rating)>0?N(tp.rating).toFixed(1)+' RTG · ':''}${N(tp.goals)}G ${N(tp.assists)}A</b>`:'<span>Player detail unavailable</span>'}</div></button>`}).join('');
+}
+
+/* v44 step 4 — Overview Performance Center. UI only; uses existing history/player-match data. */
+const overviewPerformance44={history:null,limit:10};
+function overviewPerfName44(p){return String(p?.pro_name||p?.player_name||p?.name||'Player')}
+function overviewPerfDate44(v){const d=new Date(v);return Number.isNaN(d.getTime())?'—':d.toLocaleDateString('en-GB',{day:'2-digit',month:'short'})}
+function overviewPerfSeries44(matches,pms){
+ const byMatch=new Map();
+ for(const r of pms){const k=String(r.match_id);if(!byMatch.has(k))byMatch.set(k,[]);byMatch.get(k).push(r)}
+ const team=matches.map(m=>{const rs=(byMatch.get(String(m.match_id))||[]).map(x=>N(x.rating)).filter(v=>v>0);return rs.length?rs.reduce((a,b)=>a+b,0)/rs.length:null});
+ const players=new Map();
+ for(const r of pms){const rating=N(r.rating);if(!(rating>0))continue;const key=String(r.player_id||r.player_name||'');if(!key)continue;let x=players.get(key);if(!x){x={key,name:overviewPerfName44(r),ratings:new Map(),sum:0,count:0};players.set(key,x)}x.ratings.set(String(r.match_id),rating);x.sum+=rating;x.count++}
+ const minApps=Math.min(2,Math.max(1,matches.length));
+ const top=[...players.values()].filter(x=>x.count>=minApps).sort((a,b)=>(b.sum/b.count)-(a.sum/a.count)||b.count-a.count).slice(0,3).map(x=>({name:x.name,values:matches.map(m=>x.ratings.get(String(m.match_id))??null),avg:x.sum/x.count,count:x.count}));
+ return {team,top};
+}
+function overviewPerfPath44(values,w=700,h=230){
+ const left=42,right=14,top=18,bottom=34,plotW=w-left-right,plotH=h-top-bottom;
+ const x=i=>left+(values.length<=1?plotW/2:i*plotW/(values.length-1));
+ const y=v=>top+(10-Math.max(5,Math.min(10,v)))/5*plotH;
+ const parts=[];let seg=[];
+ values.forEach((v,i)=>{if(v==null||!Number.isFinite(Number(v))){if(seg.length){parts.push(seg);seg=[]}}else seg.push([x(i),y(Number(v))])});if(seg.length)parts.push(seg);
+ return parts.map(a=>a.length===1?`M ${a[0][0]} ${a[0][1]} l .01 .01`:`M ${a.map((p,i)=>`${i?'L ':''}${p[0]} ${p[1]}`).join(' ')}`).join(' ')
+}
+function renderOverviewPerformance44(h=null,limit=null){
+ const chart=document.getElementById('overviewPerformanceChart44'),summary=document.getElementById('overviewPerformanceSummary44'),metrics=document.getElementById('overviewPerformanceMetrics44'),select=document.getElementById('overviewPerformanceRange44');
+ if(!chart||!summary||!metrics)return;
+ if(h)overviewPerformance44.history=h;if(limit)overviewPerformance44.limit=N(limit)||10;
+ const data=overviewPerformance44.history;if(!data?.enabled){chart.innerHTML='<div class="msg">Performance Center needs the Clubroom archive.</div>';summary.innerHTML='';metrics.innerHTML='<div class="msg">No archived performance metrics yet.</div>';return}
+ if(select)select.value=String(overviewPerformance44.limit);
+ const recent=(data.matches||[]).slice(0,overviewPerformance44.limit).reverse();
+ if(!recent.length){chart.innerHTML='<div class="msg">No archived matches yet.</div>';summary.innerHTML='';metrics.innerHTML='<div class="msg">No archived performance metrics yet.</div>';return}
+ const ids=new Set(recent.map(m=>String(m.match_id))),pms=(data.playerMatches||[]).filter(x=>ids.has(String(x.match_id)));
+ const series=overviewPerfSeries44(recent,pms),w=700,hg=230;
+ const grid=[5,6,7,8,9,10].map(v=>{const y=18+(10-v)/5*(hg-18-34);return `<g><line x1="42" y1="${y}" x2="686" y2="${y}"/><text x="8" y="${y+4}">${v.toFixed(1)}</text></g>`}).join('');
+ const labels=recent.map((m,i)=>{if(recent.length>10&&i%2)return'';const x=42+(recent.length<=1?644/2:i*644/(recent.length-1));return `<text class="xLabel" x="${x}" y="218" text-anchor="middle">${overviewPerfDate44(m.played_at)}</text>`}).join('');
+ const lines=[{name:'Team avg',values:series.team,cls:'team'},...series.top.map((x,i)=>({name:x.name,values:x.values,cls:`p${i+1}`}))];
+ const hasRating=lines.some(s=>s.values.some(v=>v!=null));
+ chart.innerHTML=hasRating?`<div class="performanceChartTitle44"><div><b>Match rating trend</b><span>${recent.length} archived matches</span></div></div><svg class="performanceSvg44" viewBox="0 0 ${w} ${hg}" preserveAspectRatio="none"><g class="performanceGrid44">${grid}${labels}</g>${lines.map(s=>`<path class="ratingLine44 ${s.cls}" d="${overviewPerfPath44(s.values,w,hg)}"/>`).join('')}${lines.map(s=>s.values.map((v,i)=>v==null?'':`<circle class="ratingDot44 ${s.cls}" cx="${42+(s.values.length<=1?644/2:i*644/(s.values.length-1))}" cy="${18+(10-Math.max(5,Math.min(10,N(v))))/5*(hg-18-34)}" r="2.8"><title>${escapeHtml(s.name)} · ${N(v).toFixed(2)}</title></circle>`).join('')).join('')}</svg><div class="performanceLegend44">${lines.map(s=>`<span><i class="${s.cls}"></i>${escapeHtml(s.name)}</span>`).join('')}</div>`:'<div class="msg">These matches do not contain archived rating data.</div>';
+ const wins=recent.filter(m=>m.result==='W').length,draws=recent.filter(m=>m.result==='D').length,losses=recent.length-wins-draws,goals=recent.reduce((s,m)=>s+N(m.goals),0),teamRatings=series.team.filter(v=>v!=null),avgRating=teamRatings.length?teamRatings.reduce((a,b)=>a+b,0)/teamRatings.length:null;
+ summary.innerHTML=`<div class="performanceSummaryLabel44">WINDOW SUMMARY</div><div class="performanceRecord44"><b class="w">${wins}</b><span>W</span><i>–</i><b class="d">${draws}</b><span>D</span><i>–</i><b class="l">${losses}</b><span>L</span></div><div class="performanceSummaryRows44"><div><span>Goals scored</span><b>${goals}</b></div><div><span>Win rate</span><b>${(wins/recent.length*100).toFixed(0)}%</b></div><div><span>Avg team rating</span><b class="positive">${avgRating!=null?avgRating.toFixed(2):'—'}</b></div></div>${series.top[0]?`<div class="performanceTopPlayer44"><span>TOP RATED</span><b>${escapeHtml(series.top[0].name)}</b><small>${series.top[0].avg.toFixed(2)} avg · ${series.top[0].count} matches</small></div>`:''}`;
+ const passAttempts=pms.reduce((s,x)=>s+N(x.pass_attempts),0),passes=pms.reduce((s,x)=>s+N(x.passes_made),0),shots=pms.reduce((s,x)=>s+N(x.shots),0),playerGoals=pms.reduce((s,x)=>s+N(x.goals),0),clean=recent.filter(m=>N(m.opponent_goals)===0).length;
+ const cards=[{icon:'↗',label:'PASS ACCURACY',value:passAttempts?(passes/passAttempts*100).toFixed(1)+'%':'—',meta:passAttempts?`${passes} / ${passAttempts} completed`:'No pass attempts captured',tone:'cyan'},{icon:'◎',label:'SHOT CONVERSION',value:shots?(playerGoals/shots*100).toFixed(1)+'%':'—',meta:shots?`${playerGoals} goals · ${shots} shots`:'No shots captured',tone:'purple'},{icon:'◇',label:'CLEAN SHEETS',value:String(clean),meta:`${clean} of ${recent.length} matches`,tone:'green'}];
+ metrics.innerHTML=cards.map(c=>`<article class="performanceMetric44 ${c.tone}"><span class="metricIcon44">${c.icon}</span><div><small>${c.label}</small><b>${c.value}</b><em>${c.meta}</em></div></article>`).join('');
+}
+document.addEventListener('change',e=>{if(e.target?.id==='overviewPerformanceRange44')renderOverviewPerformance44(null,e.target.value)});

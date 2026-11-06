@@ -1,21 +1,70 @@
-<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Clubroom FC27 v43</title><link rel="stylesheet" href="/style.css"></head><body>
-<header class="topbar"><a class="brand" href="/" aria-label="Clubroom homepage"><span class="brandMark">C</span><b>CLUBROOM</b><em>FC27</em></a><div class="topActions"><button id="openSearch" class="iconBtn" title="Search club">⌕</button></div></header>
+<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Clubroom FC27 v47</title><link rel="stylesheet" href="/style.css"><script type="module" src="/cards/player-card.js"></script>
+</head><body>
+<header class="topbar overviewTopbar44">
+  <a class="brand" href="/" aria-label="Clubroom homepage"><span class="brandMark">C</span><b>CLUBROOM</b><em>FC27</em></a>
+  <nav class="clubTabs topNav44" id="clubTabs" hidden>
+    <button data-tab="stats" class="active">Overview</button><button data-tab="players">Players</button><button data-tab="compare">Compare</button><button data-tab="matches">Matches</button><button data-tab="sessions">Sessions</button><button data-tab="analytics">Analytics</button><button data-tab="fun">Fun</button><button data-tab="plus" class="clubPlusNav44">♛ Club+</button>
+  </nav>
+  <div class="topActions"><button id="openSearch" class="iconBtn" title="Search club" aria-label="Search club">⌕</button></div>
+</header>
 <main class="shell">
 <section id="home" class="searchPage"><div class="searchIntro"><span class="kicker">EA SPORTS FC 27 · PRO CLUBS</span><h1>Search Pro Clubs Stats</h1><p>Search any EA FC 27 Pro Clubs team and open detailed stats, players, match history, form and analytics.</p></div><form id="search" class="searchPanel"><div class="searchInputWrap"><input id="q" placeholder="Enter club name…" required><span>⌕</span></div><div class="searchActions"><select id="platform"><option value="common-gen5">PS5 / Xbox Series / PC</option><option value="common-gen4">PS4 / Xbox One</option><option value="nx">Switch</option></select><button>Search</button></div></form><div id="results" class="results searchResults"></div></section>
 <section id="dash" hidden>
-<section class="clubHero"><div class="clubIdentity"><div id="clubLogo" class="clubLogo"><img id="clubCrest" alt="Klubový crest" hidden><span id="clubFallback">C</span></div><div><span class="kicker">CLUB PROFILE</span><h2 id="clubName">—</h2><div class="clubBadges"><span id="divisionBadge" class="divisionBadge">DIV —</span><span id="skillBadge" class="softBadge">SR —</span><span id="clubIdBadge" class="softBadge">ID —</span></div></div></div><div class="recordLine"><b class="win" id="recW">0W</b><b class="draw" id="recD">0D</b><b class="loss" id="recL">0L</b></div><div class="formBlock"><span>RECENT FORM</span><div id="formPills" class="formPills"></div><b id="formSummary"></b></div></section>
-<nav class="clubTabs" id="clubTabs"><button data-tab="stats" class="active">Overview</button><button data-tab="players">Players</button><button data-tab="compare">Compare</button><button data-tab="matches">Matches</button><button data-tab="sessions">Sessions</button><button data-tab="analytics">Analytics</button><button data-tab="fun">Fun</button><button data-tab="plus">Club+</button></nav>
-<div class="tabPane active" data-pane="stats">
-<div class="overviewLayout">
-  <div class="overviewMain">
-    <section class="panel statPanel"><div class="panelHead"><h3>Club Statistics</h3><span>EA LIVE</span></div><div id="clubStats" class="metricGrid"></div></section>
-    <section class="panel performancePanel"><div class="panelHead"><h3>Performance</h3><span>RECENT + ARCHIVE</span></div><div id="performanceStats" class="metricGrid compact"></div><div id="skillHistory"></div></section>
+<section class="clubHero overviewHero44">
+  <div class="heroIdentity44">
+    <div id="clubLogo" class="clubLogo heroCrest44"><img id="clubCrest" alt="Club crest" hidden><span id="clubFallback">C</span></div>
+    <div class="heroClubCopy44">
+      <span class="kicker">CLUB PROFILE</span>
+      <h2 id="clubName">—</h2>
+      <p id="clubMeta44" class="heroMeta44" hidden></p>
+      <div class="clubBadges heroBadges44">
+        <span id="divisionBadge" class="divisionBadge">DIV —</span>
+        <span id="skillBadge" class="softBadge">SR —</span>
+        <button id="clubIdBadge" class="softBadge clubIdCopy44" type="button" title="Copy club ID">ID — <span aria-hidden="true">⧉</span></button>
+      </div>
+    </div>
   </div>
-  <aside class="overviewSide">
-    <section class="panel sidePanel"><div class="panelHead"><h3>Recent Matches</h3><button class="textBtn" data-goto="matches">View all</button></div><div id="overviewMatches" class="overviewMatches"></div></section>
-    <section class="panel sidePanel"><div class="panelHead"><h3>Squad Leaders</h3><button class="textBtn" data-goto="players">Squad</button></div><div id="overviewLeaders" class="overviewLeaders"></div></section>
-  </aside>
+  <div class="heroDivider44" aria-hidden="true"></div>
+  <div class="heroPerformance44">
+    <div class="heroPerformanceTop44">
+      <div class="heroRecord44"><span>RECORD (W-D-L)</span><div><b class="win" id="recW">0W</b><i>–</i><b class="draw" id="recD">0D</b><i>–</i><b class="loss" id="recL">0L</b></div></div>
+      <div class="formBlock heroForm44"><span>RECENT FORM</span><div id="formPills" class="formPills"></div><b id="formSummary" hidden></b></div>
+    </div>
+    <div class="heroMetrics44">
+      <div><b id="heroGoalsPerGame44">—</b><span>GOALS / GAME</span></div>
+      <div class="negative"><b id="heroConcededPerGame44">—</b><span>CONCEDED / GAME</span></div>
+      <div class="positive"><b id="heroPointsPerGame44">—</b><span>POINTS / GAME</span></div>
+      <div><b id="heroWinRate44">—</b><span>WIN RATE</span></div>
+    </div>
+  </div>
+</section>
+<div class="tabPane active" data-pane="stats">
+<div class="overviewGrid44">
+  <div class="overviewLeft44">
+    <section class="overviewSection44 threatSection44">
+      <div class="overviewSectionHead44"><div><span class="kicker">SQUAD SIGNALS</span><h3>Key Threats</h3></div><button class="overviewLink44" data-goto="players">View squad →</button></div>
+      <div id="overviewThreats44" class="threatGrid44"><div class="msg">Player data is loading.</div></div>
+    </section>
+    <section class="overviewSection44 sessionsOverview44">
+      <div class="overviewSectionHead44"><div><span class="kicker">CLUBROOM ARCHIVE</span><h3>Recent Sessions</h3></div><button class="overviewLink44" data-goto="sessions">View All Sessions →</button></div>
+      <div id="overviewSessions44" class="overviewSessions44"><div class="msg">Session data loads from the archive.</div></div>
+    </section>
+  </div>
+  <div class="overviewRight44">
+    <section class="overviewSection44 performanceCenter44">
+      <div class="overviewSectionHead44 performanceHead44">
+        <div><span class="kicker">RECENT PERFORMANCE</span><h3>Performance Center</h3></div>
+        <label class="performanceRange44"><span>Window</span><select id="overviewPerformanceRange44"><option value="5">Last 5 Matches</option><option value="10" selected>Last 10 Matches</option><option value="20">Last 20 Matches</option></select></label>
+      </div>
+      <div class="performanceLayout44">
+        <div id="overviewPerformanceChart44" class="performanceChart44"><div class="msg">Archive ratings are loading.</div></div>
+        <aside id="overviewPerformanceSummary44" class="performanceSummary44"></aside>
+      </div>
+    </section>
+    <section id="overviewPerformanceMetrics44" class="performanceMetricStrip44"><div class="msg">Performance metrics are loading.</div></section>
+  </div>
 </div>
+<div class="overviewLegacySink44" hidden><div id="clubStats"></div><div id="performanceStats"></div><div id="skillHistory"></div><div id="overviewMatches"></div><div id="overviewLeaders"></div></div>
 </div>
 <div class="tabPane" data-pane="players"><section class="playersPage"><div id="positionSummary" class="positionSummary"></div><section class="creativityPanel"><div><span class="lockDot">✦</span><div><b>Creativity ranking</b><small>Completed dribbles + second assists per 90 from captured match data.</small></div></div><div id="creativityRanking" class="creativityRanking"></div></section><div class="playersToolbar"><span>Rank by</span><select id="playerRank"><option value="squad">Squad order</option><option value="rating">Avg rating</option><option value="goals">Goals</option><option value="assists">Assists</option><option value="ga">G+A</option><option value="passRate">Pass %</option><option value="shotRate">Shot %</option><option value="creativity">Creativity</option></select><span id="playerCount"></span></div><div id="playerCards" class="playerCards"></div></section></div>
 <div class="tabPane" data-pane="compare"><section class="panel comparePanel"><div class="panelHead"><h3>Player Compare</h3><span>career + Clubroom archive</span></div><div class="compareControls"><select id="cmpA"></select><b>VS</b><select id="cmpB"></select></div><div id="compareCoverage" class="compareCoverage"></div><div id="compareBody"></div></section></div>
