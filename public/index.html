@@ -1,4 +1,4 @@
-<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>CLUBROOM</title><meta name="description" content="Independent club statistics and match insights for EA SPORTS FC Pro Clubs."><meta property="og:title" content="CLUBROOM"><meta property="og:description" content="Independent club statistics and match insights for EA SPORTS FC Pro Clubs."><meta property="og:image" content="/assets/clubroom-mark.png"><link rel="manifest" href="/manifest.webmanifest"><link rel="icon" type="image/png" href="/assets/clubroom-favicon.png"><link rel="stylesheet" href="/style.css"><link rel="stylesheet" href="/v78/v78.css"><script type="module" src="/cards/player-card.js"></script><script type="module" src="/components/club-crest.js"></script><script type="module" src="/icons/badges/index.js"></script><script type="module" src="/charts/player-radar.js"></script>
+<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>CLUBROOM</title><meta name="description" content="Independent club statistics and match insights for EA SPORTS FC Pro Clubs."><meta property="og:title" content="CLUBROOM"><meta property="og:description" content="Independent club statistics and match insights for EA SPORTS FC Pro Clubs."><meta property="og:image" content="/assets/clubroom-mark.png"><link rel="manifest" href="/manifest.webmanifest"><link rel="icon" type="image/png" href="/assets/clubroom-favicon.png"><link rel="stylesheet" href="/style.css"><link rel="stylesheet" href="/v78/v78.css"><link rel="stylesheet" href="/v81/v81.css"><script type="module" src="/cards/player-card.js"></script><script type="module" src="/components/club-crest.js"></script><script type="module" src="/icons/badges/index.js"></script><script type="module" src="/charts/player-radar.js"></script>
 </head><body>
 <header class="topbar overviewTopbar44">
   <a class="brand" href="/" aria-label="Clubroom homepage"><img class="brandMark" src="/assets/clubroom-mark.png" alt="" aria-hidden="true"><b>CLUBROOM</b></a>
@@ -34,16 +34,7 @@
       </form>
     </div>
   </section>
-  <section class="passPromo78" aria-labelledby="passPromoTitle78">
-    <div class="passPromoCopy78"><span class="passBadge78">PASS</span><h2 id="passPromoTitle78">Clubroom Pass</h2><p>One pass unlocks the full Clubroom experience for every member of your club.</p>
-      <ul class="passBenefits78">
-        <li><i data-v78-icon="archive"></i><span><b>Full match archive</b><small>Every captured match, not just the last 30 days</small></span></li>
-        <li><i data-v78-icon="unlock"></i><span><b>All Misc insights unlocked</b><small>Awards, Habits, Lucky Charm and Wrapped without ads</small></span></li>
-        <li><i data-v78-icon="share"></i><span><b>Clean shareable cards</b><small>PNG exports without the Clubroom watermark</small></span></li>
-        <li><i data-v78-icon="trophy"></i><span><b>Gold club profile</b><small>PASS badge, gold hero and trophy cabinet</small></span></li>
-      </ul></div>
-    <div class="passPromoPrice78"><strong>4 €</strong><span>/ month for your whole club</span><a class="passCta78" href="/pass">See Clubroom Pass</a><small>Cancel anytime · payments launch soon</small></div>
-  </section>
+  <div id="results" class="results searchResults"></div>
   <section class="homeSavedGrid49" aria-label="Saved clubs">
     <article class="homeSavedCard49">
       <div class="homeSavedHead49"><div><span class="kicker">QUICK ACCESS</span><h2>Recent searches</h2></div><button id="clearRecent49" class="homeSavedAction49" type="button">Clear</button></div>
@@ -54,7 +45,12 @@
       <div id="favoriteClubs49" class="homeSavedList49"><div class="homeSavedEmpty49">Star a club to pin it here</div></div>
     </article>
   </section>
-  <div id="results" class="results searchResults"></div>
+  <a class="passStrip78" href="/pass" aria-label="Clubroom Pass – 4 euro per month for your whole club">
+    <span class="passBadge78">PASS</span>
+    <span class="passStripText78"><b>Clubroom Pass</b><span>Full archive, every Misc insight unlocked and a gold club profile – for the whole club.</span></span>
+    <span class="passStripPrice78"><b>4 €</b><small>/ month</small></span>
+    <span class="passStripCta78">See Pass <i data-v78-icon="ticket"></i></span>
+  </a>
   <section class="homeFeatures51" aria-label="Clubroom features">
     <article class="homeFeatureCard51">
       <div class="homeFeatureIcon51" data-home-icon67="featureClubStats"></div>
@@ -103,6 +99,7 @@
   </div>
 </section>
 <div class="tabPane active" data-pane="stats">
+<section id="liveSession81" class="liveSession81" hidden aria-live="polite"></section>
 <section id="clubPulse78" class="clubPulse78" aria-label="Club pulse"></section>
 <div class="overviewGrid44">
   <div class="overviewLeft44">
@@ -259,7 +256,7 @@
 <div class="tabPane" data-pane="plus"><section class="passHero78"><div><span class="passBadge78">PASS</span><h3>Clubroom Pass</h3><p>One subscription for the whole club. Everyone who opens this club gets the Pass benefits – no member accounts needed.</p><div class="passHeroPrice78"><strong>4 €</strong><span>/ month · whole club · cancel anytime</span></div><a class="passCta78" href="/pass">See all benefits</a> <span id="passStatus78" class="passStatus78">Not active for this club</span></div><div class="passArchiveBox78"><span class="kicker">CLUBROOM ARCHIVE</span><div id="historyStats" class="metricGrid"></div><div id="dbState" class="dbState">DB</div></div></section>
 <section class="panel passCompare78"><div class="panelHead"><h3>Free vs Clubroom Pass</h3></div><table class="passTable78"><thead><tr><th></th><th>Free</th><th class="gold">Pass</th></tr></thead><tbody>
 <tr><td>Overview, players, cards, compare, matches</td><td>✓</td><td>✓</td></tr>
-<tr><td>Match archive</td><td>Last 30 days</td><td>Everything captured</td></tr>
+<tr><td>Match archive</td><td>Newest 10 per match type</td><td>Everything captured</td></tr>
 <tr><td>Misc insights (Awards, Habits, Lucky Charm, Wrapped)</td><td>Short ad unlocks 24 h</td><td>Always unlocked</td></tr>
 <tr><td>Shareable PNG cards</td><td>With watermark</td><td>Clean</td></tr>
 <tr><td>Gold club profile &amp; PASS badge</td><td>—</td><td>✓</td></tr>
@@ -289,4 +286,4 @@
     <div id="playerTabContent69" class="playerTabContent69"></div>
   </section>
 </section></main>
-<footer id="appFooter51" class="legalFooter"><div><strong>CLUBROOM</strong> <nav aria-label="Legal and informational links"><a href="/about">About</a><a href="/terms">Terms</a><a href="/privacy">Privacy</a><a href="/cookies">Cookies</a><a href="/removal">Removal request</a><a href="/pass/checkout">Clubroom Pass</a><button type="button" id="cookieSettingsLink">Cookie settings</button></nav></div><p>CLUBROOM is not affiliated with, endorsed or sponsored by Electronic Arts Inc. EA SPORTS FC is a trademark of Electronic Arts Inc.</p></footer><script src="/legal-client.js" defer></script><script src="/cards/characters.js"></script><script src="/cards/player-avatar.js"></script><script src="/charts/playerRadarConfig.generated.js"></script><script src="/matchMetricsConfig.generated.js"></script><script src="/miscConfig.generated.js"></script><script src="/app.js"></script><script src="/v78/achievements.js"></script><script src="/v78/clubroom-v78.js"></script></body></html>
+<footer id="appFooter51" class="legalFooter"><div><strong>CLUBROOM</strong> <nav aria-label="Legal and informational links"><a href="/about">About</a><a href="/terms">Terms</a><a href="/privacy">Privacy</a><a href="/cookies">Cookies</a><a href="/removal">Removal request</a><a href="/pass/checkout">Clubroom Pass</a><button type="button" id="cookieSettingsLink">Cookie settings</button></nav></div><p>CLUBROOM is not affiliated with, endorsed or sponsored by Electronic Arts Inc. EA SPORTS FC is a trademark of Electronic Arts Inc.</p></footer><script src="/legal-client.js" defer></script><script src="/cards/characters.js"></script><script src="/cards/player-avatar.js"></script><script src="/charts/playerRadarConfig.generated.js"></script><script src="/matchMetricsConfig.generated.js"></script><script src="/miscConfig.generated.js"></script><script src="/app.js"></script><script src="/v78/achievements.js"></script><script src="/v78/clubroom-v78.js"></script><script src="/v81/sessions-v81.js"></script><script src="/v81/formations-v82.js"></script></body></html>

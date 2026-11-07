@@ -27,6 +27,12 @@ export async function migrate(){
    active BOOLEAN NOT NULL DEFAULT true, created_at TIMESTAMPTZ NOT NULL DEFAULT now(),
    PRIMARY KEY(club_id,platform,gamertag)
  );
+ CREATE TABLE IF NOT EXISTS club_entitlements(
+   club_id TEXT NOT NULL,platform TEXT NOT NULL DEFAULT 'any',plan TEXT NOT NULL DEFAULT 'pass',
+   source TEXT NOT NULL DEFAULT 'manual',provider_subscription_id TEXT,
+   active_until TIMESTAMPTZ,created_at TIMESTAMPTZ NOT NULL DEFAULT now(),updated_at TIMESTAMPTZ NOT NULL DEFAULT now(),
+   PRIMARY KEY(club_id,platform)
+ );
  CREATE TABLE IF NOT EXISTS pass_consent_evidence(
    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),payer_email TEXT NOT NULL,
    club_id TEXT NOT NULL,consent_version TEXT NOT NULL,consent_text TEXT NOT NULL,

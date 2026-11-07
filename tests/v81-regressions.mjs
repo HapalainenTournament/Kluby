@@ -1,0 +1,22 @@
+// CLUBROOM v81: live sessions, session detail, match detail extras, xG detection only from EA fields.
+import fs from 'node:fs';
+const root=process.argv[2]||'.';const r=f=>fs.readFileSync(`${root}/${f}`,'utf8');
+const html=r('public/index.html'),js=r('public/v81/sessions-v81.js'),app=r('public/app.js'),server=r('server.js'),cfg=r('public/matchMetricsConfig.generated.js');
+let fail=0;const check=(n,ok)=>{console.log(`${ok?'PASS':'FAIL'} ${n}`);if(!ok)fail++};
+check('v81 script and css loaded after v78',html.indexOf('/v81/sessions-v81.js')>html.indexOf('/v78/clubroom-v78.js')&&html.includes('/v81/v81.css'));
+check('live session card container on overview',html.includes('id="liveSession81"'));
+check('live = last match within 45 min',/liveMinutes:45/.test(js)&&js.includes('const isLive='));
+check('live polling refreshes archive and pauses when hidden',js.includes('/api/live-refresh/')&&js.includes('document.hidden'));
+check('server live refresh is throttled per club',server.includes('/api/live-refresh/:id')&&server.includes('liveRefreshAt')&&server.includes('60000'));
+check('no web push notifications',!/Notification\.requestPermission|pushManager|serviceWorker\.register/.test(js+html));
+for(const f of ['sessionStats','renderSessions','detailHtml','chart','fatigue','awardsHtml','matchCards'])check(`session ${f} exists`,js.includes(`function ${f}(`));
+check('session players compared with archive average',js.includes('careerAvg(')&&js.includes('vs own archive average'));
+check('session opponent stats come from EA raw match',js.includes('function oppRows(')&&js.includes('matchPlayer('));
+check('v43 session renderer replaced',js.includes('window.v43RenderSessions=function(){renderSessions()}'));
+check('match detail hooks in renderTab73',app.includes('window.v81MatchTop')&&app.includes('window.v81MatchBottom'));
+check('player table has dribbles, through balls and vs avg',app.includes('<th>Drb</th><th>TB</th>')&&app.includes('v81VsAvgCell'));
+check('xG/xA read only from real EA keys',js.includes('window.eaExpected81')&&app.includes("eaExpected81(x,'xg')")&&!/xg\s*=\s*[^;]*shots\s*\*/i.test(js));
+check('xG metrics configured but hidden when missing',cfg.includes("id:'xg'")&&cfg.includes("id:'xa'")&&app.includes("if(av==null||bv==null)return''"));
+check('EA field diagnostics endpoint',server.includes('/api/ea-fields/:id')&&server.includes('xgCandidates'));
+check('match tags, duel, goalkeepers, prev/next',js.includes('Hat-trick')&&js.includes('BEST ON THE PITCH')&&js.includes('GOALKEEPERS')&&js.includes('Previous:'));
+process.exit(fail?1:0);

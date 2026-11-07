@@ -1,12 +1,12 @@
 {
   "name": "clubroom",
-  "version": "78.0.0",
+  "version": "82.0.0",
   "private": true,
   "type": "module",
   "scripts": {
     "start": "node server.js",
     "dev": "node --watch server.js",
-    "test:regressions": "node tests/regression-bugs.mjs . && node tests/part3-ui-regressions.mjs . && node tests/players-icons-regressions.mjs . && node tests/misc-regressions.mjs . && node tests/player-profile-regressions.mjs . && node tests/avatar-consistency-v77.mjs . && node tests/v78-regressions.mjs .",
+    "test:regressions": "node tests/regression-bugs.mjs . && node tests/part3-ui-regressions.mjs . && node tests/players-icons-regressions.mjs . && node tests/misc-regressions.mjs . && node tests/player-profile-regressions.mjs . && node tests/avatar-consistency-v77.mjs . && node tests/v78-regressions.mjs . && node tests/v81-regressions.mjs . && node tests/v82-regressions.mjs . && node tests/archive-retention-db.mjs",
     "test:misc": "node tests/misc-regressions.mjs .",
     "test:player-profile": "node tests/player-profile-regressions.mjs . && node tests/avatar-consistency-v77.mjs .",
     "test:v78": "node tests/v78-regressions.mjs ."

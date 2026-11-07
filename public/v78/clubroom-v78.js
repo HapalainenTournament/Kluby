@@ -63,7 +63,7 @@ function livePlayer(id,name){const nm=String(name||'').toLowerCase();return (S.p
 function prep(h){
   if(!h||!h.enabled)return null;
   const meta=new Map((h.players||[]).map(p=>[String(p.player_id),p]));
-  const matches=(h.matches||[]).map(m=>{const ts=new Date(m.played_at||0);const og=n0(m.goals),tg=n0(m.opponent_goals);return {id:String(m.match_id),ts,og,tg,result:String(m.result||(og>tg?'W':og<tg?'L':'D')).toUpperCase(),type:String(m.match_type||''),opponent:m.opponent||'Opponent'}}).filter(m=>!isNaN(m.ts)).sort((a,b)=>a.ts-b.ts);
+  const matches=(h.matches||[]).map(m=>{const ts=new Date(m.played_at||0);const og=n0(m.goals),tg=n0(m.opponent_goals);return {id:String(m.match_id),ts,og,tg,result:String(m.result||(og>tg?'W':og<tg?'L':'D')).toUpperCase(),type:String(m.match_type||''),opponent:m.opponent||'Opponent',raw:m.raw_json||null}}).filter(m=>!isNaN(m.ts)).sort((a,b)=>a.ts-b.ts);
   const mById=new Map(matches.map(m=>[m.id,m]));
   const rows=[],byMatch=new Map(),players=new Map();
   const seen=new Set();
@@ -93,7 +93,7 @@ const clubId=()=>String(S.club?.id||'');
 /* ---------- share as PNG ---------- */
 async function sharePng(el,filename,width,height){
   try{const mod=await import('/cards/cardShared.js');const style=document.createElement('style');
-    style.textContent=(await (await fetch('/style.css')).text())+'\n'+(await (await fetch('/v78/v78.css')).text());
+    style.textContent=(await (await fetch('/style.css')).text())+'\n'+(await (await fetch('/v78/v78.css')).text())+'\n'+(await (await fetch('/v81/v81.css')).text());
     const blob=await mod.rasterizeCardElement({card:el,style,width,height,assetReplacer:async(clone,css)=>{const src=[...el.querySelectorAll('img')],tgt=[...clone.querySelectorAll('img')];for(let i=0;i<tgt.length;i++){const u=await mod.cardUrlToDataUrl(src[i]?.currentSrc||src[i]?.src);if(u)tgt[i].src=u}return {css}}});
     await mod.downloadCardBlob(blob,filename)}catch(e){console.warn('[v78 share]',e?.message||e)}
 }
@@ -309,7 +309,7 @@ function renderPulse(){
   const c=(cls,ic,label,body,foot='')=>`<article class="pulse78 ${cls}"><div class="pulseHead78">${icon(ic,17)}<span class="label">${label}</span></div>${body}${foot?`<small>${foot}</small>`:''}</article>`;
   host.innerHTML=[
     c(win>=3?'hot':'','flame','WIN STREAK',`<strong>${win}<span>${win===1?'win':'wins'}</span></strong>`,winBest!=null?`Best: ${winBest}`:''),
-    c(unb>=3?'hot':'','shield','UNBEATEN RUN',`<strong>${unb}<span>matches</span></strong>`,unbBest!=null?`Best: ${unbBest}`:''),
+    c(unb>=3?'hot':'','shield','UNBEATEN RUN',`<strong>${unb}<span>${unb===1?'match':'matches'}</span></strong>`,unbBest!=null?`Best: ${unbBest}`:''),
     c('','wave','LAST 10',`<div class="pulseForm78">${last.map(r=>`<i class="${r.toLowerCase()}" title="${r}"></i>`).join('')||'<em>--</em>'}</div><b class="pulseRec78">${lt.w}W · ${lt.d}D · ${lt.l}L</b>`),
     c('','up','PROMOTIONS / RELEGATIONS',`<div class="pulseUpDown78"><span class="up">${icon('up',16)}<b>${promo??'--'}</b></span><span class="down">${icon('down',16)}<b>${releg??'--'}</b></span></div>`,'EA club history')
   ].join('')+(src?'<p class="pulseSrc78">streaks from Clubroom archive</p>':'');
@@ -333,12 +333,18 @@ function achievementState(){
 }
 async function loadHonours(){const id=clubId();if(!id)return;try{honours=await fetchJSON(`/api/club-honours/${id}?platform=${encodeURIComponent($('#platform')?.value||'common-gen5')}`,9000)}catch{honours={honours:[]}}if(clubId()===id)renderTrophies()}
 let trophyItems=[];
+/* EA sends internal keys like CLUBS_LEAGUE_CLOSED_SEASON_7 – turn them into readable labels. */
+function seasonLabel(h){const raw=String(h.seasonName||h.seasonname||'').trim(),id=h.seasonId??h.seasonid;
+  if(raw&&!/^[A-Z0-9_]+$/.test(raw))return raw;
+  const num=(raw.match(/(\d+)\D*$/)||[])[1]||(id!=null&&/^\d+$/.test(String(id))?String(id):'');
+  const kind=/PLAYOFF/i.test(raw)?'Playoffs':/CUP/i.test(raw)?'Cup':'Season';
+  return num?`${kind} ${num}`:(raw?raw.replace(/^CLUBS_/,'').replace(/_/g,' ').toLowerCase().replace(/\b\w/g,c=>c.toUpperCase()):'Season')}
 function renderTrophies(){
   const hHost=document.getElementById('trophyHonours78'),aHost=document.getElementById('trophyAchievements78');if(!hHost||!aHost)return;
   const o={...(liveOverall||{}),...(honours?.overall||{})};trophyItems=[];
   const best=o.bestDivision??S.searchClub?.bestDivision;
   if(best!=null&&best!=='')trophyItems.push({kind:'shield',tier:tone(best),label:String(best),title:'Best division',sub:`Division ${best}`,desc:'Highest division this club has reached according to EA.'});
-  for(const h of honours?.honours||[]){const div=h.bestDivision??h.division??h.div;const season=h.seasonName||h.seasonname||(h.seasonId?`Season ${h.seasonId}`:'Season');const fin=h.bestFinishGroup??h.finishGroup;trophyItems.push({kind:fin!=null&&Number(fin)===1?'cup':'shield',tier:tone(div),label:div!=null?String(div):'?',title:'Playoff achievement',sub:`${season}${div!=null?` · Div ${div}`:''}${fin!=null?` · Group ${fin}`:''}`,desc:`EA playoff achievement${fin!=null?` · finish group ${fin}`:''}.`})}
+  for(const h of honours?.honours||[]){const div=h.bestDivision??h.division??h.div;const season=seasonLabel(h);const fin=h.bestFinishGroup??h.finishGroup;trophyItems.push({kind:fin!=null&&Number(fin)===1?'cup':'shield',tier:tone(div),label:div!=null?String(div):'?',title:'Playoff achievement',sub:`${season}${div!=null?` · Div ${div}`:''}${fin!=null?` · Group ${fin}`:''}`,desc:`EA playoff achievement${fin!=null?` · finish group ${fin}`:''}.`})}
   if(n0(o.promotions)>0)trophyItems.push({kind:'medal',tier:'silver',label:`×${n0(o.promotions)}`,title:'Promotions',sub:`${n0(o.promotions)} promotion${n0(o.promotions)===1?'':'s'}`,desc:'Total promotions reported by EA.'});
   hHost.innerHTML=trophyItems.length?trophyItems.map((t,i)=>`<button type="button" class="trophy78 ${t.tier}" data-trophy="h${i}">${trophySvg(t.kind,t.tier,t.label)}<b>${esc(t.title)}</b><small>${esc(t.sub)}</small></button>`).join(''):empty(honours?'EA has not reported club honours yet.':'Loading club honours…');
   const ach=D?achievementState():[];const seenKey=`clubroom78:ach-seen:${clubId()}`;let seen=LS.get(seenKey,null);const unlockedIds=ach.filter(a=>a.unlocked).map(a=>a.id);if(seen===null){seen=unlockedIds;if(D)LS.set(seenKey,seen)}const fresh=new Set(unlockedIds.filter(id=>!seen.includes(id)));if(fresh.size)LS.set(seenKey,[...new Set([...seen,...unlockedIds])]);
@@ -378,8 +384,8 @@ async function divisionFallback(id,name){const el=document.getElementById('divis
     if(div!=null&&clubId()===String(id)){el.textContent=String(div);el.dataset.tone=divisionTone61(div);if(currentClubBookmark49){currentClubBookmark49.currentDivision=div;addRecent49({...currentClubBookmark49})}}}catch{}}
 
 /* ---------- render all archive-driven views ---------- */
-function renderArchive(){const R=[renderRecords,renderStreaks,renderHabits,renderLucky,renderMilestones,renderAwards,renderWrapped,renderCreativity,renderPulse,renderTrophies];for(const f of R){try{f()}catch(e){console.error('[v78]',f.name,e)}}registerAvatarRoster?.();applyGates()}
-window.ClubroomV78={renderArchive,prep:h=>prep(h),showMiscTab,revealAward,CFG};
+function renderArchive(){const R=[()=>window.ClubroomV81?.render(),renderRecords,renderStreaks,renderHabits,renderLucky,renderMilestones,renderAwards,renderWrapped,renderCreativity,renderPulse,renderTrophies];for(const f of R){try{f()}catch(e){console.error('[v78]',f.name,e)}}registerAvatarRoster?.();applyGates()}
+window.ClubroomV78={renderArchive,prep:h=>prep(h),data:()=>D,showMiscTab,revealAward,CFG,sharePng,icon,av:(p,v)=>av(p,v),pLink:p=>pLink(p),mLink:(m,t)=>mLink(m,t),watermark:()=>watermark()};
 
 /* ---------- hooks ---------- */
 const prevRenderFun=renderFun;renderFun=function(h,a){prevRenderFun.apply(this,arguments);try{lastH=h;D=prep(h);renderArchive()}catch(e){console.error('[v78] archive',e)}};
@@ -401,4 +407,7 @@ document.addEventListener('click',e=>{
 document.addEventListener('change',e=>{if(e.target.id==='wrappedMonth78'){wrappedMonth=e.target.value;renderWrapped()}});
 document.addEventListener('keydown',e=>{if(e.key==='Escape'){const d=document.getElementById('trophyDialog78');if(d)d.hidden=true}});
 hydrateIcons();decorateSaved();
+/* v79: results directly under search; hide promo + features while results are shown */
+(function(){const r=document.getElementById('results');if(!r)return;const sync=()=>{const has=!!r.textContent.trim()||!!r.children.length;document.body.classList.toggle('searching78',has);if(has&&!r.dataset.scrolled78){r.dataset.scrolled78='1';const top=r.getBoundingClientRect().top;if(top>window.innerHeight*.75)r.scrollIntoView({behavior:'smooth',block:'start'})}if(!has)delete r.dataset.scrolled78};new MutationObserver(sync).observe(r,{childList:true,subtree:true,characterData:true});sync();
+ const q=document.getElementById('q');q?.addEventListener('input',()=>{if(!q.value.trim()){r.innerHTML='';sync()}})})();
 })();

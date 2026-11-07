@@ -1,0 +1,22 @@
+// CLUBROOM v82: free archive retention, owner club protection, formations with play styles.
+import fs from 'node:fs';
+const root=process.argv[2]||'.';const r=f=>fs.readFileSync(`${root}/${f}`,'utf8');
+const ent=r('entitlements.js'),storage=r('storage.js'),server=r('server.js'),db=r('db.js'),f=r('public/v81/formations-v82.js'),app=r('public/app.js'),html=r('public/index.html'),pass=r('public/pass.html');
+let fail=0;const check=(n,ok)=>{console.log(`${ok?'PASS':'FAIL'} ${n}`);if(!ok)fail++};
+check('owner club 142426 is premium by default',/OWNER_CLUB_IDS\?\?"142426"/.test(ent));
+check('free limit defaults to 10',/FREE_ARCHIVE_LIMIT\|\|10/.test(ent));
+check('prune runs after every archive write',storage.includes('await pruneFreeArchive(clubId)'));
+check('premium and grace clubs are never pruned',ent.includes('skipped:"premium"')&&ent.includes('skipped:"grace"'));
+check('shared matches with premium/tracked clubs are kept',ent.includes('o.club_id=ANY($3::text[])')&&ent.includes('FROM clubs WHERE tracking'));
+check('pruning OFF by default, opt-in on/dry-run',ent.includes('process.env.ARCHIVE_PRUNE||"off"')&&ent.includes('PRUNE_MODE==="on"||PRUNE_MODE==="dry-run"')&&server.includes('process.env.ARCHIVE_PRUNE!=="off"'));
+check('limit is per match type',ent.includes('PARTITION BY mc.club_id,'));
+check('entitlements table for future webhooks',db.includes('CREATE TABLE IF NOT EXISTS club_entitlements('));
+check('pass status reports plan',server.includes('planOf(id)')&&server.includes('freeArchiveLimit'));
+check('periodic prune of all free clubs',server.includes('pruneAllFreeClubs'));
+check('texts say newest 10 per match type',html.includes('Newest 10 per match type')&&pass.includes('newest 10 matches')&&!/last 30 days/i.test(html+pass));
+check('formations use v82 renderer',app.includes('window.v82Formations')&&html.includes('/v81/formations-v82.js'));
+check('attack always upwards: FWD line above DEF',/Y=\{FWD:22,MID:46,DEF:70,GK:88\}/.test(f));
+check('play style icons with legend',f.includes('STYLES')&&f.includes('styleLegend82')&&f.includes('pIcon82'));
+check('style relative to team baseline',f.includes('function baseline(')&&f.includes('r>score'));
+check('no invented exact coordinates note',f.includes('spread evenly'));
+process.exit(fail?1:0);

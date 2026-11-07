@@ -1,0 +1,33 @@
+// DB integration test for free-club archive retention (10 per match type). Runs only with DATABASE_URL – use a throwaway DB!
+if(!process.env.DATABASE_URL){console.log('SKIP archive retention (no DATABASE_URL)');process.exit(0)}
+process.env.OWNER_CLUB_IDS='100';process.env.FREE_ARCHIVE_LIMIT='10';process.env.PASS_ACTIVE_CLUBS='300';delete process.env.ARCHIVE_PRUNE;
+const {query,migrate,pool}=await import('../db.js');const E=await import('../entitlements.js');
+let fail=0;const check=(n,ok)=>{console.log(`${ok?'PASS':'FAIL'} ${n}`);if(!ok)fail++};
+await migrate();
+await query(`TRUNCATE matches,match_clubs,player_match_stats,clubs,club_entitlements CASCADE`);
+let t=Date.UTC(2026,9,1);const add=async(id,a,b,type='leagueMatch')=>{t+=3600000;await query(`INSERT INTO matches(match_id,platform,played_at,match_type) VALUES($1,'common-gen5',to_timestamp($2/1000.0),$3)`,[id,t,type]);for(const c of [a,b])await query(`INSERT INTO match_clubs(match_id,club_id,goals,result) VALUES($1,$2,1,'D')`,[id,c]);await query(`INSERT INTO player_match_stats(match_id,player_id,club_id) VALUES($1,'p'||$2,$2)`,[id,a])};
+for(const c of ['100','200','300','400'])await query(`INSERT INTO clubs(club_id,platform) VALUES($1,'common-gen5')`,[c]);
+for(let i=0;i<3;i++)await add('o'+i,'200','100');
+for(let i=0;i<2;i++)await add('p'+i,'200','300');
+for(let i=0;i<2;i++)await add('f'+i,'200','400');
+for(let i=0;i<13;i++)await add('r'+i,'200','9'+i);
+for(let i=0;i<12;i++)await add('po'+i,'200','7'+i,'playoffMatch');
+for(let i=0;i<14;i++)await add('own'+i,'100','8'+i);
+check('deleting is OFF by default',E.PRUNE_ENABLED===false&&(await E.pruneFreeArchive('200')).skipped==='disabled');
+const dry=await E.pruneFreeArchive('200',{dryRun:true,force:true});
+check('dry run counts but deletes nothing',dry.wouldPrune===5&&(await query(`SELECT COUNT(*)::int n FROM match_clubs WHERE club_id='200'`)).rows[0].n===32);
+const r=await E.pruneFreeArchive('200',{dryRun:false,force:true});
+const left=(await query(`SELECT match_id FROM match_clubs WHERE club_id='200'`)).rows.map(x=>x.match_id);
+check('free club keeps newest 10 league matches',['r3','r4','r5','r6','r7','r8','r9','r10','r11','r12'].every(id=>left.includes(id)));
+check('and newest 10 playoff matches separately',['po2','po3','po4','po5','po6','po7','po8','po9','po10','po11'].every(id=>left.includes(id))&&!left.includes('po0')&&!left.includes('po1'));
+check('matches with owner club are kept',['o0','o1','o2'].every(id=>left.includes(id)));
+check('matches with Pass club are kept',['p0','p1'].every(id=>left.includes(id)));
+check("matches still in the other tracked club's newest 10 are kept",['f0','f1'].every(id=>left.includes(id)));
+check('old league matches vs untracked clubs are deleted',['r0','r1','r2'].every(id=>!left.includes(id))&&r.pruned===5);
+check('player stats cascade-deleted',(await query(`SELECT COUNT(*)::int n FROM player_match_stats WHERE match_id IN ('r0','r1','r2','po0','po1')`)).rows[0].n===0);
+check('owner club never pruned',(await E.pruneFreeArchive('100',{force:true})).skipped==='premium'&&(await query(`SELECT COUNT(*)::int n FROM match_clubs WHERE club_id='100'`)).rows[0].n===17);
+check('env Pass club never pruned',(await E.pruneFreeArchive('300',{force:true})).skipped==='premium');
+await query(`INSERT INTO club_entitlements(club_id,plan,source) VALUES('400','pass','webhook')`);E.resetEntitlementCache();
+check('DB entitlement (webhook row) makes club premium',await E.isPremium('400')===true);
+check('planOf owner/pass/free',await E.planOf('100')==='owner'&&await E.planOf('300')==='pass'&&await E.planOf('200')==='free');
+await pool.end();process.exit(fail?1:0);

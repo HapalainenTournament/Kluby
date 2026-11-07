@@ -59,6 +59,18 @@
 - **Pozn.:** `tests/squad-board-step2.mjs` a `tests/card-layers-step1.mjs` padaly už ve v77 (zastaralé aserce z dřívějších verzí, nejsou v `test:regressions`).
 - **Konfigurace:** `PASS_ACTIVE_CLUBS=142426,...` zapne Pass pro dané kluby do doby, než budou webhooky. `?passPreview=1` = jen náhled vzhledu. `?gates=1` = náhled zámků za reklamu.
 
+- **2026-11-06 — WEB-014 — ✅ dokončeno 2026-11-06:** Homepage přeskládaná: kompaktnější hledání, výsledky hned pod polem, Recent/Favorites pod nimi, Pass jako úzký zlatý pruh; při zobrazených výsledcích se pruh a feature karty skryjí.
+
+- **2026-11-06 — CARD-015 — ✅ dokončeno 2026-11-06:** Hráčská karta: OVR jen číslo uvnitř rámu, erb vycentrovaný do štítu rámu, spodní řada (zápasy/G/A/MOTM) uvnitř kódového panelu a větší. Trophy Cabinet: interní EA názvy sezón (CLUBS_LEAGUE_CLOSED_SEASON_…) převedeny na čitelné. Matches: góly a asistence rozdělené do dvou řádků se štítky GOALS / ASSISTS a odlišnými ikonami.
+
+- **2026-11-07 — V81-001 — ✅ dokončeno 2026-11-07:** Sessions přepsané z archivu: live detekce (poslední zápas ≤ 45 min), live karta na Overview s MVP a formou, automatické obnovení každé 2 min přes `/api/live-refresh/:id` (server max 1× za 60 s na klub, jen když je stránka vidět), seznam session s filtry League/Playoff a týden/měsíc/vše, detail session (bilance, rozdíl skóre, přihrávky a konverze vs soupeř, čistá konta, týmový rating, karty zápasů se štítky, hráči vs vlastní průměr, žebříček 14 metrik, graf ratingů, session awards s odkrytím, únava podle pořadí zápasu, sdílení PNG).
+- **2026-11-07 — V81-002 — ✅ dokončeno 2026-11-07:** Detail zápasu: štítky (Hat-trick, Clean sheet, Thriller, Statement win, Red card), pozice v session, duel nejlepších hráčů obou týmů, rozšířené butterfly (průměrný rating, konverze, asistence, druhé asistence, driblinky), gólmani obou týmů, sdílení, předchozí/další zápas, tabulka hráčů s Drb/TB a „vs avg“, řazení podle ratingu, nulové řádky skryté.
+- **2026-11-07 — V81-003 — 🟡 čeká na data:** xG/xA se zobrazí jen pokud EA pošle pole (`xg`, `expectedGoals`, `xa`, `expectedAssists`…). Diagnostika: `/api/ea-fields/<clubId>` vypíše klíče a desetinná event ID – pošli výstup, podle něj to napojíme. Žádný odhad xG se nepočítá.
+- Web push notifikace záměrně nejsou.
+
+- **2026-11-07 — V82-001 — ✅ dokončeno 2026-11-07:** Archiv jen pro placené kluby. Free kluby mají držet posledních 10 zápasů **od každého typu** (liga/playoff/přátelák, `FREE_ARCHIVE_LIMIT`). **Mazání je zatím VYPNUTÉ** – zapne se `ARCHIVE_PRUNE=on` (maže po každém uložení a každých 6 h) nebo `ARCHIVE_PRUNE=dry-run` (jen loguje). Nemaže se zápas, kde hrál prémiový klub nebo který je mezi 10 nejnovějšími jiného sledovaného klubu. Vlastní klub 142426 je navždy premium (`OWNER_CLUB_IDS`). Pass klub má po skončení 30 dní ochranu (`PASS_GRACE_DAYS`). Tabulka `club_entitlements` připravená pro webhook platební brány. Ověřeno integračním testem na Postgres 16 (`tests/archive-retention-db.mjs`).
+- **2026-11-07 — V82-002 — ✅ dokončeno 2026-11-07:** Formace: svislé hřiště, útok vždy nahoru, hráči na své lajně (GK/DEF/MID/FWD), ikona herního stylu (Finisher, Playmaker, Dribbler, Engine, Wall, Keeper), rating, G/A, MOTM, červená karta, přepínač náš tým / soupeř. Styl našich hráčů z kariéry v archivu (5+ zápasů), jinak z daného zápasu, vždy relativně k týmu.
+
 ## Auditní omezení
 
 Toto je audit zdrojového ZIPu, **ne** test živého provozu. U bodů s ✅ je doložená požadovaná implementace v kódu. Produkční funkčnost, reálné EA odpovědi, platební sandbox a UI screenshoty z tohoto auditu nevyplývají.

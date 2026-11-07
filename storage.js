@@ -42,6 +42,7 @@ export async function persistClubPayload(clubId,platform,d){
    for(const [eid,value] of ev)await query(`INSERT INTO player_match_events(match_id,player_id,club_id,event_id,value) VALUES($1,$2,$3,$4,$5) ON CONFLICT(match_id,player_id,club_id,event_id) DO UPDATE SET value=EXCLUDED.value`,[mid,pid,cid,eid,value]);
   }
  }
+ try{await pruneFreeArchive(clubId)}catch(e){console.warn("prune",clubId,e.message)}
  return {enabled:true,newMatches};
 }
 

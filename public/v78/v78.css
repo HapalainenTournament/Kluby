@@ -225,3 +225,27 @@ body.passActive78 player-card{filter:drop-shadow(0 0 10px rgba(248,215,120,.28))
 .clubCrestTemplate78[hidden]{display:none!important}
 .clubCrestTemplate78 svg{width:78%;height:78%;max-width:140px}
 .crestTemplate78{display:inline-grid;place-items:center;width:100%;height:100%}.crestTemplate78 svg{width:80%;height:80%}
+/* v79 homepage: compact search, results first, slim Pass strip */
+#home.homeSearch44{padding-top:28px!important;margin-top:0!important}
+#home .homeSearchContent44 h1{font-size:clamp(30px,4vw,46px);margin:6px 0 6px}
+#home .homeSearchContent44>p{margin:0 0 18px}
+#home #results{max-width:900px;margin:14px auto 0}
+#home #results:empty{display:none}
+.passStrip78{display:flex;align-items:center;gap:16px;max-width:900px;margin:16px auto;padding:14px 18px;border-radius:16px;border:1px solid rgba(248,215,120,.45);background:radial-gradient(circle at 100% 0,rgba(248,215,120,.14),transparent 50%),linear-gradient(150deg,#16222f,#0b1420);color:#f3f7fb;text-decoration:none;box-sizing:border-box;transition:border-color .2s,transform .2s}
+.passStrip78:hover{border-color:var(--gold1);transform:translateY(-1px)}
+.passStripText78{display:flex;flex-direction:column;gap:2px;min-width:0;flex:1}.passStripText78 b{font-size:15px}.passStripText78 span{color:#b9c9da;font-size:13px}
+.passStripPrice78{display:flex;align-items:baseline;gap:4px;white-space:nowrap}.passStripPrice78 b{font-size:22px;color:var(--gold1)}.passStripPrice78 small{color:var(--v78muted)}
+.passStripCta78{display:inline-flex;align-items:center;gap:6px;padding:9px 14px;border-radius:11px;background:linear-gradient(135deg,#ffe9a0,var(--gold1) 45%,var(--gold2));color:#271a02;font-weight:900;font-size:13px;white-space:nowrap}.passStripCta78 svg{width:16px;height:16px}
+body.searching78 .passStrip78,body.searching78 .homeFeatures51{display:none}
+@media (max-width:760px){.passStrip78{flex-wrap:wrap;gap:10px}.passStripText78{flex-basis:calc(100% - 70px)}.passStripCta78{margin-left:auto}}
+.trophy78 b,.trophy78 small{max-width:100%;overflow-wrap:anywhere}
+/* v79 match rows: goals vs assists clearly separated */
+.matchContrib73{flex-direction:column;align-items:flex-start;gap:5px}
+.contribGroup78{display:flex;flex-wrap:wrap;align-items:center;gap:5px 6px}
+.contribGroup78>i{font-style:normal;font-size:9.5px;font-weight:900;letter-spacing:.12em;color:#6f86a0;width:52px}
+.contribChip78{display:inline-flex;align-items:center;gap:5px;padding:3px 8px 3px 5px;border-radius:999px;font-size:11.5px;border:1px solid transparent}
+.contribChip78 b{font-weight:800;color:#eef4fa}.contribChip78 em{font-style:normal;font-weight:900}
+.contribChip78.goal{background:rgba(52,223,133,.10);border-color:rgba(52,223,133,.28)}.contribChip78.goal svg{width:14px;height:14px;fill:none;stroke:#34df85;stroke-width:1.8}.contribChip78.goal em{color:#34df85}
+.contribChip78.assist{background:rgba(45,212,191,.08);border-color:rgba(45,212,191,.25)}.contribChip78.assist em{color:#5eead4}
+.aMark78{display:grid;place-items:center;width:15px;height:15px;border-radius:50%;background:#5eead4;color:#06221f;font-size:9.5px;font-weight:950}
+@media (max-width:760px){.contribGroup78>i{width:auto}}

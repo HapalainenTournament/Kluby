@@ -21,6 +21,6 @@ const checks=[
  ['formations have explicit missing state',/Formation not provided by EA\./.test(app)],
  ['mobile list and stacked goals rules exist',/@media\(max-width:640px\)/.test(css)&&/goalColumns73\{grid-template-columns:1fr\}/.test(css)],
  ['no Details button in new row',!/Details/.test(app.match(/function row73[\s\S]*?function groupKey/)[0])],
- ['custom SVG icons used for contributors',/appBadgeIcon67\('topScorer'/.test(app)&&/appBadgeIcon67\('creator'/.test(app)]
+ ['goals and assists rendered as separate labelled groups (v80)',/contribGroup78 goals/.test(app)&&/contribGroup78 assists/.test(app)&&/aMark78/.test(app)]
 ];
 let fail=0;for(const [name,ok] of checks){console.log(`${ok?'PASS':'FAIL'} ${name}`);if(!ok)fail++}process.exit(fail?1:0);

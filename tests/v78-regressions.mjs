@@ -17,7 +17,7 @@ check('achievements registry has rules',(ach.match(/metric:/g)||[]).length>=10);
 check('honours endpoint exists and is cached',server.includes('/api/club-honours/:id')&&server.includes('honoursCache'));
 check('pass status endpoint is server-side, payments off',server.includes('/api/pass/status')&&server.includes('PASS_ACTIVE_CLUBS')&&/checkoutEnabled:false/.test(server));
 check('nav says Clubroom Pass, no Club+ label',html.includes('<span>Clubroom Pass</span>')&&!html.includes('♛ Club+')&&!/<h3>Club\+/.test(html));
-check('homepage promo with price and CTA',html.includes('passPromo78')&&html.includes('4 €')&&html.includes('See Clubroom Pass'));
+check('homepage Pass strip with price, results above it',html.includes('passStrip78')&&html.includes('4 €')&&html.indexOf('id="results"')<html.indexOf('passStrip78'));
 check('/pass page route',server.includes('"removal","pass"')&&fs.existsSync(`${root}/public/pass.html`));
 check('ad gates off by default and skipped with Pass',/enabled:qs\.get\('gates'\)==='1'/.test(js)&&js.includes('Pass.active())return true'));
 check('premium shimmer respects reduced motion',css.includes('prefers-reduced-motion:reduce'));

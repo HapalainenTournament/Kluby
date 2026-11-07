@@ -3,6 +3,7 @@ import path from "node:path";
 import { fileURLToPath } from "node:url";
 import {migrate,enabled as dbEnabled,query} from "./db.js";
 import {persistClubPayload,history,analytics,buildSessions} from "./storage.js";
+import {isPremium,planOf,pruneAllFreeClubs,FREE_ARCHIVE_LIMIT} from "./entitlements.js";
 import {dueClubs,rescheduleClub} from "./collector.js";
 
 const app = express();
@@ -73,7 +74,7 @@ app.get("/api/pass/config",(_,res)=>res.json({checkoutEnabled:false,provider:"Pa
 // v78 Clubroom Pass entitlement. Payments are not live: a club is Pass-active only when listed
 // in PASS_ACTIVE_CLUBS (comma separated club IDs) or, later, by a verified provider webhook.
 const passActiveClubs=()=>new Set(String(process.env.PASS_ACTIVE_CLUBS||"").split(",").map(x=>x.replace(/[^0-9]/g,"")).filter(Boolean));
-app.get("/api/pass/status",(req,res)=>{const ids=String(req.query.ids||"").split(",").map(x=>x.replace(/[^0-9]/g,"")).filter(Boolean).slice(0,50);const active=passActiveClubs();res.json({price:{amount:4,currency:"EUR",interval:"month",scope:"club"},checkoutEnabled:false,clubs:Object.fromEntries(ids.map(id=>[id,{active:active.has(id)}]))})});
+app.get("/api/pass/status",async(req,res)=>{const ids=String(req.query.ids||"").split(",").map(x=>x.replace(/[^0-9]/g,"")).filter(Boolean).slice(0,50);const out={};for(const id of ids){const plan=await planOf(id);out[id]={active:plan!=="free",plan}}res.json({price:{amount:4,currency:"EUR",interval:"month",scope:"club"},checkoutEnabled:false,freeArchiveLimit:FREE_ARCHIVE_LIMIT,clubs:out})});
 // v78 Club honours for the Trophy Cabinet: EA playoff achievements + overall stats, cached 30 min.
 const honoursCache=new Map();
 app.get("/api/club-honours/:id",async(req,res)=>{
@@ -181,6 +182,27 @@ app.get("/api/club/:id", async (req,res)=>{
  }catch(e){console.warn(`[CLUB] ${id} FAIL ${Date.now()-started}ms · ${e.message}`);if(hit)return res.json({...await scopedJson(hit.data,id,p),_cache:"fallback",_refreshError:e.message});res.status(502).json({error:"EA club load failed.",detail:e.message})}
 });
 
+// v81 live session refresh: pull the newest EA matches into the archive now (max once per 60 s per club).
+const liveRefreshAt=new Map();
+app.post("/api/live-refresh/:id",async(req,res)=>{
+ const id=String(req.params.id).replace(/[^\d]/g,"");const p=validPlatform(req.query.platform);if(!id)return res.status(400).json({error:"Invalid club ID."});
+ const key=`${p}:${id}`,last=liveRefreshAt.get(key)||0;if(Date.now()-last<60000)return res.json({ok:true,throttled:true,nextInMs:60000-(Date.now()-last)});
+ liveRefreshAt.set(key,Date.now());
+ try{const d=await loadClubFast(id,p);clubCache.set(key,{data:d,at:Date.now()});if(dbEnabled)await persistClubPayload(id,p,d);res.json({ok:true,throttled:false,matches:Array.isArray(d.matches)?d.matches.length:0,archived:dbEnabled})}
+ catch(e){res.status(502).json({ok:false,error:e.message})}
+});
+// v81 diagnostics: which fields EA actually sends in match data (used to find xG/xA). Read-only.
+app.get("/api/ea-fields/:id",async(req,res)=>{
+ const id=String(req.params.id).replace(/[^\d]/g,"");const p=validPlatform(req.query.platform);if(!id)return res.status(400).json({error:"Invalid club ID."});
+ try{const rows=await ea("/clubs/matches",{platform:p,clubIds:id,matchType:"leagueMatch",maxResultCount:3},60000,12000);const arr=Array.isArray(rows)?rows:[];
+  const playerKeys=new Map(),clubKeys=new Set(),events=new Map(),matchKeys=new Set();
+  for(const m of arr){Object.keys(m||{}).forEach(k=>matchKeys.add(k));for(const c of Object.values(m.clubs||{})){Object.keys(c||{}).forEach(k=>clubKeys.add(k))}
+   for(const club of Object.values(m.players||{}))for(const pl of Object.values(club||{})){for(const [k,v] of Object.entries(pl||{})){if(!playerKeys.has(k))playerKeys.set(k,typeof v==="string"?v.slice(0,40):v);
+     if(k.startsWith("match_event_aggregate_")&&typeof v==="string")for(const t of v.split(/[;,| ]+/)){const mm=t.match(/^(\d+):(-?\d+(?:\.\d+)?)$/);if(mm){const e=events.get(mm[1])||{count:0,decimals:false,max:0};e.count++;e.max=Math.max(e.max,Number(mm[2]));if(mm[2].includes("."))e.decimals=true;events.set(mm[1],e)}}}}}
+  const all=[...playerKeys.keys(),...clubKeys,...matchKeys];
+  res.json({ok:true,matchesChecked:arr.length,xgCandidates:all.filter(k=>/xg|expect/i.test(k)),decimalEvents:[...events.entries()].filter(([,e])=>e.decimals).map(([id,e])=>({id,...e})),playerKeys:Object.fromEntries(playerKeys),clubKeys:[...clubKeys],matchKeys:[...matchKeys],eventIds:Object.fromEntries([...events.entries()].sort((a,b)=>Number(a[0])-Number(b[0])))});
+ }catch(e){res.status(502).json({ok:false,error:e.message})}
+});
 app.get("/api/event-probe/:id",async(req,res)=>{
  try{
   const id=String(req.params.id||"").replace(/[^\d]/g,"");if(!id)return res.status(400).json({error:"Invalid club ID."});
@@ -225,7 +247,7 @@ app.get("/api/db-export", async (req,res)=>{
     }
     const payload={
       format:"clubroom-postgres-json-backup",
-      version:"78.0.0",
+      version:"82.0.0",
       exportedAt:new Date().toISOString(),
       counts,
       data
@@ -244,7 +266,7 @@ app.get("/api/db-export", async (req,res)=>{
 app.get("/api/history/:id",async(req,res)=>{try{res.json(await scopedJson(await history(String(req.params.id).replace(/[^\d]/g,"")),String(req.params.id).replace(/[^\d]/g,""),validPlatform(req.query.platform)))}catch(e){res.status(500).json({error:e.message})}});
 app.get("/api/analytics/:id",async(req,res)=>{try{res.json(await scopedJson(await analytics(String(req.params.id).replace(/[^\d]/g,"")),String(req.params.id).replace(/[^\d]/g,""),validPlatform(req.query.platform)))}catch(e){res.status(500).json({error:e.message})}});
 app.get("/api/sessions/:id",async(req,res)=>{try{const id=String(req.params.id).replace(/[^\d]/g,"");const gap=Math.max(30,Math.min(240,Number(req.query.gap||90)));res.json(await scopedJson(await buildSessions(id,{gapMinutes:gap,activeMinutes:45}),id,validPlatform(req.query.platform)))}catch(e){res.status(500).json({error:e.message})}});
-app.get("/api/health",(_,res)=>res.json({ok:true,version:"78.0.0",database:dbEnabled,collectorEnabled:dbEnabled && process.env.COLLECTOR_ENABLED!=="false",collectorIntervalMs:Number(process.env.COLLECTOR_INTERVAL_MS||300000),collectorBatch:Number(process.env.COLLECTOR_BATCH||20),time:new Date().toISOString()}));
+app.get("/api/health",(_,res)=>res.json({ok:true,version:"82.0.0",database:dbEnabled,collectorEnabled:dbEnabled && process.env.COLLECTOR_ENABLED!=="false",collectorIntervalMs:Number(process.env.COLLECTOR_INTERVAL_MS||300000),collectorBatch:Number(process.env.COLLECTOR_BATCH||20),time:new Date().toISOString()}));
 
 for(const route of ["about","terms","privacy","cookies","removal","pass"]){
  app.get('/'+route,(_,res)=>res.sendFile(path.join(DIR,'public',route+'.html')));
@@ -259,5 +281,6 @@ await migrate();
 if(dbEnabled && process.env.COLLECTOR_ENABLED!=="false"){
  const runCollector=async()=>{try{for(const c of await dueClubs(Number(process.env.COLLECTOR_BATCH||20))){try{const d=await loadClubFull(String(c.club_id),validPlatform(c.platform));const saved=await persistClubPayload(String(c.club_id),validPlatform(c.platform),d);await rescheduleClub(String(c.club_id),validPlatform(c.platform),Number(saved?.newMatches||0));}catch(e){console.warn("collector",c.club_id,e.message)}}}catch(e){console.warn("collector batch",e.message)}};
  setTimeout(runCollector,15000);setInterval(runCollector,Number(process.env.COLLECTOR_INTERVAL_MS||300000));
+ if(process.env.ARCHIVE_PRUNE&&process.env.ARCHIVE_PRUNE!=="off"){setTimeout(()=>pruneAllFreeClubs().then(n=>console.log(`[ARCHIVE] startup prune (${process.env.ARCHIVE_PRUNE}) removed ${n} matches`)),30000);setInterval(pruneAllFreeClubs,6*3600000)}
 }
 app.listen(PORT,()=>console.log(`CLUBROOM running on ${PORT} · DB ${dbEnabled?"ON":"OFF"}`));
