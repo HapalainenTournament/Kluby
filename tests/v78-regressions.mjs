@@ -15,7 +15,7 @@ check('Club Pulse and Trophy Cabinet containers exist',html.includes('id="clubPu
 check('Trophies are own SVG, not EA images',js.includes('function trophySvg')&&!/easports[^'"]*trophy/i.test(js));
 check('achievements registry has rules',(ach.match(/metric:/g)||[]).length>=10);
 check('honours endpoint exists and is cached',server.includes('/api/club-honours/:id')&&server.includes('honoursCache'));
-check('pass status endpoint is server-side, payments off',server.includes('/api/pass/status')&&server.includes('PASS_ACTIVE_CLUBS')&&/checkoutEnabled:false/.test(server));
+check('pass status endpoint is server-side, checkout gated by config',server.includes('/api/pass/status')&&server.includes('PASS_ACTIVE_CLUBS')&&server.includes('checkoutEnabled:checkoutConfig().enabled'));
 check('nav says Clubroom Pass, no Club+ label',html.includes('<span>Clubroom Pass</span>')&&!html.includes('♛ Club+')&&!/<h3>Club\+/.test(html));
 check('homepage Pass strip with price, results above it',html.includes('passStrip78')&&html.includes('4 €')&&html.indexOf('id="results"')<html.indexOf('passStrip78'));
 check('/pass page route',server.includes('"removal","pass"')&&fs.existsSync(`${root}/public/pass.html`));

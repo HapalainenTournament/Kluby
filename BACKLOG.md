@@ -76,3 +76,17 @@
 ## Auditní omezení
 
 Toto je audit zdrojového ZIPu, **ne** test živého provozu. U bodů s ✅ je doložená požadovaná implementace v kódu. Produkční funkčnost, reálné EA odpovědi, platební sandbox a UI screenshoty z tohoto auditu nevyplývají.
+
+## V84 · Mobile navigation + overflow fixes
+- [x] Phones (≤760px): top pill nav replaced by a fixed bottom bar (Overview, Players, Matches, Sessions, More); "More" sheet holds Compare, Analytics, Misc, Clubroom Pass.
+- [x] Outside Overview the club hero collapses to a slim identity bar on phones so content starts on the first screen.
+- [x] Real overflow fixed (grid tracks `minmax(0,1fr)`, tables scroll inside their wrapper); `html,body{overflow-x:hidden}` masking removed. Verified scrollWidth=390 on all tabs and Misc subtabs.
+- [x] "Recent form" removed from the club hero card on all screen sizes.
+
+## V85 · Paddle payments for Clubroom Pass
+- [x] `paddle.js`: signed webhook verification (HMAC, 5 min replay window, secret rotation), idempotent events (`paddle_events`), out-of-order safe entitlement updates, old-subscription cancels can't end a newer Pass.
+- [x] `/api/paddle/webhook` (raw body), `/api/pass/config`, `/api/pass/checkout` (stores consent evidence, blocks double purchase).
+- [x] `/pass/checkout` page with Paddle.js overlay; Pass tab "Get Pass" pre-fills the club.
+- [x] Terms §4–5 rewritten for Paddle as Merchant of Record; new `/refund` page (14-day refund).
+- [x] Checkout stays closed unless `PASS_CHECKOUT=on` and all Paddle env vars are set.
+- [ ] Fill `[DOPLNIT …]` operator name / contact email in Terms, Refund, About, Privacy before live review.

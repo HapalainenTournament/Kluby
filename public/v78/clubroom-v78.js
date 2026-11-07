@@ -362,6 +362,7 @@ const Pass={status:{},preview:qs.get('passPreview')==='1',
   active(id=clubId()){return !!id&&(!!this.status[id]?.active||(this.preview&&id===clubId()))},
   async load(ids){ids=[...new Set(ids.filter(Boolean).map(String))].filter(id=>!(id in this.status));if(!ids.length)return;try{const r=await fetchJSON(`/api/pass/status?ids=${ids.join(',')}`,6000);Object.assign(this.status,r.clubs||{})}catch{for(const id of ids)this.status[id]={active:false}}},
   apply(){const on=this.active();document.body.classList.toggle('passActive78',on);const row=document.querySelector('.heroClubCopy61>.kicker');let b=document.getElementById('passHeroBadge78');if(on&&row&&!b){b=document.createElement('span');b.id='passHeroBadge78';b.className='passBadge78';b.textContent='PASS';row.appendChild(b)}if(!on&&b)b.remove();
+    const buy=document.getElementById('passBuy85');if(buy){buy.href='/pass/checkout'+(clubId()?'?club='+clubId():'');buy.hidden=on&&!this.preview}
     const st=document.getElementById('passStatus78');if(st){st.textContent=on?(this.preview&&!this.status[clubId()]?.active?'Preview mode – Pass visuals only':'Active for this club'):'Not active for this club';st.classList.toggle('on',on)}
     document.querySelectorAll('[data-saved-club49]').forEach(el=>{const id=el.dataset.savedClub49;const has=el.querySelector('.passBadge78');if(this.active(id)&&!has){const t=document.createElement('span');t.className='passBadge78 small';t.textContent='PASS';(el.querySelector('strong,b')||el).after(t)}else if(!this.active(id)&&has)has.remove()});
     applyGates()}

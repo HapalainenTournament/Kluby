@@ -1,0 +1,54 @@
+/* CLUBROOM v84 · mobile layout fixes + bottom navigation; recent form removed from the club hero */
+/* Recent form is no longer part of the hero card (all screen sizes) */
+.heroForm44{display:none!important}
+.heroPerformanceTop44{grid-template-columns:1fr!important}
+/* grid pages must never be wider than the screen: tracks shrink, tables scroll inside their own wrapper */
+.playersPage,.comparePage,.matchesPage73,.sessionsPage43,.miscPage68,.analyticsPage37,.overviewGrid44{min-width:0}
+.playersPage,.miscPage68{grid-template-columns:minmax(0,1fr)!important}
+.miscPage68>*,.partnershipHero75,.partnershipTop75{min-width:0;max-width:100%}
+.miscSubtabs75{max-width:100%;overflow-x:auto;scrollbar-width:none}.miscSubtabs75::-webkit-scrollbar{display:none}
+.chemMatrixScroll75{max-width:100%;overflow-x:auto}
+.tabPane>*,.playersPage>*{min-width:0;max-width:100%}
+.squadBoardScroller70,.matchPlayerTableWrap73{max-width:100%;overflow-x:auto;-webkit-overflow-scrolling:touch}
+
+/* ---------- bottom navigation (phones) ---------- */
+.bottomNav84,.moreSheet84{display:none}
+@media (max-width:760px){
+  body.hasClub84 .topNav44{display:none!important}
+  body.hasClub84{padding-bottom:calc(76px + env(safe-area-inset-bottom))}
+  body.hasClub84 .bottomNav84{display:grid}
+  .bottomNav84{position:fixed;left:10px;right:10px;bottom:calc(10px + env(safe-area-inset-bottom));z-index:120;grid-template-columns:repeat(5,1fr);gap:2px;padding:6px;border-radius:22px;background:rgba(12,20,33,.86);border:1px solid rgba(255,255,255,.08);backdrop-filter:blur(18px) saturate(1.4);-webkit-backdrop-filter:blur(18px) saturate(1.4);box-shadow:0 18px 40px -18px #000}
+  .bottomNav84 button{display:flex;flex-direction:column;align-items:center;justify-content:center;gap:3px;min-height:52px;border:0;border-radius:16px;background:transparent;color:#8ea3bd;font:inherit;font-size:10.5px;font-weight:800;letter-spacing:.02em;cursor:pointer;-webkit-tap-highlight-color:transparent}
+  .bottomNav84 button svg{width:22px;height:22px;fill:none;stroke:currentColor;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round}
+  .bottomNav84 button.active{color:#eaf6ff;background:rgba(45,212,191,.14)}
+  .bottomNav84 button.active svg{color:#5eead4}
+  .bottomNav84 button.pass{color:#f8d778}
+  body.matchRoute73 .bottomNav84,body.playerRoute69 .bottomNav84{display:grid}
+  .moreSheet84{position:fixed;inset:0;z-index:130;background:rgba(3,8,15,.55);backdrop-filter:blur(3px)}
+  .moreSheet84.open{display:block}
+  .moreSheet84>div{position:absolute;left:10px;right:10px;bottom:calc(84px + env(safe-area-inset-bottom));padding:8px;border-radius:20px;background:#0d1826;border:1px solid #1f3247;box-shadow:0 24px 50px -20px #000;display:grid;gap:4px}
+  .moreSheet84 button{display:flex;align-items:center;gap:12px;padding:14px;border:0;border-radius:14px;background:transparent;color:#eaf2fa;font:inherit;font-size:15px;font-weight:800;text-align:left}
+  .moreSheet84 button svg{width:22px;height:22px;fill:none;stroke:currentColor;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round;color:#5eead4}
+  .moreSheet84 button.active{background:#13253a}
+  .moreSheet84 button.pass{color:#f8d778}.moreSheet84 button.pass svg{color:#f8d778}
+  /* outside Overview the club hero shrinks to a slim identity bar so the content starts on the first screen */
+  body.hasClub84:not(.tab84-stats) .overviewHero44{padding:12px 14px!important;min-height:0!important}
+  body.hasClub84:not(.tab84-stats) .overviewHero44 :is(.heroDivider44,.heroPerformance44,.heroMeta44,.clubInfoStrip61,.clubColors61){display:none!important}
+  body.hasClub84:not(.tab84-stats) .heroIdentity44{display:flex!important;flex-direction:row!important;align-items:center;gap:12px;text-align:left!important;min-height:0!important}
+  body.hasClub84:not(.tab84-stats) .heroCrestStack61{flex:0 0 auto;margin:0!important}
+  body.hasClub84:not(.tab84-stats) .heroCrest44{width:44px!important;height:44px!important;margin:0!important}
+  body.hasClub84:not(.tab84-stats) .heroCrest44 club-crest{width:44px!important;height:44px!important}
+  body.hasClub84:not(.tab84-stats) .heroClubCopy44{min-width:0;align-items:flex-start!important;text-align:left!important}
+  body.hasClub84:not(.tab84-stats) .heroClubTitleRow44,body.hasClub84:not(.tab84-stats) .heroClubCopy44 .kicker{justify-content:flex-start!important;text-align:left!important;margin-left:0!important;align-self:flex-start!important;margin-right:auto!important}
+  body.hasClub84:not(.tab84-stats) .heroClubCopy44{display:flex!important;flex-direction:column;gap:2px}
+  body.hasClub84:not(.tab84-stats) .heroClubTitleRow44 h2{font-size:22px!important;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+  body.hasClub84:not(.tab84-stats) .heroClubTitleRow44 .favoriteClub44{width:28px;height:28px}
+  /* header becomes compact: logo + search only */
+  body.hasClub84 .topbar,body.hasClub84 header.top{gap:8px}
+}
+@media (max-width:760px) and (prefers-reduced-motion:no-preference){
+  .moreSheet84.open>div{animation:sheetUp84 .28s cubic-bezier(.2,.8,.2,1)}
+  @keyframes sheetUp84{from{transform:translateY(14px);opacity:0}to{transform:none;opacity:1}}
+}
+
+.passLink85{color:#9fb2c8;font-weight:700;margin-left:10px;text-decoration:none}.passLink85:hover{color:#eaf2fa}

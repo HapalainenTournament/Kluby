@@ -5,15 +5,24 @@ import {migrate,enabled as dbEnabled,query} from "./db.js";
 import {persistClubPayload,history,analytics,buildSessions} from "./storage.js";
 import {isPremium,planOf,pruneAllFreeClubs,FREE_ARCHIVE_LIMIT} from "./entitlements.js";
 import {dueClubs,rescheduleClub} from "./collector.js";
+import {checkoutConfig,verifySignature,handleEvent} from "./paddle.js";
 
 const app = express();
+// Paddle webhook needs the exact raw body for signature verification, so it is registered before express.json.
+app.post("/api/paddle/webhook",express.raw({type:"*/*",limit:"1mb"}),async(req,res)=>{
+ if(!verifySignature(req.body,req.get("paddle-signature")))return res.status(401).json({error:"Invalid signature"});
+ let ev;try{ev=JSON.parse(req.body.toString("utf8"))}catch{return res.status(400).json({error:"Invalid JSON"})}
+ if(!dbEnabled)return res.status(503).json({error:"Database required"});
+ try{const r=await handleEvent(ev);console.log("[PADDLE]",ev.event_type,JSON.stringify(r));res.json({ok:true})}
+ catch(e){console.error("[PADDLE] webhook failed",ev.event_type,e.message);res.status(500).json({error:"Processing failed"})}
+});
 app.use(express.json({limit:"16kb"}));
 const DIR = path.dirname(fileURLToPath(import.meta.url));
 const PORT = process.env.PORT || 3000;
 const EA = "https://proclubs.ea.com/api/fc";
 const cache = new Map();
-const consentVersion="clubroom-immediate-access-v0.1-draft";
-const consentText="I request immediate access to Clubroom Pass and acknowledge that I thereby lose my right to withdraw from the contract once access begins.";
+const consentVersion="clubroom-pass-v1";
+const consentText="I agree to the Terms of Service and understand that Clubroom Pass renews every month at 4 € until I cancel.";
 // The checkbox is evidence of a request, NOT proof that statutory rights were lost.
 const safeText=(v,n=160)=>String(v??"").trim().slice(0,n);
 const validEmail=v=>/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(v)&&v.length<=254;
@@ -70,11 +79,10 @@ app.post("/api/admin/privacy/removal/:id/approve",async(req,res)=>{
   return res.json({ok:true,clubId,platform:r.platform});
  }catch(e){console.error("Removal approval failed",e.message);res.status(500).json({error:"Could not approve request"})}
 });
-app.get("/api/pass/config",(_,res)=>res.json({checkoutEnabled:false,provider:"Paddle (proposed)",status:"Legal review, pricing, merchant account and webhook verification required.",consentVersion,consentText}));
 // v78 Clubroom Pass entitlement. Payments are not live: a club is Pass-active only when listed
 // in PASS_ACTIVE_CLUBS (comma separated club IDs) or, later, by a verified provider webhook.
 const passActiveClubs=()=>new Set(String(process.env.PASS_ACTIVE_CLUBS||"").split(",").map(x=>x.replace(/[^0-9]/g,"")).filter(Boolean));
-app.get("/api/pass/status",async(req,res)=>{const ids=String(req.query.ids||"").split(",").map(x=>x.replace(/[^0-9]/g,"")).filter(Boolean).slice(0,50);const out={};for(const id of ids){const plan=await planOf(id);out[id]={active:plan!=="free",plan}}res.json({price:{amount:4,currency:"EUR",interval:"month",scope:"club"},checkoutEnabled:false,freeArchiveLimit:FREE_ARCHIVE_LIMIT,clubs:out})});
+app.get("/api/pass/status",async(req,res)=>{const ids=String(req.query.ids||"").split(",").map(x=>x.replace(/[^0-9]/g,"")).filter(Boolean).slice(0,50);const out={};for(const id of ids){const plan=await planOf(id);out[id]={active:plan!=="free",plan}}res.json({price:{amount:4,currency:"EUR",interval:"month",scope:"club"},checkoutEnabled:checkoutConfig().enabled,freeArchiveLimit:FREE_ARCHIVE_LIMIT,clubs:out})});
 // v78 Club honours for the Trophy Cabinet: EA playoff achievements + overall stats, cached 30 min.
 const honoursCache=new Map();
 app.get("/api/club-honours/:id",async(req,res)=>{
@@ -86,15 +94,17 @@ app.get("/api/club-honours/:id",async(req,res)=>{
  const data={honours,overall:ov,errors:{achievements:achR.status==="rejected"?String(achR.reason?.message||"failed"):null}};
  honoursCache.set(key,{data,at:Date.now()});res.json(await scopedJson(data,id,p));
 });
+app.get("/api/pass/config",(_,res)=>res.json({...checkoutConfig(),consentVersion,consentText,price:{amount:4,currency:"EUR",interval:"month"}}));
 app.post("/api/pass/checkout",async(req,res)=>{
+ const cfg=checkoutConfig();if(!cfg.enabled)return res.status(503).json({error:"Clubroom Pass checkout is not open yet."});
  const b=req.body||{};
- if(b.consent!==true||b.consentVersion!==consentVersion)return res.status(400).json({error:"Explicit current-version consent is required."});
+ if(b.consent!==true||b.consentVersion!==consentVersion)return res.status(400).json({error:"Please accept the Terms to continue."});
  const email=safeText(b.email,254),clubId=safeText(b.clubId,80).replace(/[^0-9]/g,'');
- if(!validEmail(email)||!clubId)return res.status(400).json({error:"A valid billing email and club ID are required."});
- // Intentionally disabled: never redirect to an unverified merchant or activate Pass from client claims.
- // Before launch, create a server-side checkout session, persist consent (payer account, time,
- // exact text+version, club ID and transaction ID), verify webhook signatures and manage entitlements.
- return res.status(503).json({error:"Clubroom Pass checkout is not active. The merchant-of-record agreement, price, withdrawal text, subscription portal, signed webhooks and confirmation emails are not yet configured."});
+ if(!validEmail(email)||!clubId)return res.status(400).json({error:"A valid email and club ID are required."});
+ if(await isPremium(clubId))return res.status(409).json({error:"This club already has an active Clubroom Pass."});
+ try{const {rows}=await query(`INSERT INTO pass_consent_evidence(payer_email,club_id,consent_version,consent_text) VALUES($1,$2,$3,$4) RETURNING id`,[email,clubId,consentVersion,consentText]);
+  res.json({ok:true,consentId:rows[0].id,clubId,email,priceId:cfg.priceId})}
+ catch(e){console.error("pass checkout",e.message);res.status(500).json({error:"Could not start checkout. Try again."})}
 });
 
 
@@ -247,7 +257,7 @@ app.get("/api/db-export", async (req,res)=>{
     }
     const payload={
       format:"clubroom-postgres-json-backup",
-      version:"83.0.0",
+      version:"85.0.0",
       exportedAt:new Date().toISOString(),
       counts,
       data
@@ -266,9 +276,9 @@ app.get("/api/db-export", async (req,res)=>{
 app.get("/api/history/:id",async(req,res)=>{try{res.json(await scopedJson(await history(String(req.params.id).replace(/[^\d]/g,"")),String(req.params.id).replace(/[^\d]/g,""),validPlatform(req.query.platform)))}catch(e){res.status(500).json({error:e.message})}});
 app.get("/api/analytics/:id",async(req,res)=>{try{res.json(await scopedJson(await analytics(String(req.params.id).replace(/[^\d]/g,"")),String(req.params.id).replace(/[^\d]/g,""),validPlatform(req.query.platform)))}catch(e){res.status(500).json({error:e.message})}});
 app.get("/api/sessions/:id",async(req,res)=>{try{const id=String(req.params.id).replace(/[^\d]/g,"");const gap=Math.max(30,Math.min(240,Number(req.query.gap||90)));res.json(await scopedJson(await buildSessions(id,{gapMinutes:gap,activeMinutes:45}),id,validPlatform(req.query.platform)))}catch(e){res.status(500).json({error:e.message})}});
-app.get("/api/health",(_,res)=>res.json({ok:true,version:"83.0.0",database:dbEnabled,collectorEnabled:dbEnabled && process.env.COLLECTOR_ENABLED!=="false",collectorIntervalMs:Number(process.env.COLLECTOR_INTERVAL_MS||300000),collectorBatch:Number(process.env.COLLECTOR_BATCH||20),time:new Date().toISOString()}));
+app.get("/api/health",(_,res)=>res.json({ok:true,version:"85.0.0",database:dbEnabled,collectorEnabled:dbEnabled && process.env.COLLECTOR_ENABLED!=="false",collectorIntervalMs:Number(process.env.COLLECTOR_INTERVAL_MS||300000),collectorBatch:Number(process.env.COLLECTOR_BATCH||20),time:new Date().toISOString()}));
 
-for(const route of ["about","terms","privacy","cookies","removal","pass"]){
+for(const route of ["about","terms","privacy","cookies","removal","pass","refund"]){
  app.get('/'+route,(_,res)=>res.sendFile(path.join(DIR,'public',route+'.html')));
 }
 app.get("/pass/checkout",(_,res)=>res.sendFile(path.join(DIR,"public","pass","checkout.html")));
