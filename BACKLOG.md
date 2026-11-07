@@ -71,6 +71,8 @@
 - **2026-11-07 — V82-001 — ✅ dokončeno 2026-11-07:** Archiv jen pro placené kluby. Free kluby mají držet posledních 10 zápasů **od každého typu** (liga/playoff/přátelák, `FREE_ARCHIVE_LIMIT`). **Mazání je zatím VYPNUTÉ** – zapne se `ARCHIVE_PRUNE=on` (maže po každém uložení a každých 6 h) nebo `ARCHIVE_PRUNE=dry-run` (jen loguje). Nemaže se zápas, kde hrál prémiový klub nebo který je mezi 10 nejnovějšími jiného sledovaného klubu. Vlastní klub 142426 je navždy premium (`OWNER_CLUB_IDS`). Pass klub má po skončení 30 dní ochranu (`PASS_GRACE_DAYS`). Tabulka `club_entitlements` připravená pro webhook platební brány. Ověřeno integračním testem na Postgres 16 (`tests/archive-retention-db.mjs`).
 - **2026-11-07 — V82-002 — ✅ dokončeno 2026-11-07:** Formace: svislé hřiště, útok vždy nahoru, hráči na své lajně (GK/DEF/MID/FWD), ikona herního stylu (Finisher, Playmaker, Dribbler, Engine, Wall, Keeper), rating, G/A, MOTM, červená karta, přepínač náš tým / soupeř. Styl našich hráčů z kariéry v archivu (5+ zápasů), jinak z daného zápasu, vždy relativně k týmu.
 
+- **2026-11-07 — V83-001 — ✅ dokončeno 2026-11-07:** Nové logo (bílé CR + zlatá střecha na průhledném pozadí): hlavička, favicon, apple-touch-icon, PWA ikony 192/512, `clubroom-logo.png`. Minimalistické animace (nástup karet, růst progress barů, odpočet čísel, kreslení čar grafu, pop forem, hover zdvih, lesk na zlatém CTA) – vše vypnuté při `prefers-reduced-motion`. Oprava useknutých W/D/L ve Window summary.
+
 ## Auditní omezení
 
 Toto je audit zdrojového ZIPu, **ne** test živého provozu. U bodů s ✅ je doložená požadovaná implementace v kódu. Produkční funkčnost, reálné EA odpovědi, platební sandbox a UI screenshoty z tohoto auditu nevyplývají.

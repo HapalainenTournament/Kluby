@@ -1,0 +1,52 @@
+/* CLUBROOM v83 · minimal motion + new logo. Everything is disabled for prefers-reduced-motion. */
+.brand{display:inline-flex;align-items:center;gap:10px}
+.brandMark{width:auto!important;height:30px!important;flex:0 0 auto!important;object-fit:contain}
+.brand b{letter-spacing:.08em;font-weight:900}
+@media (prefers-reduced-motion:no-preference){
+  /* logo: soft entrance once, gentle lift on hover */
+  .brandMark{animation:logoIn83 .8s cubic-bezier(.2,.8,.2,1) both;transition:transform .35s cubic-bezier(.2,.8,.2,1),filter .35s}
+  .brand:hover .brandMark{transform:translateY(-2px) scale(1.04);filter:drop-shadow(0 6px 14px rgba(201,160,72,.35))}
+  .brand b{animation:fadeIn83 .8s .15s ease both}
+  @keyframes logoIn83{from{opacity:0;transform:translateY(6px) scale(.92)}to{opacity:1;transform:none}}
+  @keyframes fadeIn83{from{opacity:0}to{opacity:1}}
+
+  /* content rises in when it is rendered (tab switch, new data) */
+  .rise83{animation:rise83 .5s cubic-bezier(.2,.8,.2,1) both;animation-delay:calc(var(--i,0)*45ms)}
+  @keyframes rise83{from{opacity:0;transform:translateY(10px)}to{opacity:1;transform:none}}
+
+  /* progress bars grow from the left */
+  .grow83{animation:grow83 .9s cubic-bezier(.2,.8,.2,1) both;transform-origin:left center;animation-delay:calc(var(--i,0)*40ms)}
+  @keyframes grow83{from{transform:scaleX(0)}to{transform:none}}
+  .growY83{animation:growY83 .8s cubic-bezier(.2,.8,.2,1) both;transform-origin:bottom center;animation-delay:calc(var(--i,0)*50ms)}
+  @keyframes growY83{from{transform:scaleY(0)}to{transform:none}}
+
+  /* form dots / W-D-L squares pop in one after another */
+  .pop83{animation:pop83 .38s cubic-bezier(.3,1.4,.5,1) both;animation-delay:calc(var(--i,0)*40ms)}
+  @keyframes pop83{from{opacity:0;transform:scale(.5)}to{opacity:1;transform:none}}
+
+  /* chart lines draw themselves */
+  .draw83{stroke-dasharray:var(--len,1200);stroke-dashoffset:var(--len,1200);animation:draw83 1.1s .1s cubic-bezier(.4,0,.2,1) forwards}
+  @keyframes draw83{to{stroke-dashoffset:0}}
+
+  /* hover lift on interactive cards */
+  .pulse78,.recCard78,.sMatch81,.trophy78,.award78.front,.sCard81,.threatCard44,.liveCard81,.v78Panel,.passStrip78,.wrap78{transition:transform .25s cubic-bezier(.2,.8,.2,1),border-color .25s,box-shadow .25s}
+  .pulse78:hover,.recCard78:hover,.sMatch81:hover,.trophy78:hover,.sCard81:hover,.threatCard44:hover,.wrap78:hover{transform:translateY(-3px);box-shadow:0 14px 30px -18px rgba(0,0,0,.8)}
+  player-card{transition:transform .35s cubic-bezier(.2,.8,.2,1),filter .35s}
+  player-card:hover{transform:translateY(-4px) rotate(-.4deg);filter:drop-shadow(0 18px 24px rgba(0,0,0,.45))}
+
+  /* navigation: smooth active state */
+  nav button{transition:background-color .25s,color .25s,border-color .25s,box-shadow .25s}
+
+  /* buttons press feedback */
+  .v78Btn,.passCta78,.passStripCta78,button.primary{transition:transform .12s,filter .2s}
+  .v78Btn:active,.passCta78:active,.passStripCta78:active{transform:scale(.97)}
+
+  /* gold Pass CTA: slow sheen */
+  .passCta78,.passStripCta78{position:relative;overflow:hidden}
+  .passCta78:after,.passStripCta78:after{content:"";position:absolute;inset:0;background:linear-gradient(110deg,transparent 35%,rgba(255,255,255,.45) 50%,transparent 65%);background-size:250% 100%;background-position:150% 0;animation:sheen83 5s ease-in-out infinite;pointer-events:none}
+  @keyframes sheen83{0%,75%{background-position:150% 0}100%{background-position:-60% 0}}
+}
+/* fix: W/D/L letters in the Window summary record were shrunk to dots */
+.performanceRecord44 .recordPart72 em{display:inline!important;font-size:.55em!important;line-height:1!important;opacity:1!important;letter-spacing:0!important;width:auto!important;overflow:visible!important}
+.performanceRecord44 .recordPart72{font-size:24px!important;color:inherit}
+.performanceRecord44 .recordPart72.w{color:var(--green,#34d399)!important}.performanceRecord44 .recordPart72.d{color:#b4c0ce!important}.performanceRecord44 .recordPart72.l{color:var(--red,#f43f5e)!important}
