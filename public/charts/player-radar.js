@@ -22,7 +22,7 @@ function RadarView({data}){
         h(PolarGrid,{stroke:t.colors.grid}),
         h(PolarAngleAxis,{dataKey:'axis',tick:{fill:t.colors.text,fontFamily:t.fontFamily,fontSize:12,fontWeight:800}}),
         h(PolarRadiusAxis,{angle:90,domain:[0,100],tick:false,axisLine:false}),
-        h(Radar,{name:'Team average',dataKey:'team',stroke:t.colors.team,fill:'transparent',strokeWidth:1.25,isAnimationActive:false}),
+        h(Radar,{name:'Squad average',dataKey:'team',stroke:t.colors.team,fill:'transparent',strokeWidth:1.25,isAnimationActive:false}),
         h(Radar,{name:'Player',dataKey:'player',stroke:t.colors.accent,fill:t.colors.accent,fillOpacity:.22,strokeWidth:2.2,isAnimationActive:false}),
         h(Tooltip,{content:h(ClubroomChartTooltip),cursor:false})
       )

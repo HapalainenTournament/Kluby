@@ -6,6 +6,7 @@ import {persistClubPayload,history,analytics,buildSessions} from "./storage.js";
 import {isPremium,planOf,pruneAllFreeClubs,FREE_ARCHIVE_LIMIT} from "./entitlements.js";
 import {dueClubs,rescheduleClub} from "./collector.js";
 import {checkoutConfig,verifySignature,handleEvent} from "./paddle.js";
+import {benchmarks} from "./benchmarks.js";
 
 const app = express();
 // Paddle webhook needs the exact raw body for signature verification, so it is registered before express.json.
@@ -85,6 +86,7 @@ const passActiveClubs=()=>new Set(String(process.env.PASS_ACTIVE_CLUBS||"").spli
 app.get("/api/pass/status",async(req,res)=>{const ids=String(req.query.ids||"").split(",").map(x=>x.replace(/[^0-9]/g,"")).filter(Boolean).slice(0,50);const out={};for(const id of ids){const plan=await planOf(id);out[id]={active:plan!=="free",plan}}res.json({price:{amount:4,currency:"EUR",interval:"month",scope:"club"},checkoutEnabled:checkoutConfig().enabled,freeArchiveLimit:FREE_ARCHIVE_LIMIT,clubs:out})});
 // v78 Club honours for the Trophy Cabinet: EA playoff achievements + overall stats, cached 30 min.
 const honoursCache=new Map();
+app.get("/api/benchmarks",async(_,res)=>{try{res.set("Cache-Control","public, max-age=1800");res.json(await benchmarks())}catch(e){console.error("benchmarks",e.message);res.status(500).json({error:"Benchmarks unavailable",groups:{}})}});
 app.get("/api/club-honours/:id",async(req,res)=>{
  const id=String(req.params.id).replace(/[^\d]/g,"");const p=validPlatform(req.query.platform);if(!id)return res.status(400).json({error:"Invalid club ID."});
  const key=`${p}:${id}`,hit=honoursCache.get(key);if(hit&&Date.now()-hit.at<1800000)return res.json(hit.data);
@@ -257,7 +259,7 @@ app.get("/api/db-export", async (req,res)=>{
     }
     const payload={
       format:"clubroom-postgres-json-backup",
-      version:"85.0.0",
+      version:"88.0.0",
       exportedAt:new Date().toISOString(),
       counts,
       data
@@ -276,7 +278,7 @@ app.get("/api/db-export", async (req,res)=>{
 app.get("/api/history/:id",async(req,res)=>{try{res.json(await scopedJson(await history(String(req.params.id).replace(/[^\d]/g,"")),String(req.params.id).replace(/[^\d]/g,""),validPlatform(req.query.platform)))}catch(e){res.status(500).json({error:e.message})}});
 app.get("/api/analytics/:id",async(req,res)=>{try{res.json(await scopedJson(await analytics(String(req.params.id).replace(/[^\d]/g,"")),String(req.params.id).replace(/[^\d]/g,""),validPlatform(req.query.platform)))}catch(e){res.status(500).json({error:e.message})}});
 app.get("/api/sessions/:id",async(req,res)=>{try{const id=String(req.params.id).replace(/[^\d]/g,"");const gap=Math.max(30,Math.min(240,Number(req.query.gap||90)));res.json(await scopedJson(await buildSessions(id,{gapMinutes:gap,activeMinutes:45}),id,validPlatform(req.query.platform)))}catch(e){res.status(500).json({error:e.message})}});
-app.get("/api/health",(_,res)=>res.json({ok:true,version:"85.0.0",database:dbEnabled,collectorEnabled:dbEnabled && process.env.COLLECTOR_ENABLED!=="false",collectorIntervalMs:Number(process.env.COLLECTOR_INTERVAL_MS||300000),collectorBatch:Number(process.env.COLLECTOR_BATCH||20),time:new Date().toISOString()}));
+app.get("/api/health",(_,res)=>res.json({ok:true,version:"88.0.0",database:dbEnabled,collectorEnabled:dbEnabled && process.env.COLLECTOR_ENABLED!=="false",collectorIntervalMs:Number(process.env.COLLECTOR_INTERVAL_MS||300000),collectorBatch:Number(process.env.COLLECTOR_BATCH||20),time:new Date().toISOString()}));
 
 for(const route of ["about","terms","privacy","cookies","removal","pass","refund"]){
  app.get('/'+route,(_,res)=>res.sendFile(path.join(DIR,'public',route+'.html')));

@@ -10,7 +10,7 @@ nav.innerHTML=MAIN.map(([k,l])=>`<button type="button" data-bn84="${k}">${svg(k)
 const sheet=document.createElement('div');sheet.className='moreSheet84';sheet.setAttribute('role','dialog');sheet.setAttribute('aria-label','More sections');
 sheet.innerHTML=`<div>${MORE.map(([k,l])=>`<button type="button" data-bn84="${k}" class="${k==='plus'?'pass':''}">${svg(k)}<span>${l}</span></button>`).join('')}</div>`;
 document.body.append(nav,sheet);
-const current=()=>document.querySelector('.topNav44 [data-tab].active')?.dataset.tab||'stats';
+const current=()=>document.body.classList.contains('playerRoute69')?'players':document.body.classList.contains('matchRoute73')?'matches':(document.querySelector('.topNav44 [data-tab].active')?.dataset.tab||'stats');
 function sync(){const has=!document.getElementById('dash')?.hidden||document.body.classList.contains('matchRoute73')||document.body.classList.contains('playerRoute69');const hc=!!has&&!!(typeof S!=='undefined'&&S&&S.club);if(document.body.classList.contains('hasClub84')!==hc)document.body.classList.toggle('hasClub84',hc);const c=current();if(!document.body.classList.contains('tab84-'+c)){[...document.body.classList].filter(x=>x.startsWith('tab84-')).forEach(x=>document.body.classList.remove(x));document.body.classList.add('tab84-'+c)}
   nav.querySelectorAll('[data-bn84]').forEach(b=>b.classList.toggle('active',b.dataset.bn84===c));const inMore=MORE.some(([k])=>k===c);nav.querySelector('[data-bn84-more]').classList.toggle('active',inMore);sheet.querySelectorAll('[data-bn84]').forEach(b=>b.classList.toggle('active',b.dataset.bn84===c))}
 function close(){sheet.classList.remove('open');nav.querySelector('[data-bn84-more]').setAttribute('aria-expanded','false')}

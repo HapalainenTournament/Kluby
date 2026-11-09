@@ -21,7 +21,7 @@ test('last-five form is archive result data',app.includes("rows.slice(0,5)")&&ap
 test('radar config has six axes',(['attack','creation','passing','defense','discipline','rating'].every(x=>cfg.includes(`id:'${x}'`))));
 test('radar values are per match/team percentile',app.includes('rankMetric69')&&app.includes('goalContributionsPerMatch')&&app.includes('redCardsPerMatch'));
 test('discipline is lower-is-better',cfg.includes("key:'redCardsPerMatch',label:'Red cards / match',higherIsBetter:false"));
-test('strengths hidden with fewer than 3 players',app.includes('if(r.teamCount<3)'));
+test('squad-only strengths hidden with fewer than 3 players (global benchmark still shows them)',app.includes('if(!r.global&&r.teamCount<3)'));
 
 test('Recharts uses named imports only',radar.includes('import {')&&!radar.includes('import * as')&&!radar.includes('import Recharts'));
 test('Recharts imports only required radar components', ['ResponsiveContainer','RadarChart','PolarGrid','PolarAngleAxis','PolarRadiusAxis','Radar','Tooltip'].every(x=>radar.includes(x)));

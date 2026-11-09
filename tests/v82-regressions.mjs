@@ -15,7 +15,7 @@ check('pass status reports plan',server.includes('planOf(id)')&&server.includes(
 check('periodic prune of all free clubs',server.includes('pruneAllFreeClubs'));
 check('texts say newest 10 per match type',html.includes('Newest 10 per match type')&&pass.includes('newest 10 matches')&&!/last 30 days/i.test(html+pass));
 check('formations use v82 renderer',app.includes('window.v82Formations')&&html.includes('/v81/formations-v82.js'));
-check('attack always upwards: FWD line above DEF',/Y=\{FWD:22,MID:46,DEF:70,GK:88\}/.test(f));
+check('attack always upwards: FWD line above DEF',/Y=\{FWD:16,MID:40,DEF:64,GK:87\}/.test(f));
 check('play style icons with legend',f.includes('STYLES')&&f.includes('styleLegend82')&&f.includes('pIcon82'));
 check('style relative to team baseline',f.includes('function baseline(')&&f.includes('r>score'));
 check('no invented exact coordinates note',f.includes('spread evenly'));

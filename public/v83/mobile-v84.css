@@ -38,6 +38,12 @@
   body.hasClub84:not(.tab84-stats) .heroCrestStack61{flex:0 0 auto;margin:0!important}
   body.hasClub84:not(.tab84-stats) .heroCrest44{width:44px!important;height:44px!important;margin:0!important}
   body.hasClub84:not(.tab84-stats) .heroCrest44 club-crest{width:44px!important;height:44px!important}
+  /* the real EA crest is an <img> with desktop max sizes (!important) – clamp everything inside to the slim bar */
+  body.hasClub84:not(.tab84-stats) .heroCrestStack61{width:48px!important;height:48px!important;min-width:48px;display:grid!important;place-items:center;position:relative}
+  body.hasClub84:not(.tab84-stats) .heroCrest44{flex-basis:44px!important;min-width:0!important;padding:0!important;display:grid!important;place-items:center}
+  body.hasClub84:not(.tab84-stats) .heroCrest44 :is(img,svg,picture,club-crest,.clubCrestFallback){max-width:44px!important;max-height:44px!important;width:auto!important;height:auto!important;margin:0!important;position:static!important;transform:none!important}
+  body.hasClub84:not(.tab84-stats) .heroCrest44 :is(.crestFrame61,.crestCrown78,.passCrown78){display:none!important}
+  body.hasClub84:not(.tab84-stats) .heroCrest44:before{display:none}
   body.hasClub84:not(.tab84-stats) .heroClubCopy44{min-width:0;align-items:flex-start!important;text-align:left!important}
   body.hasClub84:not(.tab84-stats) .heroClubTitleRow44,body.hasClub84:not(.tab84-stats) .heroClubCopy44 .kicker{justify-content:flex-start!important;text-align:left!important;margin-left:0!important;align-self:flex-start!important;margin-right:auto!important}
   body.hasClub84:not(.tab84-stats) .heroClubCopy44{display:flex!important;flex-direction:column;gap:2px}

@@ -90,3 +90,19 @@ Toto je audit zdrojového ZIPu, **ne** test živého provozu. U bodů s ✅ je d
 - [x] Terms §4–5 rewritten for Paddle as Merchant of Record; new `/refund` page (14-day refund).
 - [x] Checkout stays closed unless `PASS_CHECKOUT=on` and all Paddle env vars are set.
 - [ ] Fill `[DOPLNIT …]` operator name / contact email in Terms, Refund, About, Privacy before live review.
+
+## V86 · Real EA archetypes + mobile crest
+- [x] Formations use EA `archetypeid` (Progressor, Boss, Disruptor, Marauder, Recycler, Maestro, Creator, Spark, Magician, Finisher, Target Man, Keeper). Mapping from community research (github.com/Interactive-63/eafc-pro-clubs-api-research/issues/5; 4/7/9 inferred). Stat-derived style only as fallback.
+- [x] Archive matches read the archetype from stored raw EA JSON; `window.clubroomArchetype(pid)` gives a player's latest archetype.
+- [x] Formation header shows "1 GK · 1 DEF · 2 MID · 1 FWD"; lines spread so nodes don't overlap on phones.
+- [x] Compact mobile hero clamps the real crest image (was overflowing).
+
+## V87 · Session awards after the session
+- [x] While a session is live, award cards are locked ("After the session") with an unlock time; reveal works once no match was played for 45 min; page re-renders automatically at unlock.
+
+## V88 · Radar vs all of Clubroom
+- [x] `/api/benchmarks` (benchmarks.js): per-match stats of every player stored in Clubroom (all clubs, both sides), players with 5+ matches (`BENCHMARK_MIN_MATCHES`), grouped GK/DEF/MID/FWD + ALL, 101 quantiles per metric, cached 6 h.
+- [x] Player radar scores = share of same-position players you're at least as good as (50 = typical); squad-average line kept for context.
+- [x] Falls back to the old squad ranking until a position has 20+ benchmark players (then ALL, then squad).
+- [x] Strengths only ≥55, weaknesses only ≤45; "Top X% / Bottom X% of midfielders".
+- [x] Bottom nav highlights Players/Matches on player and match pages.

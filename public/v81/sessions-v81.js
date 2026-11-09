@@ -44,7 +44,8 @@ function filteredSessions(){const all=(D()?.sessions||[]).slice().reverse();cons
   return all.map(s=>({...s,matches:s.matches.filter(m=>filterType==='all'||(filterType==='league'?/league/i.test(m.type):/playoff|cup/i.test(m.type)))})).filter(s=>s.matches.length&&(filterPeriod==='all'||(filterPeriod==='week'?s.end>=weekStart:s.end>=monthStart)))}
 
 /* ---------- live session card (Overview) + polling ---------- */
-function renderLiveCard(){const host=document.getElementById('liveSession81');if(!host)return;const ss=D()?.sessions||[];const s=ss[ss.length-1];
+let unlockTimer=0;function scheduleUnlock(){clearTimeout(unlockTimer);const cur=D()?.sessions?.at(-1);if(!cur||!isLive(cur))return;const ms=cur.end.getTime()+CFG.liveMinutes*60000-Date.now()+1000;unlockTimer=setTimeout(()=>{renderLiveCard();try{renderSessions()}catch{}},Math.max(1000,ms))}
+function renderLiveCard(){scheduleUnlock();const host=document.getElementById('liveSession81');if(!host)return;const ss=D()?.sessions||[];const s=ss[ss.length-1];
   if(!s||!isLive(s)){host.innerHTML='';host.hidden=true;return}
   const x=sessionStats(s),mvp=x.players.filter(p=>p.n>=Math.min(2,x.ms.length))[0],ago=Math.round((Date.now()-s.end)/60000);
   host.hidden=false;host.innerHTML=`<div class="liveCard81"><div class="liveHead81"><span class="livePill81"><i></i>LIVE SESSION</span><small>started ${tFmt(s.start)} · last match ${ago<1?'just now':ago+' min ago'}</small></div>
@@ -87,7 +88,10 @@ function fatigue(s){const all=D().matches,by=k=>all.filter(m=>m.sessionIndex===k
   const early=s.matches.slice(0,3),late=s.matches.slice(3);const allEarly=all.filter(m=>m.sessionIndex<=3),allLate=all.filter(m=>m.sessionIndex>3);
   const pts=l=>l.length?(l.reduce((a,m)=>a+(m.result==='W'?3:m.result==='D'?1:0),0)/l.length):null;
   return `<div class="fatigue81"><div><small>THIS SESSION</small><p>Matches 1–3: <b>${pctS(wr(early))}</b> wins${late.length?` · matches 4+: <b>${pctS(wr(late))}</b>`:''}</p></div><div><small>ALL SESSIONS</small><p>Matches 1–3: <b>${pctS(wr(allEarly))}</b> · matches 4+: <b>${pctS(wr(allLate))}</b>${allLate.length>=5&&allEarly.length>=5?` <em class="${pts(allLate)<pts(allEarly)?'down':'up'}">${pts(allLate)<pts(allEarly)?'you fade late':'you get stronger late'}</em>`:''}</p></div><div class="fatigueBars81">${[1,2,3,4,5].map(k=>{const l=by(k),v=wr(l);return `<span><i style="height:${v??0}%"></i><b>${v==null?'--':v+'%'}</b><small>#${k}${k===5?'+':''}</small></span>`}).join('')}</div></div>`}
-function awardsHtml(s,x){const key=`clubroom81:sAwards:${S.club?.id}:${s.start.getTime()}`,done=new Set(LS.get(key,[]));const elig=x.players.filter(p=>p.n>=Math.min(CFG.minSessionPlayerMatches,x.ms.length));
+function awardsHtml(s,x,live){
+  // Awards are revealed only once the session is over (no match for CFG.liveMinutes) – otherwise the winners would change mid-session.
+  if(live){const at=new Date(s.end.getTime()+CFG.liveMinutes*60000);return AWARDS.map(a=>`<div class="sAward81 back locked" aria-disabled="true">${icon(a.ic,22)}<b>${esc(a.t)}</b><small>${icon('lock',11)} After the session</small></div>`).join('')+`<p class="sAwardsLock81">${icon('clock',13)} Awards unlock when the session ends – around ${tFmt(at)} if no new match starts.</p>`}
+  const key=`clubroom81:sAwards:${S.club?.id}:${s.start.getTime()}`,done=new Set(LS.get(key,[]));const elig=x.players.filter(p=>p.n>=Math.min(CFG.minSessionPlayerMatches,x.ms.length));
   return AWARDS.map(a=>{const c=elig.filter(p=>!a.min||a.min(p)).map(p=>({p,v:a.v(p)})).filter(q=>q.v!=null&&Number.isFinite(q.v)).sort((q,r)=>r.v-q.v)[0];
     if(!done.has(a.id))return `<button type="button" class="sAward81 back" data-s81-award="${a.id}" data-s81-key="${esc(key)}">${icon(a.ic,22)}<b>${esc(a.t)}</b><small>Tap to reveal</small></button>`;
     return c?`<div class="sAward81 front">${icon(a.ic,16)}<b>${esc(a.t)}</b>${V.av(c.p.p,'mini')}<strong>${esc(c.p.p?.name)}</strong><em>${a.f(c.v)} <small>${esc(a.u)}</small></em></div>`:`<div class="sAward81 front none">${icon(a.ic,16)}<b>${esc(a.t)}</b><small>No winner</small></div>`}).join('')}
@@ -106,7 +110,7 @@ function detailHtml(s){const x=sessionStats(s),full=D().sessions.find(q=>q.start
     <section class="v78Panel"><div class="v78PanelHead">${icon('trophy',16)}<span class="label">SESSION LEADERBOARD</span></div><div class="sChips81">${METRICS.map(q=>`<button type="button" data-s81-metric="${q[0]}" class="${q[0]===m[0]?'active':''}">${q[1]}</button>`).join('')}</div>${lb.length?lb.map((q,i)=>`<div class="sLb81 ${i===0?'gold':''}"><span>#${i+1}</span>${V.pLink(q.p.p)}<span class="sLbTrack81"><i style="width:${Math.max(4,Math.abs(q.v)/mx*100)}%"></i></span><b>${m[3](q.v)}</b></div>`).join(''):'<div class="v78Empty">No data for this metric.</div>'}</section>
    </div>
    <section class="v78Panel"><div class="v78PanelHead">${icon('wave',16)}<span class="label">RATINGS THROUGH THE SESSION</span><small>top 6 players · dashed = team average</small></div>${chart(s,x)}</section>
-   <div class="v78Two"><section class="v78Panel"><div class="v78PanelHead">${icon('crown',16)}<span class="label">SESSION AWARDS</span><small>min. ${CFG.minSessionPlayerMatches} matches</small></div><div class="sAwards81">${awardsHtml(s,x)}</div></section>
+   <div class="v78Two"><section class="v78Panel"><div class="v78PanelHead">${icon('crown',16)}<span class="label">SESSION AWARDS</span><small>min. ${CFG.minSessionPlayerMatches} matches</small></div><div class="sAwards81">${awardsHtml(s,x,lv)}</div></section>
    <section class="v78Panel"><div class="v78PanelHead">${icon('clock',16)}<span class="label">FATIGUE CHECK</span><small>win rate by match order</small></div>${fatigue(s)}</section></div>
    ${V.watermark()}</article>`}
 
@@ -129,7 +133,7 @@ document.addEventListener('click',e=>{
   const t=e.target.closest('[data-s81-type]');if(t){filterType=t.dataset.s81Type;LS.set('clubroom81:sType',filterType);document.querySelectorAll('[data-s81-type]').forEach(b=>b.classList.toggle('active',b===t));selected=null;renderSessions();return}
   const p=e.target.closest('[data-s81-period]');if(p){filterPeriod=p.dataset.s81Period;LS.set('clubroom81:sPeriod',filterPeriod);document.querySelectorAll('[data-s81-period]').forEach(b=>b.classList.toggle('active',b===p));selected=null;renderSessions();return}
   const mm=e.target.closest('[data-s81-metric]');if(mm){metric=mm.dataset.s81Metric;LS.set('clubroom81:sMetric',metric);renderSessions();return}
-  const a=e.target.closest('[data-s81-award]');if(a){const k=a.dataset.s81Key,set=new Set(LS.get(k,[]));set.add(a.dataset.s81Award);LS.set(k,[...set]);renderSessions();return}
+  const a=e.target.closest('[data-s81-award]');if(a){const cur=D()?.sessions?.at(-1);if(cur&&isLive(cur)&&a.dataset.s81Key.endsWith(':'+cur.start.getTime()))return;const k=a.dataset.s81Key,set=new Set(LS.get(k,[]));set.add(a.dataset.s81Award);LS.set(k,[...set]);renderSessions();return}
   if(e.target.closest('[data-share-session81]')){const el=document.getElementById('sessionCard81');if(el)V.sharePng(el,`clubroom-session-${selected}.png`,1200,Math.max(1400,Math.round(el.scrollHeight*1200/el.clientWidth)));return}
   if(e.target.closest('[data-share-match81]')){const el=document.getElementById('matchScoreboard73');if(el)V.sharePng(el,'clubroom-match.png',1200,630);return}
 });
