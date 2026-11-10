@@ -44,3 +44,10 @@ ok(s.includes("function lbCarousel(x)")&&r("public/v81/v81.css").includes("scrol
 ok(!s.includes("data-s81-metric=\"${q[0]}\""),"old metric chips removed");
 ok(["shooting","dribbling","discipline"].every(g=>cfg.includes(`id:'${g}'`))&&cfg.includes("sample:'eventMatches'"),"Squad Board has detailed event groups");
 ok(x.includes("squadBoardData70=function(p)")&&!x.includes("drbPct"),"Squad Board merges event sums; no dribble %");}
+// v94
+{const t=r("public/v94/trends.js"),html=r("public/index.html");
+ok(html.includes('id="formTrend94"')&&html.includes('id="mbm94"')&&html.includes("/v94/trends.js"),"Analytics form + match-by-match trend views mounted");
+ok(t.includes("const WINDOWS=[5,10,20,30]")&&t.includes("function trendOf(ys)"),"window 5/10/20/30 and trend label from regression slope");
+ok(t.includes("class=\"col94")&&t.includes("RES[res]"),"form uses rating columns coloured by result");
+ok(t.includes("mbmGrid94")&&t.includes("['beaten','Opponents beaten'"),"match-by-match shows whole squad per stat incl. EA event stats");
+ok(html.includes('<details class="mbmList94"><summary>All matches</summary><div id="analyticsMatchByMatch">'),"old match table kept under All matches");}

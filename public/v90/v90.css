@@ -30,3 +30,7 @@
 .cmpBar90 span,.cmpBar90 i{display:block;height:100%;border-radius:99px;min-width:3px}
 .cmpBar90 span{background:#2dd4bf}.cmpBar90 i{background:#64748b}
 @media (max-width:760px){.extTiles90{grid-template-columns:1fr 1fr}.extTiles90 b{font-size:19px}}
+
+/* v93: only current-gen search (EA returns errors for PS4/Xbox One and nothing for Switch) */
+.platformSegment44{grid-template-columns:1fr!important}
+.platformSegment44 button{pointer-events:none}

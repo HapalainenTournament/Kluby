@@ -131,3 +131,10 @@ Toto je audit zdrojového ZIPu, **ne** test živého provozu. U bodů s ✅ je d
 - [x] Checkout page redirects to Stripe; return URL polls until the webhook activates the Pass.
 - [x] Terms / Refund / Pass texts: Stripe + Link as merchant of record; cancel at app.link.com.
 - [ ] Fill [DOPLNIT support email] in Refund policy; set support email in Stripe business details (Link escalates there).
+
+## V93 · Current-gen search only
+- [x] PS4 / Xbox One removed from homepage search (EA search errors for common-gen4 on FC 26); Switch not added (EA returns no clubs for nx). Saved gen4 clubs still open; server still accepts gen4/nx.
+
+## V94 · Analytics player form + match-by-match
+- [x] Form tab: "Rating run" – player chips with trend arrows, window 5/10/20/30, rating columns coloured by result, avg line, tap for match, last-N avg vs career, trend (regression slope), best/worst, squad pulse cards with sparklines.
+- [x] Match-by-Match tab: 13 stats (incl. EA event stats) shown for the whole squad as small multiples with result-coloured dots, avg line, best/worst, top performer; old table under "All matches".
