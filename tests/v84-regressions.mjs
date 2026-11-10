@@ -96,3 +96,4 @@ ok(html.includes("<b>POSTGAME</b>")&&r("server.js").includes('"admin@postgame.gg
 // v102.0.1: index.html must stay balanced (a broken nesting hid the whole Misc tab)
 {const s=r("public/index.html");const a=s.indexOf('data-pane="analytics"'),b=s.indexOf('data-pane="misc"');const seg=s.slice(a,b);
 ok(seg.split("<section").length===seg.split("</section>").length&&seg.split("<div").length===seg.split("</div>").length,"Analytics markup is balanced, Misc is not swallowed");}
+ok(!r("public/v101/compare.js").includes("data-compare-swap62"),"Compare: no swap button");

@@ -49,3 +49,4 @@
 .cmpTable101 thead th:first-child,.cmpTable101 tbody th{text-transform:none;letter-spacing:0}
 @media (max-width:760px){.cmpHead101{padding:12px 10px 4px!important}.cmpCovHost101{padding:0 10px}.comparePanel #compareBody{padding:0 10px 14px}.cmpTable101 thead th:first-child{width:140px}}
 .typeTag101{font-style:normal;margin-left:6px;padding:1px 6px;border-radius:6px;background:#13283c;color:#8ea3bd;font-size:10px;font-weight:900;letter-spacing:.04em;text-transform:uppercase}
+.compareSwap62,.cmpSwap101{display:none!important}

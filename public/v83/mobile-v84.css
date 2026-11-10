@@ -58,3 +58,11 @@
 }
 
 .passLink85{color:#9fb2c8;font-weight:700;margin-left:10px;text-decoration:none}.passLink85:hover{color:#eaf2fa}
+/* v102.1: smaller player figures in Misc → Chemistry on phones */
+@media (max-width:760px){
+ .partnershipTop75{min-height:0!important;height:auto!important}
+ .partnershipPlayer75{height:auto!important}
+ .partnershipPlayer75 player-avatar{flex:0 0 auto!important;width:68px!important;height:112px!important;max-width:68px;align-self:center}
+ .chemPickPortrait75{width:84px!important;height:96px!important;min-height:0!important;aspect-ratio:auto!important;align-self:center;margin:0 auto}
+ .chemPickPortrait75 player-avatar,.chemPickPortrait75 img{width:100%!important;height:100%!important}
+}

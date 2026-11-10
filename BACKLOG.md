@@ -184,3 +184,9 @@ Toto je audit zdrojového ZIPu, **ne** test živého provozu. U bodů s ✅ je d
 ## v102.0.1
 - Fix: broken nesting in Analytics → Detailed hid the whole Misc tab.
 - Prepared (not active): worker.js + wrangler.toml for a later Cloudflare move.
+
+## v102.0.2
+- Mobile: smaller player figures in Misc → Chemistry (spotlight + pick a pair).
+
+## v102.0.3
+- Compare: swap button removed.

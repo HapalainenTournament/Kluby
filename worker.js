@@ -17,7 +17,7 @@ import {clubCardSvg,toPng,setRenderer,setMark} from "./og.js";
 import {addWebhook,listWebhooks,removeWebhook,runDiscordJob,sessionImage} from "./discord.js";
 import {stripeConfig,verifyStripeSignature,handleStripeEvent,createCheckout} from "./stripe.js";
 
-const VERSION="102.0.1";
+const VERSION="102.0.3";
 const dbOn=()=>dbEnabledLive;
 const env$=k=>process.env[k];
 
