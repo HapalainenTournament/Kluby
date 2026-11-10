@@ -1,6 +1,6 @@
 {
   "name": "clubroom",
-  "version": "102.0.0",
+  "version": "102.0.1",
   "private": true,
   "type": "module",
   "scripts": {
@@ -16,7 +16,9 @@
   },
   "dependencies": {
     "@resvg/resvg-js": "^2.6.2",
+    "@resvg/resvg-wasm": "^2.6.2",
     "express": "^5.1.0",
+    "hono": "^4.13.17",
     "pg": "^8.13.1"
   }
 }

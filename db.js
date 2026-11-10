@@ -1,15 +1,22 @@
 import pg from "pg";
 const {Pool}=pg;
-export const enabled=!!process.env.DATABASE_URL;
-export const pool=enabled?new Pool({
+// v103: works on Node (pool from DATABASE_URL) and on Cloudflare Workers (worker.js calls configureDb with the
+// Hyperdrive connection string; one short-lived client per query, Hyperdrive does the real pooling).
+export let enabled=!!process.env.DATABASE_URL;
+export let pool=enabled?new Pool({
   connectionString:process.env.DATABASE_URL,
   ssl:process.env.DATABASE_URL?.includes("localhost")?false:{rejectUnauthorized:false},
   max:5
 }):null;
+let perQueryUrl=null;
+export function configureDb(url){if(!url){enabled=false;perQueryUrl=null;return}enabled=true;pool=null;perQueryUrl=url}
 
 export async function query(text,params=[]){
   if(!enabled) return {rows:[],rowCount:0};
-  return pool.query(text,params);
+  if(pool) return pool.query(text,params);
+  const c=new pg.Client({connectionString:perQueryUrl});
+  await c.connect();
+  try{return await c.query(text,params)}finally{c.end().catch(()=>{})}
 }
 
 export async function migrate(){

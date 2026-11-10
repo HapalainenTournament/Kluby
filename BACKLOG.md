@@ -180,3 +180,7 @@ Toto je audit zdrojového ZIPu, **ne** test živého provozu. U bodů s ✅ je d
 - Operator defaults: Kryštof Kadlec, admin@postgame.gg (env can override). Set PUBLIC_URL=https://postgame.gg after domain is live.
 - Analytics: Impact (decisive wins, with/without, goal share, close vs rest), Development (last 10 vs prev 10, jump/drop, Pass percentiles), Fatigue (match # of session), When we win (day×time heatmap, type, squad size). Creativity+Passing merged into Detailed. Clutch/Carry/Improvement removed.
 - Gates: new tabs = reward ad; Match-by-Match now free.
+
+## v102.0.1
+- Fix: broken nesting in Analytics → Detailed hid the whole Misc tab.
+- Prepared (not active): worker.js + wrangler.toml for a later Cloudflare move.

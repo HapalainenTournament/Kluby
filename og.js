@@ -1,17 +1,14 @@
 // POSTGAME v96 · Server-rendered share images (SVG → PNG via resvg): club link preview (1200×630) and session report.
-import fs from "node:fs";
-import path from "node:path";
-import {fileURLToPath} from "node:url";
-import {Resvg} from "@resvg/resvg-js";
-const DIR=path.dirname(fileURLToPath(import.meta.url));
-const FONTS=["Inter_500Medium.ttf","Inter_800ExtraBold.ttf","Inter_900Black.ttf"].map(f=>path.join(DIR,"assets","fonts",f)).filter(f=>fs.existsSync(f));
-const MARK=(()=>{try{return "data:image/png;base64,"+fs.readFileSync(path.join(DIR,"public","assets","postgame-mark.png")).toString("base64")}catch{return null}})();
+// v103: runtime-agnostic. The host (server.js on Node, worker.js on Cloudflare) plugs in the SVG→PNG renderer and the logo.
+let RENDER=null,MARK=null;
+export function setRenderer(fn){RENDER=fn}
+export function setMark(dataUri){MARK=dataUri||null}
 const esc=s=>String(s??"").replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
 const N=v=>{const n=Number(v);return Number.isFinite(n)?n:0};
 const RES={W:"#2dd4bf",D:"#fbbf24",L:"#fb7185"};
 // rough text fitting (Inter ≈ 0.6em per char at heavy weights)
 export function fit(text,maxPx,size,min=28){text=String(text||"");let s=size;while(s>min&&text.length*s*0.6>maxPx)s-=2;let t=text;while(t.length>3&&t.length*s*0.6>maxPx)t=t.slice(0,-2);if(t!==text)t=t.replace(/\s+$/,"")+"…";return {text:t,size:s}}
-export function toPng(svg,width){const r=new Resvg(svg,{fitTo:{mode:"width",value:width},font:{fontFiles:FONTS,loadSystemFonts:false,defaultFontFamily:"Inter"}});return r.render().asPng()}
+export function toPng(svg,width){if(!RENDER)throw new Error("PNG renderer not configured");return RENDER(svg,width)}
 
 const SHIELD=`<path d="M0-96 L80-64 L80 8 C80 58 40 86 0 100 C-40 86 -80 58 -80 8 L-80-64 Z" fill="#13283c" stroke="#2dd4bf" stroke-width="5"/><path d="M0-40v80M-40 0h80" stroke="#2dd4bf" stroke-width="10" stroke-linecap="round"/>`;
 const crestEl=(crest,cx,cy,size)=>crest?`<image href="${crest}" x="${cx-size/2}" y="${cy-size/2}" width="${size}" height="${size}" preserveAspectRatio="xMidYMid meet"/>`:`<g transform="translate(${cx} ${cy}) scale(${size/220})">${SHIELD}</g>`;

@@ -1,6 +1,6 @@
 // v96: share images + Discord session reports. DB part needs a THROWAWAY DATABASE_URL.
 process.env.OWNER_CLUB_IDS='555';delete process.env.PASS_ACTIVE_CLUBS;
-const O=await import('../og.js');const Dc=await import('../discord.js');
+const O=await import('../og.js');{const {Resvg}=await import('@resvg/resvg-js');const fs=await import('node:fs');const F=['Inter_500Medium','Inter_800ExtraBold','Inter_900Black'].map(f=>'assets/fonts/'+f+'.ttf');O.setRenderer((svg,w)=>new Resvg(svg,{fitTo:{mode:'width',value:w},font:{fontFiles:F,loadSystemFonts:false,defaultFontFamily:'Inter'}}).render().asPng())}const Dc=await import('../discord.js');
 let n=0,fail=0;const check=(m,ok)=>{n++;console.log(`${ok?'PASS':'FAIL'} ${m}`);if(!ok)fail++};
 const png=O.toPng(O.clubCardSvg({name:'Skutec FC',wins:1,ties:2,losses:3,form:['W','L']}),1200);
 check('club preview renders a 1200×630 PNG',png[1]===0x50&&png.readUInt32BE(16)===1200&&png.readUInt32BE(20)===630);

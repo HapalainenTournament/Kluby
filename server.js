@@ -8,7 +8,8 @@ import {isPremium,planOf,pruneAllFreeClubs,FREE_ARCHIVE_LIMIT} from "./entitleme
 import {dueClubs,rescheduleClub} from "./collector.js";
 import {checkoutConfig,verifySignature,handleEvent} from "./paddle.js";
 import {benchmarks} from "./benchmarks.js";
-import {clubCardSvg,toPng,sessionSummary,sessionCardSvg} from "./og.js";
+import {clubCardSvg,toPng,sessionSummary,sessionCardSvg,setRenderer,setMark} from "./og.js";
+import {Resvg} from "@resvg/resvg-js";
 import {addWebhook,listWebhooks,removeWebhook,runDiscordJob,sessionImage} from "./discord.js";
 import {stripeConfig,verifyStripeSignature,handleStripeEvent,createCheckout} from "./stripe.js";
 // Which payment provider sells Postgame Pass: PAYMENT_PROVIDER=stripe|paddle (default stripe when STRIPE_SECRET_KEY is set).
@@ -33,6 +34,9 @@ app.post("/api/stripe/webhook",express.raw({type:"*/*",limit:"1mb"}),async(req,r
 });
 app.use(express.json({limit:"16kb"}));
 const DIR = path.dirname(fileURLToPath(import.meta.url));
+{const fonts=["Inter_500Medium.ttf","Inter_800ExtraBold.ttf","Inter_900Black.ttf"].map(f=>path.join(DIR,"assets","fonts",f)).filter(f=>fs.existsSync(f));
+ setRenderer((svg,width)=>new Resvg(svg,{fitTo:{mode:"width",value:width},font:{fontFiles:fonts,loadSystemFonts:false,defaultFontFamily:"Inter"}}).render().asPng());
+ try{setMark("data:image/png;base64,"+fs.readFileSync(path.join(DIR,"public","assets","postgame-mark.png")).toString("base64"))}catch{}}
 const PORT = process.env.PORT || 3000;
 const EA = "https://proclubs.ea.com/api/fc";
 const cache = new Map();
@@ -300,7 +304,7 @@ app.get("/api/db-export", async (req,res)=>{
     }
     const payload={
       format:"clubroom-postgres-json-backup",
-      version:"102.0.0",
+      version:"102.0.1",
       exportedAt:new Date().toISOString(),
       counts,
       data
@@ -319,7 +323,7 @@ app.get("/api/db-export", async (req,res)=>{
 app.get("/api/history/:id",async(req,res)=>{try{res.json(await scopedJson(await history(String(req.params.id).replace(/[^\d]/g,"")),String(req.params.id).replace(/[^\d]/g,""),validPlatform(req.query.platform)))}catch(e){res.status(500).json({error:e.message})}});
 app.get("/api/analytics/:id",async(req,res)=>{try{res.json(await scopedJson(await analytics(String(req.params.id).replace(/[^\d]/g,"")),String(req.params.id).replace(/[^\d]/g,""),validPlatform(req.query.platform)))}catch(e){res.status(500).json({error:e.message})}});
 app.get("/api/sessions/:id",async(req,res)=>{try{const id=String(req.params.id).replace(/[^\d]/g,"");const gap=Math.max(30,Math.min(240,Number(req.query.gap||90)));res.json(await scopedJson(await buildSessions(id,{gapMinutes:gap,activeMinutes:45}),id,validPlatform(req.query.platform)))}catch(e){res.status(500).json({error:e.message})}});
-app.get("/api/health",(_,res)=>res.json({ok:true,version:"102.0.0",database:dbEnabled,collectorEnabled:dbEnabled && process.env.COLLECTOR_ENABLED!=="false",collectorIntervalMs:Number(process.env.COLLECTOR_INTERVAL_MS||300000),collectorBatch:Number(process.env.COLLECTOR_BATCH||20),time:new Date().toISOString()}));
+app.get("/api/health",(_,res)=>res.json({ok:true,version:"102.0.1",database:dbEnabled,collectorEnabled:dbEnabled && process.env.COLLECTOR_ENABLED!=="false",collectorIntervalMs:Number(process.env.COLLECTOR_INTERVAL_MS||300000),collectorBatch:Number(process.env.COLLECTOR_BATCH||20),time:new Date().toISOString()}));
 
 for(const route of ["pass"]){
  app.get('/'+route,(_,res)=>res.sendFile(path.join(DIR,'public',route+'.html')));
