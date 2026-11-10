@@ -33,6 +33,7 @@ export async function migrate(){
    active_until TIMESTAMPTZ,created_at TIMESTAMPTZ NOT NULL DEFAULT now(),updated_at TIMESTAMPTZ NOT NULL DEFAULT now(),
    PRIMARY KEY(club_id,platform)
  );
+ CREATE TABLE IF NOT EXISTS billing_events(provider TEXT NOT NULL,event_id TEXT NOT NULL,event_type TEXT NOT NULL,occurred_at TIMESTAMPTZ,received_at TIMESTAMPTZ NOT NULL DEFAULT now(),PRIMARY KEY(provider,event_id));
  CREATE TABLE IF NOT EXISTS paddle_events(event_id TEXT PRIMARY KEY,event_type TEXT NOT NULL,occurred_at TIMESTAMPTZ,received_at TIMESTAMPTZ NOT NULL DEFAULT now());
  ALTER TABLE club_entitlements ADD COLUMN IF NOT EXISTS provider_customer_id TEXT;
  ALTER TABLE club_entitlements ADD COLUMN IF NOT EXISTS provider_status TEXT;

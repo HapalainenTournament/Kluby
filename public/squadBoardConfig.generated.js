@@ -4,7 +4,10 @@ export const SQUAD_BOARD_GROUPS70=[
  {id:'attack',label:'Attack'},
  {id:'creation',label:'Creation'},
  {id:'defense',label:'Defense'},
- {id:'passing',label:'Passing'}
+ {id:'passing',label:'Passing'},
+ {id:'shooting',label:'Shooting'},
+ {id:'dribbling',label:'Dribbling'},
+ {id:'discipline',label:'Discipline'}
 ];
 export const SQUAD_BOARD_METRICS70=[
  {id:'matches',label:'Matches',group:'general',valueKey:'matches',format:'integer',higherIsBetter:true,rankKey:'games',perMatch:'sample',sample:'matches'},
@@ -25,5 +28,28 @@ export const SQUAD_BOARD_METRICS70=[
  {id:'cleanSheets',label:'Clean sheets',group:'defense',valueKey:'cleanSheets',format:'integer',higherIsBetter:true,perMatch:'rate',sample:'archiveMatches',perMatchFormat:'percent'},
  {id:'passRate',label:'Pass %',group:'passing',valueKey:'passRate',format:'percent',higherIsBetter:true,rankKey:'passRate',perMatch:'same',sample:'matches'},
  {id:'passes',label:'Passes',group:'passing',valueKey:'passes',format:'integer',higherIsBetter:true,rankKey:'passes',perMatch:'divide',sample:'matches'},
- {id:'passAttempts',label:'Pass attempts',group:'passing',valueKey:'passAttempts',format:'integer',higherIsBetter:true,perMatch:'divide',sample:'matches'}
+ {id:'passAttempts',label:'Pass attempts',group:'passing',valueKey:'passAttempts',format:'integer',higherIsBetter:true,perMatch:'divide',sample:'matches'},
+ // v91: detailed EA event stats (sample = archived matches that carry event data)
+ {id:'xShotsOn',label:'On target',group:'shooting',valueKey:'xShotsOn',format:'integer',higherIsBetter:true,perMatch:'divide',sample:'eventMatches'},
+ {id:'xShotAcc',label:'Shot acc. %',group:'shooting',valueKey:'xShotAcc',format:'percent',higherIsBetter:true,perMatch:'same',sample:'eventMatches'},
+ {id:'xInBox',label:'In box',group:'shooting',valueKey:'xInBox',format:'integer',higherIsBetter:true,perMatch:'divide',sample:'eventMatches'},
+ {id:'xOutBox',label:'Outside box',group:'shooting',valueKey:'xOutBox',format:'integer',higherIsBetter:true,perMatch:'divide',sample:'eventMatches'},
+ {id:'xConv',label:'Conversion %',group:'shooting',valueKey:'xConv',format:'percent',higherIsBetter:true,perMatch:'same',sample:'eventMatches'},
+ {id:'xFwd',label:'Forward',group:'passing',valueKey:'xFwd',format:'integer',higherIsBetter:true,perMatch:'divide',sample:'eventMatches'},
+ {id:'xLong',label:'Long',group:'passing',valueKey:'xLong',format:'integer',higherIsBetter:true,perMatch:'divide',sample:'eventMatches'},
+ {id:'xCross',label:'Crosses',group:'passing',valueKey:'xCross',format:'integer',higherIsBetter:true,perMatch:'divide',sample:'eventMatches'},
+ {id:'xSwitch',label:'Switches',group:'passing',valueKey:'xSwitch',format:'integer',higherIsBetter:true,perMatch:'divide',sample:'eventMatches'},
+ {id:'xDribbles',label:'Dribbles',group:'dribbling',valueKey:'xDribbles',format:'integer',higherIsBetter:true,perMatch:'divide',sample:'eventMatches'},
+ {id:'xBeaten',label:'Beaten',group:'dribbling',valueKey:'xBeaten',format:'integer',higherIsBetter:true,perMatch:'divide',sample:'eventMatches'},
+ {id:'xSkill',label:'Skill beats',group:'dribbling',valueKey:'xSkill',format:'integer',higherIsBetter:true,perMatch:'divide',sample:'eventMatches'},
+ {id:'xCarries',label:'Carries',group:'dribbling',valueKey:'xCarries',format:'integer',higherIsBetter:true,perMatch:'divide',sample:'eventMatches'},
+ {id:'xDisp',label:'Dispossessed',group:'dribbling',valueKey:'xDisp',format:'integer',higherIsBetter:false,perMatch:'divide',sample:'eventMatches'},
+ {id:'xPossLost',label:'Poss. lost',group:'dribbling',valueKey:'xPossLost',format:'integer',higherIsBetter:false,perMatch:'divide',sample:'eventMatches'},
+ {id:'xTklLost',label:'Tackles lost',group:'defense',valueKey:'xTklLost',format:'integer',higherIsBetter:false,perMatch:'divide',sample:'eventMatches'},
+ {id:'xWonHigh',label:'Won high',group:'defense',valueKey:'xWonHigh',format:'integer',higherIsBetter:true,perMatch:'divide',sample:'eventMatches'},
+ {id:'xFouls',label:'Fouls',group:'discipline',valueKey:'xFouls',format:'integer',higherIsBetter:false,perMatch:'divide',sample:'eventMatches'},
+ {id:'xFoulsWon',label:'Fouls won',group:'discipline',valueKey:'xFoulsWon',format:'integer',higherIsBetter:true,perMatch:'divide',sample:'eventMatches'},
+ {id:'xYellow',label:'Yellow',group:'discipline',valueKey:'xYellow',format:'integer',higherIsBetter:false,perMatch:'divide',sample:'eventMatches'},
+ {id:'xRed',label:'Red',group:'discipline',valueKey:'xRed',format:'integer',higherIsBetter:false,perMatch:'divide',sample:'eventMatches'},
+ {id:'xOffside',label:'Offside',group:'discipline',valueKey:'xOffside',format:'integer',higherIsBetter:false,perMatch:'divide',sample:'eventMatches'}
 ];

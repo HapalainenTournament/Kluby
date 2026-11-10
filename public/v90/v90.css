@@ -1,0 +1,32 @@
+/* CLUBROOM v90 · extended stats */
+.extSeg90{display:flex;gap:4px;margin:0 0 14px;padding:4px;border-radius:14px;background:#0a1420;border:1px solid #1d2f44;overflow-x:auto;scrollbar-width:none;max-width:100%}
+.extSeg90::-webkit-scrollbar{display:none}
+.extSeg90 button{flex:0 0 auto;padding:8px 13px;border:0;border-radius:10px;background:transparent;color:#8ea3bd;font:inherit;font-size:13px;font-weight:800;cursor:pointer}
+.extSeg90 button.active{background:#13283c;color:#eaf6ff;box-shadow:inset 0 0 0 1px #2a4a66}
+.matchPlayerTable73.ext90 th[title]{text-decoration:underline dotted;cursor:help}
+.ext90card{margin:16px 0 0;padding:16px;border-radius:18px;background:#0d1826;border:1px solid #1f3247;min-width:0}
+.extHead90{display:flex;flex-wrap:wrap;align-items:baseline;gap:4px 10px;margin:0 0 12px}
+.extHead90 .label{flex-basis:100%;font-size:11px;letter-spacing:.12em;font-weight:900;color:#5eead4}
+.extHead90 h3{margin:0;font-size:18px}
+.extHead90 small{color:#8ea3bd;font-size:12px}
+.extTiles90{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:8px}
+.extTiles90>div{padding:12px;border-radius:14px;background:#0a1420;border:1px solid #1a2c40;display:grid;gap:3px;min-width:0}
+.extTiles90 span{font-size:11px;font-weight:800;letter-spacing:.06em;text-transform:uppercase;color:#8ea3bd}
+.extTiles90 b{font-size:22px;color:#eaf2fa;font-variant-numeric:tabular-nums}
+.extTiles90 small{color:#9fb2c8;font-size:12px;line-height:1.35}
+.extMore90{margin-top:12px}
+.extMore90 summary{cursor:pointer;color:#5eead4;font-weight:800;font-size:13px;padding:6px 0}
+.extGroup90{display:grid;grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:2px 16px;margin:10px 0 0;padding-top:10px;border-top:1px solid #1a2c40}
+.extGroup90>b{grid-column:1/-1;font-size:12px;letter-spacing:.08em;text-transform:uppercase;color:#cfe0f1;margin-bottom:4px}
+.extGroup90>div{display:flex;justify-content:space-between;gap:10px;padding:4px 0;font-size:13px;color:#9fb2c8;border-bottom:1px dashed #16273a}
+.extGroup90 em{font-style:normal;font-weight:800;color:#eaf2fa;font-variant-numeric:tabular-nums}
+.extGroup90 span[title]{text-decoration:underline dotted;cursor:help}
+.cmp90{display:grid;grid-template-columns:52px 1fr 52px;align-items:center;gap:4px 10px;padding:6px 0}
+.cmp90 small{grid-column:1/-1;grid-row:1;text-align:center;font-size:12px;color:#8ea3bd;font-weight:700}
+.cmp90 b{font-variant-numeric:tabular-nums;color:#9fb2c8;font-size:15px}
+.cmp90 b:last-of-type{text-align:right}
+.cmp90 b.win{color:#eaf2fa}
+.cmpBar90{display:flex;gap:3px;height:7px}
+.cmpBar90 span,.cmpBar90 i{display:block;height:100%;border-radius:99px;min-width:3px}
+.cmpBar90 span{background:#2dd4bf}.cmpBar90 i{background:#64748b}
+@media (max-width:760px){.extTiles90{grid-template-columns:1fr 1fr}.extTiles90 b{font-size:19px}}

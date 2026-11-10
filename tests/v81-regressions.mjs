@@ -16,7 +16,7 @@ check('v43 session renderer replaced',js.includes('window.v43RenderSessions=func
 check('match detail hooks in renderTab73',app.includes('window.v81MatchTop')&&app.includes('window.v81MatchBottom'));
 check('player table has dribbles, through balls and vs avg',app.includes('<th>Drb</th><th>TB</th>')&&app.includes('v81VsAvgCell'));
 check('xG/xA read only from real EA keys',js.includes('window.eaExpected81')&&app.includes("eaExpected81(x,'xg')")&&!/xg\s*=\s*[^;]*shots\s*\*/i.test(js));
-check('xG metrics configured but hidden when missing',cfg.includes("id:'xg'")&&cfg.includes("id:'xa'")&&app.includes("if(av==null||bv==null)return''"));
+check('xG/xA metrics removed (v90: EA sends none)',!cfg.includes("id:'xg'")&&!cfg.includes("id:'xa'")&&app.includes("if(av==null||bv==null)return''"));
 check('EA field diagnostics endpoint',server.includes('/api/ea-fields/:id')&&server.includes('xgCandidates'));
 check('match tags, duel, goalkeepers, prev/next',js.includes('Hat-trick')&&js.includes('BEST ON THE PITCH')&&js.includes('GOALKEEPERS')&&js.includes('Previous:'));
 process.exit(fail?1:0);

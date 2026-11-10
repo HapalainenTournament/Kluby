@@ -106,3 +106,28 @@ Toto je audit zdrojového ZIPu, **ne** test živého provozu. U bodů s ✅ je d
 - [x] Falls back to the old squad ranking until a position has 20+ benchmark players (then ALL, then squad).
 - [x] Strengths only ≥55, weaknesses only ≤45; "Top X% / Bottom X% of midfielders".
 - [x] Bottom nav highlights Players/Matches on player and match pages.
+
+## V89 · Refresh keeps the club
+- [x] Loading/refreshing /club/:id or /club/:id/:tab opens that club and tab (was falling back to the homepage; player and match URLs already worked).
+
+## V90 · Extended EA stats (no xG)
+- [x] `public/v90/stats-ext.js`: parses match_event_aggregate events (confirmed IDs from github.com/Interactive-63/eafc-pro-clubs-api-research): passes completed/failed by direction & length, crosses, through balls, switches, shots on/off target in/outside box, dribbles, opponents beaten, skill beats, carries, dispossessed, tackles lost, possession won high / lost, fouls, fouls won, yellow cards, offsides.
+- [x] Match → Player Stats: General / Shooting / Passing / Dribbling / Defending / Discipline groups for both teams; General table now shows pass counts (made/attempted) + %.
+- [x] Match → Overview: team comparison bars.
+- [x] Session detail, player profile (under radar) and Analytics → Detailed (club totals + us vs opponents per match).
+- [x] xG/xA removed (EA sends none). Dribble % = completed vs dispossessed (EA has no dribble attempts).
+- [ ] Squad Board columns from event data (needs per-player archive sums – profile card already has them).
+
+## V91 · Smoother sessions + Squad Board detail
+- [x] Award reveal swaps only the tapped card (flip animation) – no page re-render, charts stay.
+- [x] Session leaderboard = swipeable slides (scroll-snap) with arrows, counter, dots, keyboard; bars animate in per slide; top 5 per stat.
+- [x] Dribble % removed everywhere (EA sends no dribble attempts).
+- [x] Squad Board: new Shooting / Dribbling / Discipline groups + extra Passing & Defense columns from EA events (per-match uses matches with event data).
+
+## V92 · Stripe (Managed Payments) instead of Paddle
+- [x] `stripe.js`: Checkout Session (mode=subscription, managed_payments[enabled]=true, Stripe-Version 2026-04-22.dahlia), club_id in metadata + subscription_data.metadata, idempotency key per consent.
+- [x] `/api/stripe/webhook`: Stripe-Signature HMAC + 5 min replay window; idempotent `billing_events`; customer.subscription.* → club_entitlements (period end from subscription items, past_due grace, out-of-order + old-subscription protection); checkout.session.completed links consent evidence.
+- [x] `PAYMENT_PROVIDER=stripe|paddle` (default stripe when STRIPE_SECRET_KEY set); Paddle code kept.
+- [x] Checkout page redirects to Stripe; return URL polls until the webhook activates the Pass.
+- [x] Terms / Refund / Pass texts: Stripe + Link as merchant of record; cancel at app.link.com.
+- [ ] Fill [DOPLNIT support email] in Refund policy; set support email in Stripe business details (Link escalates there).

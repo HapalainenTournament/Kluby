@@ -7,6 +7,10 @@ import {isPremium,planOf,pruneAllFreeClubs,FREE_ARCHIVE_LIMIT} from "./entitleme
 import {dueClubs,rescheduleClub} from "./collector.js";
 import {checkoutConfig,verifySignature,handleEvent} from "./paddle.js";
 import {benchmarks} from "./benchmarks.js";
+import {stripeConfig,verifyStripeSignature,handleStripeEvent,createCheckout} from "./stripe.js";
+// Which payment provider sells Clubroom Pass: PAYMENT_PROVIDER=stripe|paddle (default stripe when STRIPE_SECRET_KEY is set).
+const PROVIDER=()=>String(process.env.PAYMENT_PROVIDER||(process.env.STRIPE_SECRET_KEY?"stripe":"paddle")).toLowerCase()==="paddle"?"paddle":"stripe";
+const activeCheckout=()=>PROVIDER()==="stripe"?stripeConfig():{...checkoutConfig(),provider:"paddle"};
 
 const app = express();
 // Paddle webhook needs the exact raw body for signature verification, so it is registered before express.json.
@@ -16,6 +20,13 @@ app.post("/api/paddle/webhook",express.raw({type:"*/*",limit:"1mb"}),async(req,r
  if(!dbEnabled)return res.status(503).json({error:"Database required"});
  try{const r=await handleEvent(ev);console.log("[PADDLE]",ev.event_type,JSON.stringify(r));res.json({ok:true})}
  catch(e){console.error("[PADDLE] webhook failed",ev.event_type,e.message);res.status(500).json({error:"Processing failed"})}
+});
+app.post("/api/stripe/webhook",express.raw({type:"*/*",limit:"1mb"}),async(req,res)=>{
+ if(!verifyStripeSignature(req.body,req.get("stripe-signature")))return res.status(400).json({error:"Invalid signature"});
+ let ev;try{ev=JSON.parse(req.body.toString("utf8"))}catch{return res.status(400).json({error:"Invalid JSON"})}
+ if(!dbEnabled)return res.status(503).json({error:"Database required"});
+ try{const r=await handleStripeEvent(ev);console.log("[STRIPE]",ev.type,JSON.stringify(r));res.json({received:true})}
+ catch(e){console.error("[STRIPE] webhook failed",ev.type,e.message);res.status(500).json({error:"Processing failed"})}
 });
 app.use(express.json({limit:"16kb"}));
 const DIR = path.dirname(fileURLToPath(import.meta.url));
@@ -83,7 +94,7 @@ app.post("/api/admin/privacy/removal/:id/approve",async(req,res)=>{
 // v78 Clubroom Pass entitlement. Payments are not live: a club is Pass-active only when listed
 // in PASS_ACTIVE_CLUBS (comma separated club IDs) or, later, by a verified provider webhook.
 const passActiveClubs=()=>new Set(String(process.env.PASS_ACTIVE_CLUBS||"").split(",").map(x=>x.replace(/[^0-9]/g,"")).filter(Boolean));
-app.get("/api/pass/status",async(req,res)=>{const ids=String(req.query.ids||"").split(",").map(x=>x.replace(/[^0-9]/g,"")).filter(Boolean).slice(0,50);const out={};for(const id of ids){const plan=await planOf(id);out[id]={active:plan!=="free",plan}}res.json({price:{amount:4,currency:"EUR",interval:"month",scope:"club"},checkoutEnabled:checkoutConfig().enabled,freeArchiveLimit:FREE_ARCHIVE_LIMIT,clubs:out})});
+app.get("/api/pass/status",async(req,res)=>{const ids=String(req.query.ids||"").split(",").map(x=>x.replace(/[^0-9]/g,"")).filter(Boolean).slice(0,50);const out={};for(const id of ids){const plan=await planOf(id);out[id]={active:plan!=="free",plan}}res.json({price:{amount:4,currency:"EUR",interval:"month",scope:"club"},checkoutEnabled:activeCheckout().enabled,freeArchiveLimit:FREE_ARCHIVE_LIMIT,clubs:out})});
 // v78 Club honours for the Trophy Cabinet: EA playoff achievements + overall stats, cached 30 min.
 const honoursCache=new Map();
 app.get("/api/benchmarks",async(_,res)=>{try{res.set("Cache-Control","public, max-age=1800");res.json(await benchmarks())}catch(e){console.error("benchmarks",e.message);res.status(500).json({error:"Benchmarks unavailable",groups:{}})}});
@@ -96,17 +107,20 @@ app.get("/api/club-honours/:id",async(req,res)=>{
  const data={honours,overall:ov,errors:{achievements:achR.status==="rejected"?String(achR.reason?.message||"failed"):null}};
  honoursCache.set(key,{data,at:Date.now()});res.json(await scopedJson(data,id,p));
 });
-app.get("/api/pass/config",(_,res)=>res.json({...checkoutConfig(),consentVersion,consentText,price:{amount:4,currency:"EUR",interval:"month"}}));
+app.get("/api/pass/config",(_,res)=>res.json({...activeCheckout(),consentVersion,consentText,price:{amount:4,currency:"EUR",interval:"month"}}));
+const originOf=req=>String(process.env.PUBLIC_URL||`${(req.get("x-forwarded-proto")||req.protocol||"https").split(",")[0]}://${req.get("host")}`).replace(/\/$/,"");
 app.post("/api/pass/checkout",async(req,res)=>{
- const cfg=checkoutConfig();if(!cfg.enabled)return res.status(503).json({error:"Clubroom Pass checkout is not open yet."});
+ const cfg=activeCheckout();if(!cfg.enabled)return res.status(503).json({error:"Clubroom Pass checkout is not open yet."});
  const b=req.body||{};
  if(b.consent!==true||b.consentVersion!==consentVersion)return res.status(400).json({error:"Please accept the Terms to continue."});
  const email=safeText(b.email,254),clubId=safeText(b.clubId,80).replace(/[^0-9]/g,'');
  if(!validEmail(email)||!clubId)return res.status(400).json({error:"A valid email and club ID are required."});
  if(await isPremium(clubId))return res.status(409).json({error:"This club already has an active Clubroom Pass."});
  try{const {rows}=await query(`INSERT INTO pass_consent_evidence(payer_email,club_id,consent_version,consent_text) VALUES($1,$2,$3,$4) RETURNING id`,[email,clubId,consentVersion,consentText]);
-  res.json({ok:true,consentId:rows[0].id,clubId,email,priceId:cfg.priceId})}
- catch(e){console.error("pass checkout",e.message);res.status(500).json({error:"Could not start checkout. Try again."})}
+  const consentId=rows[0].id;
+  if(cfg.provider==="stripe"){const s=await createCheckout({clubId,email,consentId,origin:originOf(req)});return res.json({ok:true,provider:"stripe",url:s.url,clubId})}
+  res.json({ok:true,provider:"paddle",consentId,clubId,email,priceId:cfg.priceId})}
+ catch(e){console.error("pass checkout",e.status||"",e.code||"",e.message);res.status(502).json({error:"Could not start checkout. Try again."})}
 });
 
 
@@ -259,7 +273,7 @@ app.get("/api/db-export", async (req,res)=>{
     }
     const payload={
       format:"clubroom-postgres-json-backup",
-      version:"88.0.0",
+      version:"92.0.0",
       exportedAt:new Date().toISOString(),
       counts,
       data
@@ -278,7 +292,7 @@ app.get("/api/db-export", async (req,res)=>{
 app.get("/api/history/:id",async(req,res)=>{try{res.json(await scopedJson(await history(String(req.params.id).replace(/[^\d]/g,"")),String(req.params.id).replace(/[^\d]/g,""),validPlatform(req.query.platform)))}catch(e){res.status(500).json({error:e.message})}});
 app.get("/api/analytics/:id",async(req,res)=>{try{res.json(await scopedJson(await analytics(String(req.params.id).replace(/[^\d]/g,"")),String(req.params.id).replace(/[^\d]/g,""),validPlatform(req.query.platform)))}catch(e){res.status(500).json({error:e.message})}});
 app.get("/api/sessions/:id",async(req,res)=>{try{const id=String(req.params.id).replace(/[^\d]/g,"");const gap=Math.max(30,Math.min(240,Number(req.query.gap||90)));res.json(await scopedJson(await buildSessions(id,{gapMinutes:gap,activeMinutes:45}),id,validPlatform(req.query.platform)))}catch(e){res.status(500).json({error:e.message})}});
-app.get("/api/health",(_,res)=>res.json({ok:true,version:"88.0.0",database:dbEnabled,collectorEnabled:dbEnabled && process.env.COLLECTOR_ENABLED!=="false",collectorIntervalMs:Number(process.env.COLLECTOR_INTERVAL_MS||300000),collectorBatch:Number(process.env.COLLECTOR_BATCH||20),time:new Date().toISOString()}));
+app.get("/api/health",(_,res)=>res.json({ok:true,version:"92.0.0",database:dbEnabled,collectorEnabled:dbEnabled && process.env.COLLECTOR_ENABLED!=="false",collectorIntervalMs:Number(process.env.COLLECTOR_INTERVAL_MS||300000),collectorBatch:Number(process.env.COLLECTOR_BATCH||20),time:new Date().toISOString()}));
 
 for(const route of ["about","terms","privacy","cookies","removal","pass","refund"]){
  app.get('/'+route,(_,res)=>res.sendFile(path.join(DIR,'public',route+'.html')));

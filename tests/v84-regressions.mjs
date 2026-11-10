@@ -33,3 +33,14 @@ ok(b.includes("HAVING COUNT(*)>=$1"),"benchmarks only count players with the min
 ok(app.includes("function benchPct69(q,v,lowerBetter)")&&app.includes("benchGroup69(obj)"),"radar scores against Clubroom-wide distribution");
 ok(app.includes("legacyRadar69(p,team,obj,cfg)"),"falls back to squad ranking while benchmark sample is too small");
 ok(app.includes("x.player>=55")&&app.includes("x.player<=45"),"strengths/weaknesses only when clearly above/below typical");}
+// v89
+{const app=r("public/app.js");
+ok(app.includes("location.pathname.match(/^\\/club\\/([^/]+)(?:\\/([a-z]+))?\\/?$/)"),"refresh on /club/:id[/:tab] reloads that club");
+ok(app.includes("openTab(tab,false)"),"refresh restores the tab");}
+// v91
+{const s=r("public/v81/sessions-v81.js"),cfg=r("public/squadBoardConfig.generated.js"),x=r("public/v90/stats-ext.js");
+ok(s.includes("<template>${front}</template>")&&s.includes("a.replaceWith(f)"),"award reveal swaps only that card (no page re-render)");
+ok(s.includes("function lbCarousel(x)")&&r("public/v81/v81.css").includes("scroll-snap-type:x mandatory"),"session leaderboard is a swipeable slide carousel");
+ok(!s.includes("data-s81-metric=\"${q[0]}\""),"old metric chips removed");
+ok(["shooting","dribbling","discipline"].every(g=>cfg.includes(`id:'${g}'`))&&cfg.includes("sample:'eventMatches'"),"Squad Board has detailed event groups");
+ok(x.includes("squadBoardData70=function(p)")&&!x.includes("drbPct"),"Squad Board merges event sums; no dribble %");}

@@ -104,3 +104,28 @@
 .sAward81.locked{cursor:default;opacity:.62}
 .sAward81.locked small{display:inline-flex;align-items:center;gap:4px}
 .sAwardsLock81{grid-column:1/-1;margin:2px 0 0;display:flex;align-items:center;gap:6px;color:#9fb2c8;font-size:13px}
+/* v91: in-place award reveal + leaderboard slides */
+.sAward81.front.shown{animation:none}
+@media (prefers-reduced-motion:no-preference){.sAward81.front:not(.shown){animation:awardFlip91 .55s cubic-bezier(.2,.8,.2,1)}}
+@keyframes awardFlip91{0%{transform:perspective(600px) rotateY(90deg);opacity:.2}60%{transform:perspective(600px) rotateY(-8deg);opacity:1}100%{transform:none}}
+.sAward81 template{display:none}
+.lbCar81{min-width:0}
+.lbNav81{margin-left:auto;display:flex;align-items:center;gap:8px}
+.lbNav81 span{font-size:12px;font-weight:800;color:#8ea3bd;font-variant-numeric:tabular-nums;min-width:44px;text-align:center}
+.lbNav81 button{width:30px;height:30px;border-radius:50%;border:1px solid #24405a;background:#0b1522;color:#eaf2fa;font-size:18px;line-height:1;cursor:pointer;display:grid;place-items:center}
+.lbNav81 button:hover{border-color:#2dd4bf;color:#5eead4}
+.lbTrack81{display:flex;overflow-x:auto;scroll-snap-type:x mandatory;scrollbar-width:none;overscroll-behavior-x:contain;outline:none}
+.lbTrack81::-webkit-scrollbar{display:none}
+.lbSlide81{flex:0 0 100%;min-width:0;scroll-snap-align:start;padding:2px 2px 4px;box-sizing:border-box}
+.lbSlide81 h4{margin:2px 0 10px;font-size:20px;letter-spacing:-.01em}
+.lbSlide81 .sLbTrack81 i{width:var(--w)}
+.lbDots81{display:flex;justify-content:center;gap:6px;margin-top:10px;flex-wrap:wrap}
+.lbDots81 button{width:7px;height:7px;padding:0;border:0;border-radius:99px;background:#24405a;cursor:pointer;transition:width .25s,background .25s}
+.lbDots81 button.active{width:20px;background:#2dd4bf}
+@media (prefers-reduced-motion:no-preference){
+ .lbSlide81 .sLb81{opacity:.25;transform:translateY(6px);transition:opacity .35s var(--d,0ms),transform .35s var(--d,0ms)}
+ .lbSlide81.in .sLb81{opacity:1;transform:none}
+ .lbSlide81 .sLbTrack81 i{width:0;transition:width .6s cubic-bezier(.2,.8,.2,1) calc(var(--d,0ms) + 80ms)}
+ .lbSlide81.in .sLbTrack81 i{width:var(--w)}
+ .lbSlide81 h4{transition:opacity .3s;opacity:.4}.lbSlide81.in h4{opacity:1}
+}
