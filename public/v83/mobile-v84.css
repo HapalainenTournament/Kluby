@@ -1,4 +1,4 @@
-/* CLUBROOM v84 · mobile layout fixes + bottom navigation; recent form removed from the club hero */
+/* POSTGAME v84 · mobile layout fixes + bottom navigation; recent form removed from the club hero */
 /* Recent form is no longer part of the hero card (all screen sizes) */
 .heroForm44{display:none!important}
 .heroPerformanceTop44{grid-template-columns:1fr!important}

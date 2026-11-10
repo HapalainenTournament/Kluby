@@ -30,7 +30,7 @@ ok(s.includes("function scheduleUnlock()"),"awards unlock automatically when the
 {const app=r("public/app.js"),srv=r("server.js"),b=r("benchmarks.js");
 ok(srv.includes('app.get("/api/benchmarks"')&&b.includes("GROUPING SETS ((grp),())"),"global benchmarks endpoint per position + all");
 ok(b.includes("HAVING COUNT(*)>=$1"),"benchmarks only count players with the minimum matches");
-ok(app.includes("function benchPct69(q,v,lowerBetter)")&&app.includes("benchGroup69(obj)"),"radar scores against Clubroom-wide distribution");
+ok(app.includes("function benchPct69(q,v,lowerBetter)")&&app.includes("benchGroup69(obj)"),"radar scores against Postgame-wide distribution");
 ok(app.includes("legacyRadar69(p,team,obj,cfg)"),"falls back to squad ranking while benchmark sample is too small");
 ok(app.includes("x.player>=55")&&app.includes("x.player<=45"),"strengths/weaknesses only when clearly above/below typical");}
 // v89
@@ -57,7 +57,7 @@ ok(["terms","privacy","cookies","removal","refund","about"].every(f=>!fsx.exists
 ok(srv.includes('res.redirect(301,`/legal#${anchor}`)'),"old legal URLs redirect to /legal sections");
 ok(["#about","#terms","#pass","#refunds","#privacy","#cookies","#removal"].every(a=>legal.includes(`href="${a}"`))&&legal.includes("{{OPERATOR_NAME}}")&&legal.includes("Art. 6(1)(f)"),"legal page has all sections, operator from env, GDPR bases");
 ok(srv.includes("ADSENSE_CLIENT")&&srv.includes('app.get("/ads.txt"')&&srv.includes("adsInject("),"ads ready but off until ADS=on + ADSENSE_CLIENT");
-ok(r("public/index.html").includes('<a href="/legal">Legal</a><a href="/pass">Clubroom Pass</a>'),"footer: Legal + Clubroom Pass");}
+ok(r("public/index.html").includes('<a href="/legal">Legal</a><a href="/pass">Postgame Pass</a>'),"footer: Legal + Postgame Pass");}
 // v96
 {const srv=r("server.js"),ss=r("public/v81/sessions-v81.js"),html=r("public/index.html");
 ok(srv.includes('app.get(["/og/club/:id.png","/og/club/:id"]')&&srv.includes("summary_large_image")&&srv.includes("BOT_RE"),"club link previews: OG image + tags for chat bots");
@@ -76,12 +76,20 @@ ok(t.includes("+w.dataset.win94>10&&window.CR_GATES&&!window.CR_GATES.open('rewa
 ok(!r("public/v78/clubroom-v78.js").includes("adGates:{enabled:qs.get('gates')==='1'"),"old v78 placeholder gates replaced");}
 // v100
 {const app=r("public/app.js"),srv=r("server.js");
-ok(app.includes("function srcChip100(kind)")&&app.includes("srcChip100(m.sample==='matches'?'ea'")&&app.includes('const CAREER100=new Set(["games","goals","assists","ga","motm"])'),"every Squad Board / Compare stat shows its source (EA career vs Clubroom archive)");
+ok(app.includes("function srcChip100(kind)")&&app.includes("srcChip100(m.sample==='matches'?'ea'")&&app.includes('const CAREER100=new Set(["games","goals","assists","ga","motm"])'),"every Squad Board / Compare stat shows its source (EA career vs Postgame archive)");
 ok(srv.includes("const adsOn=()=>")&&srv.includes('name="google-adsense-account"'),"ADSENSE_CLIENT alone = AdSense site verification without gates");}
 // v101
 {const c=r("public/v101/compare.js"),html=r("public/index.html"),v78=r("public/v78/clubroom-v78.js");
 ok(c.includes("const MAX=()=>pass()?4:2")&&c.includes("Compare up to 4 players"),"Compare: 2 players free, up to 4 with Pass");
-ok(c.includes("cmpExplain101")&&c.includes("CAREER_ROWS")&&c.includes("ARCH_ROWS"),"Compare explains EA career vs Clubroom archive in two separate tables");
+ok(c.includes("cmpExplain101")&&c.includes("CAREER_ROWS")&&c.includes("ARCH_ROWS"),"Compare explains EA career vs Postgame archive in two separate tables");
 ok(c.includes("x.shots>=10?pc(x.goals,x.shots)"),"shot conversion needs 10+ shots");
 ok(!html.includes("All matches")&&html.includes('<div id="analyticsMatchByMatch" hidden>'),"Match-by-Match: All matches list removed");
 ok(v78.includes("typeTag101"),"hat-tricks show match type breakdown");}
+// v102
+{const i=r("public/v102/insights.js"),html=r("public/index.html"),g=r("public/v98/gates.js");
+ok(["impact","development","fatigue","when","detailed"].every(t=>html.includes(`data-analytics-tab="${t}"`))&&!html.includes('data-analytics-tab="clutch"')&&!html.includes('data-analytics-tab="passing"'),"Analytics tabs: Form, MBM, Impact, Development, Fatigue, When we win, Detailed");
+ok(i.includes("m.result==='W'&&N(r.goals)>0&&N(r.goals)>=m.og-m.tg"),"decisive win = win that needed his goals");
+ok(i.includes("bOf(m.sessionIndex)")&&i.includes("BANDS"),"fatigue by match number + day/time heatmap");
+ok(i.includes("benchLock102")&&i.includes("if(!pass())"),"Development percentiles are Pass-only");
+ok(g.includes('[data-analytics-pane="impact"]')&&!g.includes('[data-analytics-pane="match"]'),"new tabs behind reward ad; Match-by-Match free");
+ok(html.includes("<b>POSTGAME</b>")&&r("server.js").includes('"admin@postgame.gg"')&&r("server.js").includes('"Kryštof Kadlec"'),"rebrand to Postgame + operator defaults");}

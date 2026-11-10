@@ -1,4 +1,4 @@
-/* CLUBROOM v96 · Session report PNG (server-rendered) + Discord webhook settings in the Pass tab. */
+/* POSTGAME v96 · Session report PNG (server-rendered) + Discord webhook settings in the Pass tab. */
 (function(){
 'use strict';
 const esc=s=>String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
@@ -25,9 +25,9 @@ async function load(){const c=club();if(!c)return;state.id=String(c.id);try{cons
 function render(){const host=document.getElementById('discord96');if(!host)return;const c=club();if(!c){host.innerHTML='';return}
   const keys=LS.get(KEYS,{});const when=d=>{try{return new Date(d).toLocaleString('en-GB',{day:'numeric',month:'short',hour:'2-digit',minute:'2-digit'})}catch{return''}};
   const list=state.webhooks.length?`<ul class="dList96">${state.webhooks.map(w=>`<li><span class="dDot96 ${w.failing?'bad':''}"></span><div><b>Channel #${w.id}</b><small>Connected ${esc(when(w.createdAt))}${w.lastSentAt?` · last report ${esc(when(w.lastSentAt))}`:' · waiting for the next session'}</small></div>${keys[w.id]?`<button type="button" data-dremove96="${w.id}">Remove</button>`:'<small class="dMuted96">Added on another device</small>'}</li>`).join('')}</ul>`:'';
-  host.innerHTML=`<div class="dHead96"><span class="dLogo96">${discordIcon}</span><div><span class="kicker">CLUBROOM PASS</span><h3>Session reports in Discord</h3><p>When a session ends (no match for 45 minutes), Clubroom posts the results, awards and the session image to your club's channel.</p></div></div>
+  host.innerHTML=`<div class="dHead96"><span class="dLogo96">${discordIcon}</span><div><span class="kicker">POSTGAME PASS</span><h3>Session reports in Discord</h3><p>When a session ends (no match for 45 minutes), Postgame posts the results, awards and the session image to your club's channel.</p></div></div>
    ${state.premium?`${list}${state.webhooks.length<3?`<form class="dForm96" data-dform96><label for="dUrl96">Discord webhook URL</label><div><input id="dUrl96" type="url" inputmode="url" placeholder="https://discord.com/api/webhooks/…" autocomplete="off" required><button type="submit" ${state.busy?'disabled':''}>${state.busy?'Connecting…':'Connect'}</button></div><small>Discord → Server settings → Integrations → Webhooks → New webhook → Copy webhook URL. We'll post a test message.</small></form>`:''}`
-   :`<div class="dLocked96"><b>Available with Clubroom Pass</b><a class="passCta78" href="/pass/checkout?club=${encodeURIComponent(c.id)}">Get Pass</a></div>`}
+   :`<div class="dLocked96"><b>Available with Postgame Pass</b><a class="passCta78" href="/pass/checkout?club=${encodeURIComponent(c.id)}">Get Pass</a></div>`}
    ${state.err?`<p class="dMsg96 err">${esc(state.err)}</p>`:''}${state.ok?`<p class="dMsg96 ok">${esc(state.ok)}</p>`:''}`}
 document.addEventListener('submit',async e=>{const f=e.target.closest('[data-dform96]');if(!f)return;e.preventDefault();const url=f.querySelector('input').value.trim();state.busy=true;state.err='';state.ok='';render();
   try{const r=await fetch(`/api/discord/${encodeURIComponent(state.id)}`,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({url,platform:plat()})});const j=await r.json().catch(()=>({}));if(!r.ok)throw new Error(j.error||'Could not connect.');

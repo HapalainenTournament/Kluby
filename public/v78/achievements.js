@@ -1,4 +1,4 @@
-// CLUBROOM v78 · Clubroom achievements (rules). Values are computed from archived matches only.
+// POSTGAME v78 · Postgame achievements (rules). Values are computed from archived matches only.
 // metric = key produced by clubroom-v78.js achievementState(); target = threshold to unlock.
 window.CLUBROOM_ACHIEVEMENTS = Object.freeze([
   {id:'first-win',      title:'First Blood',       desc:'Win your first archived match.',              metric:'wins',          target:1,   tier:'bronze', icon:'cup'},

@@ -1,4 +1,4 @@
-/* CLUBROOM v92 · Clubroom Pass checkout: Stripe Checkout redirect (Managed Payments) or Paddle.js overlay. Pass is activated by the server webhook, not here. */
+/* POSTGAME v92 · Postgame Pass checkout: Stripe Checkout redirect (Managed Payments) or Paddle.js overlay. Pass is activated by the server webhook, not here. */
 (function(){
 'use strict';
 const $=id=>document.getElementById(id);
@@ -16,7 +16,7 @@ async function showClub(){const id=cleanId(clubIn.value);clubBox.hidden=!id;if(!
   try{const st=await fetch(`/api/pass/status?ids=${id}`).then(r=>r.json());const active=st.clubs?.[id]?.active;
     let name='';try{const recent=JSON.parse(localStorage.getItem('clubroomRecentClubs49')||'[]');name=(recent.find(c=>String(c.id)===id)||{}).name||''}catch{}
     clubBox.innerHTML=`<b>${esc(name||'Club '+id)}</b><small>ID ${id}${active?' · Pass already active':''}</small>`;
-    if(active){say('This club already has Clubroom Pass.','ok')}}catch{clubBox.innerHTML=`<b>Club ${id}</b>`}
+    if(active){say('This club already has Postgame Pass.','ok')}}catch{clubBox.innerHTML=`<b>Club ${id}</b>`}
   update()}
 clubIn.addEventListener('input',()=>{clearTimeout(clubTimer);clubTimer=setTimeout(showClub,350)});
 [emailIn,consent].forEach(el=>el.addEventListener('input',update));consent.addEventListener('change',update);
@@ -25,14 +25,14 @@ function update(){btn.disabled=!valid();if(cfg.enabled&&paddleReady)btn.textCont
 
 async function waitForPass(id){say('Payment received. Activating Pass…','ok');
   for(let i=0;i<20;i++){await new Promise(r=>setTimeout(r,3000));
-    try{const st=await fetch(`/api/pass/status?ids=${id}`).then(r=>r.json());if(st.clubs?.[id]?.active){say('Clubroom Pass is active. Taking you to your club…','ok');setTimeout(()=>location.href=`/club/${id}/plus`,1500);return}}catch{}}
+    try{const st=await fetch(`/api/pass/status?ids=${id}`).then(r=>r.json());if(st.clubs?.[id]?.active){say('Postgame Pass is active. Taking you to your club…','ok');setTimeout(()=>location.href=`/club/${id}/plus`,1500);return}}catch{}}
   say(`Payment went through, activation is taking longer than usual. Refresh your club page in a few minutes – the receipt from ${stripe()?'Link':'Paddle'} is in your inbox.`,'ok')}
 
 function loadPaddle(){return new Promise((ok,fail)=>{if(window.Paddle)return ok();const s=document.createElement('script');s.src='https://cdn.paddle.com/paddle/v2/paddle.js';s.onload=ok;s.onerror=()=>fail(new Error('Paddle could not load'));document.head.appendChild(s)})}
 let pendingClub='';
 async function init(){
   try{cfg=await fetch('/api/pass/config').then(r=>r.json())}catch{cfg={enabled:false}}
-  if(!cfg.enabled){btn.textContent='Checkout is not open yet';say('Clubroom Pass purchases open soon.');if(pre)showClub();return}
+  if(!cfg.enabled){btn.textContent='Checkout is not open yet';say('Postgame Pass purchases open soon.');if(pre)showClub();return}
   if(cfg.consentText)$('coConsentText85').innerHTML=esc(cfg.consentText).replace('Terms of Service','<a href="/legal#terms" target="_blank">Terms of Service</a>');
   $('coEnv85').hidden=!(cfg.env==='sandbox'||cfg.env==='test');$('coEnv85').textContent=cfg.env==='test'?'TEST MODE':'SANDBOX';
   const by=$('coBy92');if(by)by.textContent=stripe()?'Payments are processed by Stripe and sold through Link, our merchant of record.':'Payments are processed by Paddle.com, our merchant of record.';

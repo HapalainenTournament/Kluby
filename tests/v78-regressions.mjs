@@ -1,4 +1,4 @@
-// CLUBROOM v78 static regressions: Misc tabs, Pulse, Trophy Cabinet, Pass, Creativity tab, player card panel.
+// POSTGAME v78 static regressions: Misc tabs, Pulse, Trophy Cabinet, Pass, Creativity tab, player card panel.
 import fs from 'node:fs';
 const root=process.argv[2]||'.';const r=f=>fs.readFileSync(`${root}/${f}`,'utf8');
 const html=r('public/index.html'),js=r('public/v78/clubroom-v78.js'),css=r('public/v78/v78.css'),card=r('public/cards/player-card.js'),server=r('server.js'),ach=r('public/v78/achievements.js'),cfg=r('public/miscConfig.generated.js');
@@ -16,12 +16,12 @@ check('Trophies are own SVG, not EA images',js.includes('function trophySvg')&&!
 check('achievements registry has rules',(ach.match(/metric:/g)||[]).length>=10);
 check('honours endpoint exists and is cached',server.includes('/api/club-honours/:id')&&server.includes('honoursCache'));
 check('pass status endpoint is server-side, checkout gated by config',server.includes('/api/pass/status')&&server.includes('PASS_ACTIVE_CLUBS')&&server.includes('checkoutEnabled:activeCheckout().enabled'));
-check('nav says Clubroom Pass, no Club+ label',html.includes('<span>Clubroom Pass</span>')&&!html.includes('♛ Club+')&&!/<h3>Club\+/.test(html));
+check('nav says Postgame Pass, no Club+ label',html.includes('<span>Postgame Pass</span>')&&!html.includes('♛ Club+')&&!/<h3>Club\+/.test(html));
 check('homepage Pass strip with price, results above it',html.includes('passStrip78')&&html.includes('4 €')&&html.indexOf('id="results"')<html.indexOf('passStrip78'));
 check('/pass page route + legal page',server.includes('for(const route of ["pass"])')&&fs.existsSync(`${root}/public/pass.html`)&&fs.existsSync(`${root}/public/legal.html`));
 check('ad gates off by default and skipped with Pass (v98 gates.js)',js.includes('adGates:{enabled:false')&&fs.readFileSync(`${root}/public/v98/gates.js`,'utf8').includes('const REWARD_ON=()=>ADS.on||TEST'));
 check('premium shimmer respects reduced motion',css.includes('prefers-reduced-motion:reduce'));
-check('Creativity is an Analytics tab',html.includes('data-analytics-tab="creativity"')&&html.includes('data-analytics-pane="creativity"'));
+check('Creativity lives in Detailed',html.includes('id="analyticsCreativity78"')&&html.includes('id="passingInsights"'));
 check('player card has code-drawn stats panel',card.includes('data-stats-panel')&&card.includes('.statsPanel{'));
 check('player card totals use SVG, not emoji',!/<i>[⚽★◉↗]<\/i>/.test(card));
 check('avatar is fitted to the portrait slot',card.includes('cardLayout.slots.player.top'));

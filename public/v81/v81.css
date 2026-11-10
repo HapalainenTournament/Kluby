@@ -1,4 +1,4 @@
-/* CLUBROOM v81 · live sessions, session detail, richer match detail */
+/* POSTGAME v81 · live sessions, session detail, richer match detail */
 .w{color:var(--v78w,#34df85)}.d{color:var(--v78d,#7f93ad)}.l{color:var(--v78l,#f04d62)}
 .livePill81{display:inline-flex;align-items:center;gap:7px;padding:5px 11px;border-radius:999px;background:rgba(240,77,98,.14);border:1px solid rgba(240,77,98,.45);color:#ff8496;font-size:11px;font-weight:900;letter-spacing:.12em}
 .livePill81 i{width:8px;height:8px;border-radius:50%;background:#f04d62;box-shadow:0 0 0 0 rgba(240,77,98,.7);animation:livePulse81 1.6s infinite}

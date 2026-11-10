@@ -1,4 +1,4 @@
-/* CLUBROOM v96 · session report button + Discord panel */
+/* POSTGAME v96 · session report button + Discord panel */
 .shareSession96{margin-left:auto;display:inline-flex;align-items:center;gap:6px;padding:6px 11px;border-radius:10px;border:1px solid #24405a;background:#0b1522;color:#eaf2fa;font:inherit;font-size:12px;font-weight:800;cursor:pointer}
 .shareSession96:hover{border-color:#2dd4bf;color:#5eead4}
 .shareSession96:disabled{opacity:.6;cursor:wait}

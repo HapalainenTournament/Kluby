@@ -1,4 +1,4 @@
-/* CLUBROOM v82 · Match formations: real lines from EA positions, attack always upwards, play-style icons.
+/* POSTGAME v82 · Match formations: real lines from EA positions, attack always upwards, play-style icons.
    EA only sends the broad position (GK/DEF/MID/FWD) for human players, so players are placed on their line
    and spread evenly – no invented exact coordinates. */
 (function(){

@@ -1,4 +1,4 @@
-/* CLUBROOM v98 · gates + ad slots */
+/* POSTGAME v98 · gates + ad slots */
 .gated98{position:relative!important;min-height:320px;max-height:640px;overflow:hidden}
 .gated98>:not(.gate98){filter:blur(7px) saturate(.6);opacity:.55;pointer-events:none;user-select:none}
 .gate98{position:absolute;inset:0;z-index:5;display:flex;justify-content:center;align-items:flex-start;padding:48px 16px 18px;background:linear-gradient(180deg,rgba(10,17,32,.35),rgba(10,17,32,.85))}

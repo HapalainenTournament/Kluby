@@ -13,7 +13,7 @@ export async function query(text,params=[]){
 }
 
 export async function migrate(){
- if(!enabled){console.log("DATABASE_URL není nastaveno — Clubroom běží v live-only režimu.");return;}
+ if(!enabled){console.log("DATABASE_URL není nastaveno — Postgame běží v live-only režimu.");return;}
  await query(`
  CREATE TABLE IF NOT EXISTS privacy_removal_requests(
    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),

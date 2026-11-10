@@ -1,4 +1,4 @@
-/* CLUBROOM v78 · Misc tabs, Club Pulse, Trophy Cabinet, Clubroom Pass, Creativity tab, division fallback.
+/* POSTGAME v78 · Misc tabs, Club Pulse, Trophy Cabinet, Postgame Pass, Creativity tab, division fallback.
    Archive-only computations (S.history). No synthetic data is ever shown to users. Classic script, loaded after app.js. */
 (function(){
 'use strict';
@@ -102,7 +102,7 @@ const watermark=()=>Pass.active()?'':'<span class="v78Watermark">clubroom</span>
 /* ================= MISC: RECORDS ================= */
 function renderRecords(){
   const host=document.getElementById('miscRecords78');if(!host)return;
-  if(!D||!D.matches.length){host.innerHTML=empty('Records appear once the Clubroom archive has matches.');return}
+  if(!D||!D.matches.length){host.innerHTML=empty('Records appear once the Postgame archive has matches.');return}
   const M=D.matches,R=D.rows;
   const by=(arr,f)=>arr.reduce((b,x)=>b==null||f(x)>f(b)?x:b,null);
   const wins=M.filter(m=>m.result==='W'),losses=M.filter(m=>m.result==='L');
@@ -206,7 +206,7 @@ function renderMilestones(){
   reached.sort((a,b)=>b.m.ts-a.m.ts);
   host.innerHTML=`<div class="v78Two"><section class="v78Panel"><div class="v78PanelHead">${icon('flag',16)}<span class="label">COMING UP</span><small>closest first</small></div>${all.length?all.map(upRow).join(''):empty('No upcoming milestones.')}</section>
   <section class="v78Panel"><div class="v78PanelHead">${icon('trophy',16)}<span class="label">REACHED</span><small>${reached.length}</small></div>${reached.length?`<ol class="msTimeline78">${reached.slice(0,20).map(x=>`<li><span class="msDot78"></span><div><b>${x.who?esc(x.who.name):esc(clubName())}</b> reached <b>${x.t} ${msLabel[x.k]}</b><small>${dFmt(x.m.ts)} · vs ${esc(x.m.opponent)}</small></div>${mLink(x.m,'Match')}</li>`).join('')}</ol>`:empty('No milestone reached in the archive yet.')}</section></div>
-  <p class="v78Note">Counts use matches captured by Clubroom, not EA career totals.</p>`;
+  <p class="v78Note">Counts use matches captured by Postgame, not EA career totals.</p>`;
 }
 
 /* ================= MISC: AWARDS (reveal) ================= */
@@ -271,7 +271,7 @@ function renderWrapped(){
   const bigWin=M.filter(m=>m.result==='W').sort((a,b)=>(b.og-b.tg)-(a.og-a.tg)||b.og-a.og)[0];
   const days=new Map();for(const m of M){const k=m.ts.toDateString();if(!days.has(k))days.set(k,[]);days.get(k).push(m)}
   const worst=[...days.values()].filter(l=>l.length>=3).map(list=>({...tally(list),list,ppm:list.reduce((s,m)=>s+(m.result==='W'?3:m.result==='D'?1:0),0)/list.length})).sort((a,b)=>a.ppm-b.ppm)[0];
-  const card=(cls,kicker,body)=>`<article class="wrap78 ${cls}"><header><span>${esc(clubName())}</span><b>${esc(monthName(wrappedMonth))}</b></header><span class="wrapKicker78">${kicker}</span>${body}<footer>${icon('ticket',14)} CLUBROOM WRAPPED${watermark()}</footer></article>`;
+  const card=(cls,kicker,body)=>`<article class="wrap78 ${cls}"><header><span>${esc(clubName())}</span><b>${esc(monthName(wrappedMonth))}</b></header><span class="wrapKicker78">${kicker}</span>${body}<footer>${icon('ticket',14)} POSTGAME WRAPPED${watermark()}</footer></article>`;
   const pcard=(cls,k,x,big,sub)=>x?card(cls,k,`<div class="wrapAvatar78">${av(x.p,'bust')}</div><strong class="wrapName78">${esc(x.p?.name)}</strong><div class="wrapBig78">${big}</div><p>${sub}</p>`):'';
   const cards=[
     card('c1','YOUR MONTH IN NUMBERS',`<div class="wrapBig78">${M.length}<small>matches</small></div><div class="wrapStats78"><span><b>≈${Math.round(mins/60)}</b> hours on the pitch</span><span><b>${sess.length}</b> sessions</span><span><b>${gf}</b> goals scored</span></div>`),
@@ -312,7 +312,7 @@ function renderPulse(){
     c(unb>=3?'hot':'','shield','UNBEATEN RUN',`<strong>${unb}<span>${unb===1?'match':'matches'}</span></strong>`,unbBest!=null?`Best: ${unbBest}`:''),
     c('','wave','LAST 10',`<div class="pulseForm78">${last.map(r=>`<i class="${r.toLowerCase()}" title="${r}"></i>`).join('')||'<em>--</em>'}</div><b class="pulseRec78">${lt.w}W · ${lt.d}D · ${lt.l}L</b>`),
     c('','up','PROMOTIONS / RELEGATIONS',`<div class="pulseUpDown78"><span class="up">${icon('up',16)}<b>${promo??'--'}</b></span><span class="down">${icon('down',16)}<b>${releg??'--'}</b></span></div>`,'EA club history')
-  ].join('')+(src?'<p class="pulseSrc78">streaks from Clubroom archive</p>':'');
+  ].join('')+(src?'<p class="pulseSrc78">streaks from Postgame archive</p>':'');
 }
 
 /* ================= OVERVIEW: TROPHY CABINET ================= */
@@ -348,7 +348,7 @@ function renderTrophies(){
   if(n0(o.promotions)>0)trophyItems.push({kind:'medal',tier:'silver',label:`×${n0(o.promotions)}`,title:'Promotions',sub:`${n0(o.promotions)} promotion${n0(o.promotions)===1?'':'s'}`,desc:'Total promotions reported by EA.'});
   hHost.innerHTML=trophyItems.length?trophyItems.map((t,i)=>`<button type="button" class="trophy78 ${t.tier}" data-trophy="h${i}">${trophySvg(t.kind,t.tier,t.label)}<b>${esc(t.title)}</b><small>${esc(t.sub)}</small></button>`).join(''):empty(honours?'EA has not reported club honours yet.':'Loading club honours…');
   const ach=D?achievementState():[];const seenKey=`clubroom78:ach-seen:${clubId()}`;let seen=LS.get(seenKey,null);const unlockedIds=ach.filter(a=>a.unlocked).map(a=>a.id);if(seen===null){seen=unlockedIds;if(D)LS.set(seenKey,seen)}const fresh=new Set(unlockedIds.filter(id=>!seen.includes(id)));if(fresh.size)LS.set(seenKey,[...new Set([...seen,...unlockedIds])]);
-  aHost.innerHTML=ach.length&&D?ach.sort((a,b)=>(b.unlocked?1:0)-(a.unlocked?1:0)||(b.value/b.target)-(a.value/a.target)).map(a=>`<button type="button" class="trophy78 ach ${a.unlocked?a.tier:'locked'} ${fresh.has(a.id)?'fresh':''}" data-trophy="a:${a.id}">${fresh.has(a.id)?'<span class="newTag78">NEW</span>':''}<span class="achBadge78">${trophySvg('medal',a.unlocked?a.tier:'locked','')}<span class="achIcon78">${icon(achIcon[a.icon]||'star',18)}</span></span><b>${esc(a.title)}</b>${a.unlocked?`<small>${dFmt(a.unlocked.m.ts)}</small>`:`<span class="achTrack78"><i style="width:${Math.min(100,a.value/a.target*100)}%"></i></span><small>${Math.min(a.value,a.target)}/${a.target}</small>`}</button>`).join(''):empty('Achievements are computed once the Clubroom archive has matches.');
+  aHost.innerHTML=ach.length&&D?ach.sort((a,b)=>(b.unlocked?1:0)-(a.unlocked?1:0)||(b.value/b.target)-(a.value/a.target)).map(a=>`<button type="button" class="trophy78 ach ${a.unlocked?a.tier:'locked'} ${fresh.has(a.id)?'fresh':''}" data-trophy="a:${a.id}">${fresh.has(a.id)?'<span class="newTag78">NEW</span>':''}<span class="achBadge78">${trophySvg('medal',a.unlocked?a.tier:'locked','')}<span class="achIcon78">${icon(achIcon[a.icon]||'star',18)}</span></span><b>${esc(a.title)}</b>${a.unlocked?`<small>${dFmt(a.unlocked.m.ts)}</small>`:`<span class="achTrack78"><i style="width:${Math.min(100,a.value/a.target*100)}%"></i></span><small>${Math.min(a.value,a.target)}/${a.target}</small>`}</button>`).join(''):empty('Achievements are computed once the Postgame archive has matches.');
   const cnt=document.getElementById('trophyCount78');if(cnt)cnt.textContent=`${trophyItems.length} honours · ${ach.filter(a=>a.unlocked).length}/${ach.length} achievements`;
   window.__v78ach=ach;
 }
@@ -357,7 +357,7 @@ function openTrophy(key){const dlg=document.getElementById('trophyDialog78'),bod
   else{const a=(window.__v78ach||[]).find(x=>x.id===key.slice(2));if(!a)return;body.innerHTML=`<div class="trophyDetail78 ${a.unlocked?a.tier:'locked'}"><span class="achBadge78 big">${trophySvg('medal',a.unlocked?a.tier:'locked','')}<span class="achIcon78">${icon(achIcon[a.icon]||'star',26)}</span></span><h3 id="trophyDialogTitle78">${esc(a.title)}</h3><p>${esc(a.desc)}</p>${a.unlocked?`<small>Unlocked ${dFmt(a.unlocked.m.ts)} · vs ${esc(a.unlocked.m.opponent)}</small>${mLink(a.unlocked.m,'Open match')}`:`<span class="achTrack78 wide"><i style="width:${Math.min(100,a.value/a.target*100)}%"></i></span><small>How to unlock: ${esc(a.desc)} Progress ${a.value}/${a.target}.</small>`}</div>`}
   dlg.hidden=false}
 
-/* ================= CLUBROOM PASS ================= */
+/* ================= POSTGAME PASS ================= */
 const Pass={status:{},preview:qs.get('passPreview')==='1',
   active(id=clubId()){return !!id&&(!!this.status[id]?.active||(this.preview&&id===clubId()))},
   async load(ids){ids=[...new Set(ids.filter(Boolean).map(String))].filter(id=>!(id in this.status));if(!ids.length)return;try{const r=await fetchJSON(`/api/pass/status?ids=${ids.join(',')}`,6000);Object.assign(this.status,r.clubs||{})}catch{for(const id of ids)this.status[id]={active:false}}},
@@ -373,7 +373,7 @@ async function decorateSaved(){const ids=[...document.querySelectorAll('[data-sa
 /* ---------- ad gates (placeholder, off by default) ---------- */
 const gateKey=tab=>`clubroom78:unlock:${clubId()}:${tab}`;
 function gateOpen(tab){if(!CFG.adGates.enabled||!CFG.adGates.tabs.includes(tab)||Pass.active())return true;const t=LS.get(gateKey(tab),0);return Date.now()-t<CFG.adGates.hours*3600e3}
-function applyGates(){document.querySelectorAll('.miscPane78').forEach(p=>{const tab=p.dataset.miscPane,open=gateOpen(tab);p.classList.toggle('gated78',!open);let ov=p.querySelector('.gate78');if(!open&&!ov){ov=document.createElement('div');ov.className='gate78';ov.innerHTML=`<div class="gateCard78">${icon('lock',26)}<h4>Unlock ${esc(p.querySelector('h3')?.textContent||'this section')}</h4><p>Watch a short ad to unlock this section for ${CFG.adGates.hours} hours, or get Clubroom Pass for your whole club.</p><div><button type="button" class="v78Btn" data-gate-ad="${esc(tab)}">${icon('eye',15)} Watch a short ad</button><a class="passCta78 small" href="/pass">Get Clubroom Pass</a></div><small>Ads are a placeholder until the ad provider is approved.</small></div>`;p.appendChild(ov)}if(open&&ov)ov.remove()})}
+function applyGates(){document.querySelectorAll('.miscPane78').forEach(p=>{const tab=p.dataset.miscPane,open=gateOpen(tab);p.classList.toggle('gated78',!open);let ov=p.querySelector('.gate78');if(!open&&!ov){ov=document.createElement('div');ov.className='gate78';ov.innerHTML=`<div class="gateCard78">${icon('lock',26)}<h4>Unlock ${esc(p.querySelector('h3')?.textContent||'this section')}</h4><p>Watch a short ad to unlock this section for ${CFG.adGates.hours} hours, or get Postgame Pass for your whole club.</p><div><button type="button" class="v78Btn" data-gate-ad="${esc(tab)}">${icon('eye',15)} Watch a short ad</button><a class="passCta78 small" href="/pass">Get Postgame Pass</a></div><small>Ads are a placeholder until the ad provider is approved.</small></div>`;p.appendChild(ov)}if(open&&ov)ov.remove()})}
 function playAd(tab,btn){btn.disabled=true;let s=3;btn.textContent=`Ad placeholder… ${s}`;const t=setInterval(()=>{s--;if(s>0)btn.textContent=`Ad placeholder… ${s}`;else{clearInterval(t);LS.set(gateKey(tab),Date.now());applyGates()}},1000)}
 
 /* ---------- misc tab switching ---------- */

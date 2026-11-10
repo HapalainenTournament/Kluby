@@ -1,11 +1,11 @@
-// CLUBROOM v96 · Server-rendered share images (SVG → PNG via resvg): club link preview (1200×630) and session report.
+// POSTGAME v96 · Server-rendered share images (SVG → PNG via resvg): club link preview (1200×630) and session report.
 import fs from "node:fs";
 import path from "node:path";
 import {fileURLToPath} from "node:url";
 import {Resvg} from "@resvg/resvg-js";
 const DIR=path.dirname(fileURLToPath(import.meta.url));
 const FONTS=["Inter_500Medium.ttf","Inter_800ExtraBold.ttf","Inter_900Black.ttf"].map(f=>path.join(DIR,"assets","fonts",f)).filter(f=>fs.existsSync(f));
-const MARK=(()=>{try{return "data:image/png;base64,"+fs.readFileSync(path.join(DIR,"public","assets","clubroom-mark.png")).toString("base64")}catch{return null}})();
+const MARK=(()=>{try{return "data:image/png;base64,"+fs.readFileSync(path.join(DIR,"public","assets","postgame-mark.png")).toString("base64")}catch{return null}})();
 const esc=s=>String(s??"").replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
 const N=v=>{const n=Number(v);return Number.isFinite(n)?n:0};
 const RES={W:"#2dd4bf",D:"#fbbf24",L:"#fb7185"};
@@ -16,7 +16,7 @@ export function toPng(svg,width){const r=new Resvg(svg,{fitTo:{mode:"width",valu
 const SHIELD=`<path d="M0-96 L80-64 L80 8 C80 58 40 86 0 100 C-40 86 -80 58 -80 8 L-80-64 Z" fill="#13283c" stroke="#2dd4bf" stroke-width="5"/><path d="M0-40v80M-40 0h80" stroke="#2dd4bf" stroke-width="10" stroke-linecap="round"/>`;
 const crestEl=(crest,cx,cy,size)=>crest?`<image href="${crest}" x="${cx-size/2}" y="${cy-size/2}" width="${size}" height="${size}" preserveAspectRatio="xMidYMid meet"/>`:`<g transform="translate(${cx} ${cy}) scale(${size/220})">${SHIELD}</g>`;
 const bg=(w,h)=>`<defs><linearGradient id="bg" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#0a1120"/><stop offset="1" stop-color="#0f2236"/></linearGradient><radialGradient id="glow" cx=".2" cy=".35" r=".55"><stop offset="0" stop-color="#2dd4bf" stop-opacity=".22"/><stop offset="1" stop-color="#2dd4bf" stop-opacity="0"/></radialGradient></defs><rect width="${w}" height="${h}" fill="url(#bg)"/><rect width="${w}" height="${h}" fill="url(#glow)"/>`;
-const brand=(x,y,url)=>`${MARK?`<image href="${MARK}" x="${x}" y="${y-30}" width="40" height="40"/>`:""}<text x="${x+52}" y="${y}" font-family="Inter" font-weight="900" font-size="26" fill="#eaf2fa" letter-spacing="3">CLUBROOM</text>${url?`<text x="${1200-60}" y="${y}" text-anchor="end" font-family="Inter" font-weight="500" font-size="22" fill="#8ea3bd">${esc(url)}</text>`:""}`;
+const brand=(x,y,url)=>`${MARK?`<image href="${MARK}" x="${x}" y="${y-30}" width="40" height="40"/>`:""}<text x="${x+52}" y="${y}" font-family="Inter" font-weight="900" font-size="26" fill="#eaf2fa" letter-spacing="3">POSTGAME</text>${url?`<text x="${1200-60}" y="${y}" text-anchor="end" font-family="Inter" font-weight="500" font-size="22" fill="#8ea3bd">${esc(url)}</text>`:""}`;
 
 /** Club link preview: crest, name, record, form, division. */
 export function clubCardSvg(c){

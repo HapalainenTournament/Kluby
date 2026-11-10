@@ -1,4 +1,4 @@
-/* CLUBROOM v94 · Analytics: player form (rating columns) + match-by-match small multiples.
+/* POSTGAME v94 · Analytics: player form (rating columns) + match-by-match small multiples.
    Data: archive rows (ClubroomV78.data()), event stats via CLUBROOM_EXT90. Own design – columns coloured by result, squad grid. */
 (function(){
 'use strict';

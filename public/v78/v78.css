@@ -1,4 +1,4 @@
-/* CLUBROOM v78 · Misc tabs, Club Pulse, Trophy Cabinet, Clubroom Pass */
+/* POSTGAME v78 · Misc tabs, Club Pulse, Trophy Cabinet, Postgame Pass */
 :root{--gold1:#f8d778;--gold2:#c99a3a;--gold3:#8a6420;--v78card:#0d1724;--v78line:#22364c;--v78muted:#8ea3bd;--v78w:#34df85;--v78d:#7f93ad;--v78l:#f04d62;--v78cyan:#2dd4bf}
 .v78i{display:inline-block;flex:none;fill:none;stroke:currentColor;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round;vertical-align:middle}
 .v78i .d{opacity:.45;fill:currentColor;stroke:none}
@@ -154,7 +154,7 @@
 .v78DialogClose{position:absolute;right:12px;top:10px;border:0;background:none;color:#cfe0f2;font-size:24px;cursor:pointer}
 .trophyDetail78{display:flex;flex-direction:column;align-items:center;text-align:center;gap:6px}.trophyDetail78 .trophyArt78{width:96px;height:108px}.trophyDetail78 h3{margin:6px 0 0}.trophyDetail78 p{margin:0;color:#cfdbea}.trophyDetail78 small{color:var(--v78muted)}
 
-/* Clubroom Pass */
+/* Postgame Pass */
 .passBadge78{display:inline-flex;align-items:center;font-size:11px;font-weight:950;letter-spacing:.16em;padding:4px 9px;border-radius:7px;color:#2a1c02;background:linear-gradient(135deg,#fff1b8,var(--gold1) 40%,var(--gold2));box-shadow:0 2px 10px -2px rgba(248,215,120,.55)}
 .passBadge78.small{font-size:9px;padding:2px 6px;margin-left:6px}
 .passNav78{display:inline-flex!important;align-items:center;gap:7px;color:var(--gold1)!important}.passNav78 .navTicket78{width:17px;height:17px;fill:none;stroke:currentColor;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round}

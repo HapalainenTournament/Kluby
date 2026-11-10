@@ -1,4 +1,4 @@
-// CLUBROOM v92 · Stripe Billing + Managed Payments (Stripe/Link is merchant of record) for Clubroom Pass.
+// POSTGAME v92 · Stripe Billing + Managed Payments (Stripe/Link is merchant of record) for Postgame Pass.
 // Env: PAYMENT_PROVIDER=stripe (default when STRIPE_SECRET_KEY is set), PASS_CHECKOUT=on,
 //      STRIPE_SECRET_KEY (sk_test_… / sk_live_… or a restricted rk_ key), STRIPE_PRICE_ID (price_…), STRIPE_WEBHOOK_SECRET (whsec_…),
 //      optional STRIPE_API_VERSION (default 2026-04-22.dahlia – first version with managed_payments), PUBLIC_URL.

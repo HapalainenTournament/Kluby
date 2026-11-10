@@ -1,4 +1,4 @@
-// CLUBROOM v96 · Discord webhooks (Clubroom Pass): after a session ends, post a summary + session report image to the club's channel.
+// POSTGAME v96 · Discord webhooks (Postgame Pass): after a session ends, post a summary + session report image to the club's channel.
 // Anyone can add a webhook for a Pass club (the data is public anyway); removing needs the key returned when it was added.
 import crypto from "node:crypto";
 import {query,enabled} from "./db.js";
@@ -19,10 +19,10 @@ export function sessionImage({sess,clubName,crest}){const s=sessionSummary(sess)
 export function discordPayload({club,clubName,platform,s}){
  const rec=`**${s.w}W ${s.d}D ${s.l}L** · ${s.gf}:${s.ga} goals · ${s.count} matches`;
  const lines=s.results.slice(0,10).map(r=>`${r.result==="W"?"🟢":r.result==="D"?"🟡":"🔴"} ${r.og}:${r.tg} vs ${r.opponent||"Opponent"}`).join("\n");
- return {username:"Clubroom",avatar_url:`${PUBLIC()}/assets/icon-192.png`,allowed_mentions:{parse:[]},
+ return {username:"Postgame",avatar_url:`${PUBLIC()}/assets/icon-192.png`,allowed_mentions:{parse:[]},
   embeds:[{title:`Session report · ${clubName}`,url:`${PUBLIC()}/club/${club}/sessions`,description:`${rec}\n\n${lines}`.slice(0,4000),color:0x2dd4bf,
    fields:s.awards.slice(0,4).map(a=>({name:a.title,value:`**${a.player}** · ${a.value} ${a.unit||""}`.slice(0,1000),inline:true})),
-   image:{url:"attachment://session.png"},footer:{text:"Clubroom · Pro Clubs stats"},timestamp:s.lastMatchAt}]};
+   image:{url:"attachment://session.png"},footer:{text:"Postgame · Pro Clubs stats"},timestamp:s.lastMatchAt}]};
 }
 export async function postDiscord(url,payload,png){
  const fd=new FormData();fd.append("payload_json",JSON.stringify(payload));if(png)fd.append("files[0]",new Blob([png],{type:"image/png"}),"session.png");
@@ -32,10 +32,10 @@ export async function postDiscord(url,payload,png){
 export async function addWebhook({club,platform,url,clubName}){
  if(!enabled)throw Object.assign(new Error("Database required."),{status:503});
  if(!WEBHOOK_RE.test(String(url||"").trim()))throw Object.assign(new Error("Paste a Discord webhook URL (Server settings → Integrations → Webhooks → Copy URL)."),{status:400});
- if(!(await isPremium(club)))throw Object.assign(new Error("Discord reports are a Clubroom Pass feature."),{status:402});
+ if(!(await isPremium(club)))throw Object.assign(new Error("Discord reports are a Postgame Pass feature."),{status:402});
  const n=(await query(`SELECT COUNT(*)::int n FROM club_webhooks WHERE club_id=$1 AND active`,[club])).rows[0].n;if(n>=MAX_WEBHOOKS)throw Object.assign(new Error(`This club already has ${MAX_WEBHOOKS} Discord channels connected.`),{status:409});
  const clean=String(url).trim();
- await postDiscord(clean,{username:"Clubroom",avatar_url:`${PUBLIC()}/assets/icon-192.png`,allowed_mentions:{parse:[]},embeds:[{title:`Clubroom connected · ${clubName||"club "+club}`,description:"Session reports will be posted here when a session ends (no match for 45 minutes).",color:0x2dd4bf,url:`${PUBLIC()}/club/${club}/sessions`}]}).catch(e=>{throw Object.assign(new Error(e.status===404||e.status===401?"Discord says this webhook does not exist. Copy the URL again.":"Could not reach Discord. Try again."),{status:400})});
+ await postDiscord(clean,{username:"Postgame",avatar_url:`${PUBLIC()}/assets/icon-192.png`,allowed_mentions:{parse:[]},embeds:[{title:`Postgame connected · ${clubName||"club "+club}`,description:"Session reports will be posted here when a session ends (no match for 45 minutes).",color:0x2dd4bf,url:`${PUBLIC()}/club/${club}/sessions`}]}).catch(e=>{throw Object.assign(new Error(e.status===404||e.status===401?"Discord says this webhook does not exist. Copy the URL again.":"Could not reach Discord. Try again."),{status:400})});
  const key=crypto.randomBytes(18).toString("base64url");
  const r=await query(`INSERT INTO club_webhooks(club_id,platform,url,key_hash,last_session_start) VALUES($1,$2,$3,$4,(SELECT MAX(played_at) FROM matches m JOIN match_clubs mc ON mc.match_id=m.match_id AND mc.club_id=$1)) RETURNING id`,[club,platform,clean,sha(key)]);
  return {id:r.rows[0].id,key};

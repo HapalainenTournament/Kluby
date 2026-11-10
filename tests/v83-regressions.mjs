@@ -1,9 +1,9 @@
-// CLUBROOM v83: new logo assets and minimal motion.
+// POSTGAME v83: new logo assets and minimal motion.
 import fs from 'node:fs';
 const root=process.argv[2]||'.';const r=f=>fs.readFileSync(`${root}/${f}`,'utf8');
 const html=r('public/index.html'),css=r('public/v83/motion.css'),js=r('public/v83/motion.js'),man=JSON.parse(r('public/manifest.webmanifest'));
 let fail=0;const check=(n,ok)=>{console.log(`${ok?'PASS':'FAIL'} ${n}`);if(!ok)fail++};
-for(const f of ['clubroom-mark.png','clubroom-favicon.png','apple-touch-icon.png','icon-192.png','icon-512.png','clubroom-logo.png'])check(`asset ${f} exists`,fs.existsSync(`${root}/public/assets/${f}`));
+for(const f of ['postgame-mark.png','postgame-favicon.png','apple-touch-icon.png','icon-192.png','icon-512.png','postgame-logo.png'])check(`asset ${f} exists`,fs.existsSync(`${root}/public/assets/${f}`));
 check('manifest has 192 and 512 icons',man.icons.some(i=>i.sizes==='192x192')&&man.icons.some(i=>i.sizes==='512x512'));
 check('apple touch icon linked',html.includes('apple-touch-icon'));
 check('motion css + js loaded',html.includes('/v83/motion.css')&&html.includes('/v83/motion.js'));

@@ -1,4 +1,4 @@
-/* CLUBROOM v90 · Extended stats from EA match_event_aggregate events (no xG – EA doesn't send it).
+/* POSTGAME v90 · Extended stats from EA match_event_aggregate events (no xG – EA doesn't send it).
    Event meanings: community research github.com/Interactive-63/eafc-pro-clubs-api-research (confirmed IDs only).
    Used in: match detail (Player Stats groups + team comparison), session detail, player profile, Analytics → Detailed. */
 (function(){

@@ -1,4 +1,4 @@
-/* CLUBROOM v98 · Free / reward ad (12 h) / Pass-only gating + display ad slots.
+/* POSTGAME v98 · Free / reward ad (12 h) / Pass-only gating + display ad slots.
    One rewarded ad unlocks ALL reward features for that club in this browser for 12 hours. Pass clubs: everything open, no ads.
    Gates are only active when ads are configured (window.CLUBROOM_ADS.on) – or for testing with ?gates=1.
    Pass-only features (player radar) are always gated for non-Pass clubs. */
@@ -23,11 +23,11 @@ window.CR_GATES={open:t=>t==='pass'?pass():rewardOpen(),prompt:()=>openModal(),h
 // [selector, tier, label]. tier: 'reward' (ad or Pass) | 'pass' (Pass only)
 const TARGETS=[
  ['.miscPane78:not([data-misc-pane="records"])','reward','Misc insights'],
- ['[data-analytics-pane="clutch"]','reward','Clutch'],
- ['[data-analytics-pane="carry"]','reward','Carry'],
- ['[data-analytics-pane="improvement"]','reward','Improvement'],
+ ['[data-analytics-pane="impact"]','reward','Impact'],
+ ['[data-analytics-pane="development"]','reward','Development'],
+ ['[data-analytics-pane="fatigue"]','reward','Session fatigue'],
+ ['[data-analytics-pane="when"]','reward','When we win'],
  ['[data-analytics-pane="detailed"]','reward','Detailed stats'],
- ['[data-analytics-pane="match"]','reward','Match-by-Match'],
  ['#playerDetail90','reward','Detailed stats'],
  ['.sDetail81 .ext90card','reward','Session detailed stats'],
  ['.sAwards81','reward','Session awards'],
@@ -36,7 +36,7 @@ const SQUAD_X=new Set(['shooting','dribbling','discipline']);
 
 function overlay(tier,label){const lockSvg='<svg viewBox="0 0 24 24" width="26" height="26" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><rect x="5" y="10.5" width="14" height="10" rx="2"/><path d="M8.5 10.5V7.5a3.5 3.5 0 0 1 7 0v3"/></svg>';
   const c=cid();return tier==='pass'
-  ?`<div class="gateCard98 pass">${lockSvg}<span class="gateTag98">CLUBROOM PASS</span><h4>${esc(label)}</h4><p>See how this player compares with every player Clubroom tracks in the same position.</p><a class="passCta78" href="/pass/checkout${c?`?club=${encodeURIComponent(c)}`:''}">Get Pass · 4 €/month</a></div>`
+  ?`<div class="gateCard98 pass">${lockSvg}<span class="gateTag98">POSTGAME PASS</span><h4>${esc(label)}</h4><p>See how this player compares with every player Postgame tracks in the same position.</p><a class="passCta78" href="/pass/checkout${c?`?club=${encodeURIComponent(c)}`:''}">Get Pass · 4 €/month</a></div>`
   :`<div class="gateCard98">${lockSvg}<h4>Unlock ${esc(label)}</h4><p>Watch one short ad and <b>everything</b> locked opens for this club for ${HOURS} hours.</p><div class="gateBtns98"><button type="button" class="gateAd98" data-gate98>▶ Watch a short ad</button><a class="gatePass98" href="/pass/checkout${c?`?club=${encodeURIComponent(c)}`:''}">No ads with Pass</a></div>${TEST&&!ADS.on?'<small>Test mode: the ad is a 5-second placeholder.</small>':''}</div>`}
 function setGate(el,locked,tier,label){if(!el)return;el.classList.toggle('gated98',locked);let ov=[...el.children].find(x=>x.classList?.contains('gate98'));
   if(locked&&!ov){ov=document.createElement('div');ov.className='gate98';ov.innerHTML=overlay(tier,label);el.appendChild(ov)}else if(!locked&&ov)ov.remove()}

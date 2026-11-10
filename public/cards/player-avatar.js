@@ -1,4 +1,4 @@
-/* CLUBROOM PlayerAvatar: the only renderer of character artwork. Light DOM works inside PlayerCard shadow DOM and PNG export. */
+/* POSTGAME PlayerAvatar: the only renderer of character artwork. Light DOM works inside PlayerCard shadow DOM and PNG export. */
 (function(){
   const esc=v=>String(v??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
   const valid=v=>/^#[0-9a-f]{6}$/i.test(String(v||''));

@@ -1,6 +1,6 @@
 {
-  "name": "CLUBROOM",
-  "short_name": "CLUBROOM",
+  "name": "POSTGAME",
+  "short_name": "POSTGAME",
   "description": "Independent insights for EA SPORTS FC Pro Clubs",
   "start_url": "/",
   "display": "standalone",

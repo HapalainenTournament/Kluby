@@ -1,4 +1,4 @@
-/* CLUBROOM v83 · minimal motion + new logo. Everything is disabled for prefers-reduced-motion. */
+/* POSTGAME v83 · minimal motion + new logo. Everything is disabled for prefers-reduced-motion. */
 .brand{display:inline-flex;align-items:center;gap:10px}
 .brandMark{width:auto!important;height:30px!important;flex:0 0 auto!important;object-fit:contain}
 .brand b{letter-spacing:.08em;font-weight:900}

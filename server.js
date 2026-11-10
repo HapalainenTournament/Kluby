@@ -11,7 +11,7 @@ import {benchmarks} from "./benchmarks.js";
 import {clubCardSvg,toPng,sessionSummary,sessionCardSvg} from "./og.js";
 import {addWebhook,listWebhooks,removeWebhook,runDiscordJob,sessionImage} from "./discord.js";
 import {stripeConfig,verifyStripeSignature,handleStripeEvent,createCheckout} from "./stripe.js";
-// Which payment provider sells Clubroom Pass: PAYMENT_PROVIDER=stripe|paddle (default stripe when STRIPE_SECRET_KEY is set).
+// Which payment provider sells Postgame Pass: PAYMENT_PROVIDER=stripe|paddle (default stripe when STRIPE_SECRET_KEY is set).
 const PROVIDER=()=>String(process.env.PAYMENT_PROVIDER||(process.env.STRIPE_SECRET_KEY?"stripe":"paddle")).toLowerCase()==="paddle"?"paddle":"stripe";
 const activeCheckout=()=>PROVIDER()==="stripe"?stripeConfig():{...checkoutConfig(),provider:"paddle"};
 
@@ -37,7 +37,7 @@ const PORT = process.env.PORT || 3000;
 const EA = "https://proclubs.ea.com/api/fc";
 const cache = new Map();
 const consentVersion="clubroom-pass-v1";
-const consentText="I agree to the Terms of Service and understand that Clubroom Pass renews every month at 4 € until I cancel.";
+const consentText="I agree to the Terms of Service and understand that Postgame Pass renews every month at 4 € until I cancel.";
 // The checkbox is evidence of a request, NOT proof that statutory rights were lost.
 const safeText=(v,n=160)=>String(v??"").trim().slice(0,n);
 const validEmail=v=>/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(v)&&v.length<=254;
@@ -94,7 +94,7 @@ app.post("/api/admin/privacy/removal/:id/approve",async(req,res)=>{
   return res.json({ok:true,clubId,platform:r.platform});
  }catch(e){console.error("Removal approval failed",e.message);res.status(500).json({error:"Could not approve request"})}
 });
-// v78 Clubroom Pass entitlement. Payments are not live: a club is Pass-active only when listed
+// v78 Postgame Pass entitlement. Payments are not live: a club is Pass-active only when listed
 // in PASS_ACTIVE_CLUBS (comma separated club IDs) or, later, by a verified provider webhook.
 const passActiveClubs=()=>new Set(String(process.env.PASS_ACTIVE_CLUBS||"").split(",").map(x=>x.replace(/[^0-9]/g,"")).filter(Boolean));
 app.get("/api/pass/status",async(req,res)=>{const ids=String(req.query.ids||"").split(",").map(x=>x.replace(/[^0-9]/g,"")).filter(Boolean).slice(0,50);const out={};for(const id of ids){const plan=await planOf(id);out[id]={active:plan!=="free",plan}}res.json({price:{amount:4,currency:"EUR",interval:"month",scope:"club"},checkoutEnabled:activeCheckout().enabled,freeArchiveLimit:FREE_ARCHIVE_LIMIT,clubs:out})});
@@ -113,12 +113,12 @@ app.get("/api/club-honours/:id",async(req,res)=>{
 app.get("/api/pass/config",(_,res)=>res.json({...activeCheckout(),consentVersion,consentText,price:{amount:4,currency:"EUR",interval:"month"}}));
 const originOf=req=>String(process.env.PUBLIC_URL||`${(req.get("x-forwarded-proto")||req.protocol||"https").split(",")[0]}://${req.get("host")}`).replace(/\/$/,"");
 app.post("/api/pass/checkout",async(req,res)=>{
- const cfg=activeCheckout();if(!cfg.enabled)return res.status(503).json({error:"Clubroom Pass checkout is not open yet."});
+ const cfg=activeCheckout();if(!cfg.enabled)return res.status(503).json({error:"Postgame Pass checkout is not open yet."});
  const b=req.body||{};
  if(b.consent!==true||b.consentVersion!==consentVersion)return res.status(400).json({error:"Please accept the Terms to continue."});
  const email=safeText(b.email,254),clubId=safeText(b.clubId,80).replace(/[^0-9]/g,'');
  if(!validEmail(email)||!clubId)return res.status(400).json({error:"A valid email and club ID are required."});
- if(await isPremium(clubId))return res.status(409).json({error:"This club already has an active Clubroom Pass."});
+ if(await isPremium(clubId))return res.status(409).json({error:"This club already has an active Postgame Pass."});
  try{const {rows}=await query(`INSERT INTO pass_consent_evidence(payer_email,club_id,consent_version,consent_text) VALUES($1,$2,$3,$4) RETURNING id`,[email,clubId,consentVersion,consentText]);
   const consentId=rows[0].id;
   if(cfg.provider==="stripe"){const s=await createCheckout({clubId,email,consentId,origin:originOf(req)});return res.json({ok:true,provider:"stripe",url:s.url,clubId})}
@@ -131,8 +131,8 @@ app.post("/api/pass/checkout",async(req,res)=>{
 const LEGAL_REDIRECTS={terms:"terms",privacy:"privacy",cookies:"cookies",removal:"removal",refund:"refunds",about:"about"};
 for(const [from,anchor] of Object.entries(LEGAL_REDIRECTS))app.get(["/"+from,"/"+from+".html"],(_,res)=>res.redirect(301,`/legal#${anchor}`));
 const legalEsc=s=>String(s).replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
-const OPERATOR=()=>({name:process.env.OPERATOR_NAME||"[OPERATOR_NAME not set]",ico:process.env.OPERATOR_ICO||"",address:process.env.OPERATOR_ADDRESS||"",email:process.env.CONTACT_EMAIL||"[CONTACT_EMAIL not set]",effective:process.env.LEGAL_EFFECTIVE_DATE||"10 November 2026"});
-if(!process.env.OPERATOR_NAME||!process.env.CONTACT_EMAIL)console.warn("[LEGAL] Set OPERATOR_NAME and CONTACT_EMAIL (and OPERATOR_ICO / OPERATOR_ADDRESS once you have a trade licence) – required on /legal.");
+const OPERATOR=()=>({name:process.env.OPERATOR_NAME||"Kryštof Kadlec",ico:process.env.OPERATOR_ICO||"",address:process.env.OPERATOR_ADDRESS||"",email:process.env.CONTACT_EMAIL||"admin@postgame.gg",effective:process.env.LEGAL_EFFECTIVE_DATE||"10 November 2026"});
+if(!process.env.OPERATOR_ICO)console.warn("[LEGAL] Set OPERATOR_NAME and CONTACT_EMAIL (and OPERATOR_ICO / OPERATOR_ADDRESS once you have a trade licence) – required on /legal.");
 app.get(["/legal","/legal.html"],(_,res)=>{const o=OPERATOR();const details=[o.ico&&`IČO ${o.ico}`,o.address].filter(Boolean).map(x=>`<br>${legalEsc(x)}`).join("");
  let html=fs.readFileSync(path.join(DIR,"public","legal.html"),"utf8").replaceAll("{{OPERATOR_NAME}}",legalEsc(o.name)).replaceAll("{{OPERATOR_DETAILS}}",details).replaceAll("{{CONTACT_EMAIL}}",legalEsc(o.email)).replaceAll("{{EFFECTIVE_DATE}}",legalEsc(o.effective));
  res.type("html").send(adsInject(html))});
@@ -300,7 +300,7 @@ app.get("/api/db-export", async (req,res)=>{
     }
     const payload={
       format:"clubroom-postgres-json-backup",
-      version:"101.0.0",
+      version:"102.0.0",
       exportedAt:new Date().toISOString(),
       counts,
       data
@@ -319,7 +319,7 @@ app.get("/api/db-export", async (req,res)=>{
 app.get("/api/history/:id",async(req,res)=>{try{res.json(await scopedJson(await history(String(req.params.id).replace(/[^\d]/g,"")),String(req.params.id).replace(/[^\d]/g,""),validPlatform(req.query.platform)))}catch(e){res.status(500).json({error:e.message})}});
 app.get("/api/analytics/:id",async(req,res)=>{try{res.json(await scopedJson(await analytics(String(req.params.id).replace(/[^\d]/g,"")),String(req.params.id).replace(/[^\d]/g,""),validPlatform(req.query.platform)))}catch(e){res.status(500).json({error:e.message})}});
 app.get("/api/sessions/:id",async(req,res)=>{try{const id=String(req.params.id).replace(/[^\d]/g,"");const gap=Math.max(30,Math.min(240,Number(req.query.gap||90)));res.json(await scopedJson(await buildSessions(id,{gapMinutes:gap,activeMinutes:45}),id,validPlatform(req.query.platform)))}catch(e){res.status(500).json({error:e.message})}});
-app.get("/api/health",(_,res)=>res.json({ok:true,version:"101.0.0",database:dbEnabled,collectorEnabled:dbEnabled && process.env.COLLECTOR_ENABLED!=="false",collectorIntervalMs:Number(process.env.COLLECTOR_INTERVAL_MS||300000),collectorBatch:Number(process.env.COLLECTOR_BATCH||20),time:new Date().toISOString()}));
+app.get("/api/health",(_,res)=>res.json({ok:true,version:"102.0.0",database:dbEnabled,collectorEnabled:dbEnabled && process.env.COLLECTOR_ENABLED!=="false",collectorIntervalMs:Number(process.env.COLLECTOR_INTERVAL_MS||300000),collectorBatch:Number(process.env.COLLECTOR_BATCH||20),time:new Date().toISOString()}));
 
 for(const route of ["pass"]){
  app.get('/'+route,(_,res)=>res.sendFile(path.join(DIR,'public',route+'.html')));
@@ -357,7 +357,7 @@ app.get(["/api/session-card/:id.png","/api/session-card/:id"],async(req,res)=>{c
   const {png}=sessionImage({sess,clubName:c.name||req.query.name||`Club ${id}`,crest:await crestData(c.crestId)});
   res.set("Cache-Control","public, max-age=600").set("Content-Disposition",`inline; filename="clubroom-session-${id}-${String(sess.startedAt).slice(0,10)}.png"`).type("png").send(png)}
  catch(e){console.warn("session card",id,e.message);res.status(500).json({error:"Could not render the session report."})}});
-// Discord webhooks (Clubroom Pass)
+// Discord webhooks (Postgame Pass)
 app.get("/api/discord/:id",async(req,res)=>{const id=String(req.params.id).replace(/[^\d]/g,"");try{res.json({premium:await isPremium(id),webhooks:await listWebhooks(id)})}catch(e){res.status(500).json({error:e.message})}});
 app.post("/api/discord/:id",async(req,res)=>{const id=String(req.params.id).replace(/[^\d]/g,"");const p=validPlatform(req.body?.platform);
  const now=Date.now(),last=discordAddAt.get(id)||0;if(now-last<20000)return res.status(429).json({error:"Wait a few seconds and try again."});discordAddAt.set(id,now);
@@ -367,10 +367,10 @@ const discordAddAt=new Map();
 // Link previews: Discord/WhatsApp/… fetch the page HTML – give them a title, description and the club image.
 const BOT_RE=/discordbot|whatsapp|twitterbot|facebookexternalhit|slackbot|telegrambot|linkedinbot|skypeuripreview|redditbot|applebot|embedly|pinterest|vkshare|iframely/i;
 async function previewTags(req){const m=req.path.match(/^\/club\/(\d+)(?:\/([a-z]+))?/);if(!m)return "";const id=m[1],p=validPlatform(req.query.platform),img=`${PUBLIC_URL()}/og/club/${id}.png${p!=="common-gen5"?`?platform=${p}`:""}`;
- let title="Pro Clubs club · Clubroom",desc="Club stats, sessions, awards and player cards for EA SPORTS FC Pro Clubs.";
- if(BOT_RE.test(req.get("user-agent")||"")){try{const c=await clubSummary(id,p);if(c.name){title=`${c.name} · Clubroom`;desc=`${c.wins}W · ${c.ties}D · ${c.losses}L${c.form.length?` · Form ${c.form.join("")}`:""}${c.division?` · Division ${c.division}`:""} — club stats, sessions and awards.`}}catch{}}
+ let title="Pro Clubs club · Postgame",desc="Club stats, sessions, awards and player cards for EA SPORTS FC Pro Clubs.";
+ if(BOT_RE.test(req.get("user-agent")||"")){try{const c=await clubSummary(id,p);if(c.name){title=`${c.name} · Postgame`;desc=`${c.wins}W · ${c.ties}D · ${c.losses}L${c.form.length?` · Form ${c.form.join("")}`:""}${c.division?` · Division ${c.division}`:""} — club stats, sessions and awards.`}}catch{}}
  const e=s=>String(s).replace(/[&<>"]/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]));
- return `<meta name="description" content="${e(desc)}"><meta property="og:type" content="website"><meta property="og:site_name" content="Clubroom"><meta property="og:title" content="${e(title)}"><meta property="og:description" content="${e(desc)}"><meta property="og:url" content="${e(PUBLIC_URL()+req.path)}"><meta property="og:image" content="${e(img)}"><meta property="og:image:width" content="1200"><meta property="og:image:height" content="630"><meta name="twitter:card" content="summary_large_image"><meta name="theme-color" content="#2dd4bf">`}
+ return `<meta name="description" content="${e(desc)}"><meta property="og:type" content="website"><meta property="og:site_name" content="Postgame"><meta property="og:title" content="${e(title)}"><meta property="og:description" content="${e(desc)}"><meta property="og:url" content="${e(PUBLIC_URL()+req.path)}"><meta property="og:image" content="${e(img)}"><meta property="og:image:width" content="1200"><meta property="og:image:height" content="630"><meta name="twitter:card" content="summary_large_image"><meta name="theme-color" content="#2dd4bf">`}
 app.get("/{*splat}",sendIndex);
 await migrate();
 // Background archive: clubs are discovered by real searches/visits, then refreshed in batches.
@@ -382,4 +382,4 @@ if(dbEnabled && process.env.COLLECTOR_ENABLED!=="false"){
  setTimeout(discordJob,60000);setInterval(discordJob,Number(process.env.DISCORD_JOB_MS||300000));setInterval(runCollector,Number(process.env.COLLECTOR_INTERVAL_MS||300000));
  if(process.env.ARCHIVE_PRUNE&&process.env.ARCHIVE_PRUNE!=="off"){setTimeout(()=>pruneAllFreeClubs().then(n=>console.log(`[ARCHIVE] startup prune (${process.env.ARCHIVE_PRUNE}) removed ${n} matches`)),30000);setInterval(pruneAllFreeClubs,6*3600000)}
 }
-app.listen(PORT,()=>console.log(`CLUBROOM running on ${PORT} · DB ${dbEnabled?"ON":"OFF"}`));
+app.listen(PORT,()=>console.log(`POSTGAME running on ${PORT} · DB ${dbEnabled?"ON":"OFF"}`));

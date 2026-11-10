@@ -1,4 +1,4 @@
-// CLUBROOM v88 · Global player benchmarks: per-match stats of EVERY player Clubroom has stored (all clubs, both sides of
+// POSTGAME v88 · Global player benchmarks: per-match stats of EVERY player Postgame has stored (all clubs, both sides of
 // every match), grouped by position. Players need MIN_MATCHES matches in a position to count. Returned as 101 quantiles
 // (0 %,1 %,…,100 %) per metric so the browser can turn any value into "better than X % of midfielders".
 import {query,enabled} from "./db.js";

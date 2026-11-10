@@ -19,5 +19,5 @@ check('Trio combinations use actual shared matches',app.includes('function trios
 check('No claimed direct link-up statistics',!app.includes('linkUps:null'));
 check('Partnership player profiles are clickable',app.includes('data-chem-profile')&&app.includes('showPlayer(profile.dataset.chemProfile)'));
 check('Old awards remain preserved', ['funAwards','viralRankings','statPadder','bestFront','clutchStats','milestones'].every(x=>html.includes(`id="${x}"`)));
-check('Chemistry styled with CLUBROOM palette',css.includes('.chemHeatmap75')&&css.includes('.partnershipHero75')&&css.includes('#2dd4bf'));
+check('Chemistry styled with POSTGAME palette',css.includes('.chemHeatmap75')&&css.includes('.partnershipHero75')&&css.includes('#2dd4bf'));
 process.exit(failed?1:0);

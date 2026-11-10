@@ -1,4 +1,4 @@
-/* CLUBROOM v83 · minimal motion helpers: count-up numbers, staggered entrance, growing bars, drawn chart lines.
+/* POSTGAME v83 · minimal motion helpers: count-up numbers, staggered entrance, growing bars, drawn chart lines.
    Runs on newly rendered nodes only; does nothing with prefers-reduced-motion. */
 (function(){
 'use strict';

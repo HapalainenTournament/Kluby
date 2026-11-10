@@ -1,4 +1,4 @@
-// CLUBROOM v82 · Clubroom Pass entitlements and free-archive retention.
+// POSTGAME v82 · Postgame Pass entitlements and free-archive retention.
 // A club is premium when it is an OWNER club (always), listed in PASS_ACTIVE_CLUBS, or has an active
 // row in club_entitlements (filled later by the payment provider webhook).
 // Free clubs keep only their newest FREE_ARCHIVE_LIMIT matches PER MATCH TYPE (default 10: league, playoff,
@@ -22,7 +22,7 @@ export async function isPremium(clubId){const id=String(clubId);return OWNER_CLU
 export async function planOf(clubId){const id=String(clubId);if(OWNER_CLUBS.has(id))return "owner";return await isPremium(id)?"pass":"free"}
 // Delete matches of a FREE club beyond its newest N. A match is kept when any premium club played in it,
 // or when it is still among the newest N of another TRACKED club in that match (so that club keeps its 10).
-// Untracked opponents (clubs nobody opened in Clubroom) do not protect a match.
+// Untracked opponents (clubs nobody opened in Postgame) do not protect a match.
 // Grace period: archive of a club whose Pass ended less than PASS_GRACE_DAYS ago is not pruned yet.
 export const PASS_GRACE_DAYS=Math.max(0,Number(process.env.PASS_GRACE_DAYS||30));
 async function inGrace(clubId){if(!enabled)return false;try{const r=await query(`SELECT 1 FROM club_entitlements WHERE club_id=$1 AND active_until IS NOT NULL AND active_until>now()-($2::int*interval '1 day') LIMIT 1`,[String(clubId),PASS_GRACE_DAYS]);return r.rowCount>0}catch{return false}}

@@ -1,4 +1,4 @@
-// CLUBROOM v82: free archive retention, owner club protection, formations with play styles.
+// POSTGAME v82: free archive retention, owner club protection, formations with play styles.
 import fs from 'node:fs';
 const root=process.argv[2]||'.';const r=f=>fs.readFileSync(`${root}/${f}`,'utf8');
 const ent=r('entitlements.js'),storage=r('storage.js'),server=r('server.js'),db=r('db.js'),f=r('public/v81/formations-v82.js'),app=r('public/app.js'),html=r('public/index.html'),pass=r('public/pass.html');

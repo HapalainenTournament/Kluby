@@ -1,5 +1,5 @@
-/* CLUBROOM v81 · Live sessions, session detail, richer match detail, xG/xA detection.
-   Built only from the Clubroom archive (S.history) and EA match payloads. Nothing is estimated or invented:
+/* POSTGAME v81 · Live sessions, session detail, richer match detail, xG/xA detection.
+   Built only from the Postgame archive (S.history) and EA match payloads. Nothing is estimated or invented:
    xG/xA appear only when EA actually sends such a field. Classic script, loaded after v78. */
 (function(){
 'use strict';
@@ -65,7 +65,7 @@ setInterval(()=>{if(document.getElementById('liveSession81')&&!document.getEleme
 function toolbar(){const f=document.getElementById('sessionFilters42');if(!f||f.dataset.v81)return;f.dataset.v81='1';
   f.innerHTML=`<div class="v78Segment" role="tablist" aria-label="Match type">${[['all','All'],['league','League'],['playoff','Playoff']].map(([k,l])=>`<button type="button" data-s81-type="${k}" class="${filterType===k?'active':''}">${l}</button>`).join('')}</div><div class="v78Segment" role="tablist" aria-label="Period">${[['all','All time'],['month','This month'],['week','This week']].map(([k,l])=>`<button type="button" data-s81-period="${k}" class="${filterPeriod===k?'active':''}">${l}</button>`).join('')}</div>`}
 function renderSessions(){toolbar();const list=document.getElementById('sessionList42'),sum=document.getElementById('sessionSummary42'),live=document.getElementById('sessionLive42'),cnt=document.getElementById('sessionArchiveCount43'),det=document.getElementById('sessionDetail43');if(!list||!det)return;
-  if(!D()||!D().matches.length){list.innerHTML='<div class="v78Empty">Sessions appear once the Clubroom archive has matches.</div>';return}
+  if(!D()||!D().matches.length){list.innerHTML='<div class="v78Empty">Sessions appear once the Postgame archive has matches.</div>';return}
   const ss=filteredSessions(),all=D().sessions,cur=all[all.length-1];
   if(live){live.classList.toggle('active',isLive(cur));live.textContent=isLive(cur)?`● LIVE · ${cur.matches.length} matches · ${durS((cur.end-cur.start)/60000+15)}`:'NO LIVE SESSION'}
   if(cnt)cnt.textContent=`${ss.length} session${ss.length===1?'':'s'}`;

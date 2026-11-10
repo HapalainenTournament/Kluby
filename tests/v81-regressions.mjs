@@ -1,4 +1,4 @@
-// CLUBROOM v81: live sessions, session detail, match detail extras, xG detection only from EA fields.
+// POSTGAME v81: live sessions, session detail, match detail extras, xG detection only from EA fields.
 import fs from 'node:fs';
 const root=process.argv[2]||'.';const r=f=>fs.readFileSync(`${root}/${f}`,'utf8');
 const html=r('public/index.html'),js=r('public/v81/sessions-v81.js'),app=r('public/app.js'),server=r('server.js'),cfg=r('public/matchMetricsConfig.generated.js');

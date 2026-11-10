@@ -1,4 +1,4 @@
-/* CLUBROOM v90 · extended stats */
+/* POSTGAME v90 · extended stats */
 .extSeg90{display:flex;gap:4px;margin:0 0 14px;padding:4px;border-radius:14px;background:#0a1420;border:1px solid #1d2f44;overflow-x:auto;scrollbar-width:none;max-width:100%}
 .extSeg90::-webkit-scrollbar{display:none}
 .extSeg90 button{flex:0 0 auto;padding:8px 13px;border:0;border-radius:10px;background:transparent;color:#8ea3bd;font:inherit;font-size:13px;font-weight:800;cursor:pointer}

@@ -1,4 +1,4 @@
-// CLUBROOM v85 · Paddle Billing for Clubroom Pass (one subscription = one club).
+// POSTGAME v85 · Paddle Billing for Postgame Pass (one subscription = one club).
 // Env: PASS_CHECKOUT=on, PADDLE_ENV=sandbox|live, PADDLE_CLIENT_TOKEN, PADDLE_PRICE_ID, PADDLE_WEBHOOK_SECRET.
 // The browser opens Paddle checkout with custom_data {club_id, consent_id}. Pass is activated ONLY from
 // signed webhooks – never from anything the browser says.

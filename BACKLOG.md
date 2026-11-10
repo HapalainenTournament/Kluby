@@ -174,3 +174,9 @@ Toto je audit zdrojového ZIPu, **ne** test živého provozu. U bodů s ✅ je d
 - Match-by-Match: "All matches" list removed, card padding/footer fixed.
 - Hat-tricks: breakdown League / Playoff / Friendly + type tag per row (archive only).
 - NEXT (proposal sent): redesign Clutch / Carry / Improvement.
+
+## v102
+- Rebrand CLUBROOM → POSTGAME (texts, logo mark, icons, OG, Discord, legal). Internal identifiers/localStorage keys unchanged so saved state survives.
+- Operator defaults: Kryštof Kadlec, admin@postgame.gg (env can override). Set PUBLIC_URL=https://postgame.gg after domain is live.
+- Analytics: Impact (decisive wins, with/without, goal share, close vs rest), Development (last 10 vs prev 10, jump/drop, Pass percentiles), Fatigue (match # of session), When we win (day×time heatmap, type, squad size). Creativity+Passing merged into Detailed. Clutch/Carry/Improvement removed.
+- Gates: new tabs = reward ad; Match-by-Match now free.
