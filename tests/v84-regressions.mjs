@@ -51,3 +51,30 @@ ok(t.includes("const WINDOWS=[5,10,20,30]")&&t.includes("function trendOf(ys)"),
 ok(t.includes("class=\"col94")&&t.includes("RES[res]"),"form uses rating columns coloured by result");
 ok(t.includes("mbmGrid94")&&t.includes("['beaten','Opponents beaten'"),"match-by-match shows whole squad per stat incl. EA event stats");
 ok(html.includes('<details class="mbmList94"><summary>All matches</summary><div id="analyticsMatchByMatch">'),"old match table kept under All matches");}
+// v95
+{const srv=r("server.js"),legal=r("public/legal.html"),fsx=await import("node:fs");
+ok(["terms","privacy","cookies","removal","refund","about"].every(f=>!fsx.existsSync(new URL(`../public/${f}.html`,import.meta.url))),"old legal pages merged into /legal");
+ok(srv.includes('res.redirect(301,`/legal#${anchor}`)'),"old legal URLs redirect to /legal sections");
+ok(["#about","#terms","#pass","#refunds","#privacy","#cookies","#removal"].every(a=>legal.includes(`href="${a}"`))&&legal.includes("{{OPERATOR_NAME}}")&&legal.includes("Art. 6(1)(f)"),"legal page has all sections, operator from env, GDPR bases");
+ok(srv.includes("ADSENSE_CLIENT")&&srv.includes('app.get("/ads.txt"')&&srv.includes("adsInject("),"ads ready but off until ADS=on + ADSENSE_CLIENT");
+ok(r("public/index.html").includes('<a href="/legal">Legal</a><a href="/pass">Clubroom Pass</a>'),"footer: Legal + Clubroom Pass");}
+// v96
+{const srv=r("server.js"),ss=r("public/v81/sessions-v81.js"),html=r("public/index.html");
+ok(srv.includes('app.get(["/og/club/:id.png","/og/club/:id"]')&&srv.includes("summary_large_image")&&srv.includes("BOT_RE"),"club link previews: OG image + tags for chat bots");
+ok(srv.includes('replace(/<meta (?:property="og:[^"]*"|name="twitter:[^"]*")[^>]*>/g,"")'),"default OG tags replaced on club pages");
+ok(srv.includes('app.get(["/api/session-card/:id.png"')&&ss.includes("data-share-session96")&&ss.includes("${!lv?"),"session report PNG, share button only after the session");
+ok(srv.includes('app.post("/api/discord/:id"')&&srv.includes('app.delete("/api/discord/:id/:hook"')&&srv.includes("setInterval(discordJob"),"Discord webhooks: add/remove + background job");
+ok(html.includes('id="discord96"')&&html.includes("Session reports posted to your Discord"),"Discord panel in Pass tab + listed as Pass benefit");}
+// v98
+{const g=r("public/v98/gates.js"),srv=r("server.js"),t=r("public/v94/trends.js");
+ok(g.includes("const HOURS=12")&&g.includes("Date.now()-unlockedAt()<HOURS*3600e3"),"one reward ad unlocks everything for the club for 12 h");
+ok(g.includes("['.playerRadarSection69','pass','Player radar']"),"player radar is Pass-only");
+ok(g.includes("const REWARD_ON=()=>ADS.on||TEST")&&g.includes("pass()||"),"reward gates only when ads are on; Pass opens everything");
+ok(g.includes("rewardedSlotGranted")&&g.includes("fail()"),"GPT rewarded ad with no-fill fallback (user still gets access)");
+ok(srv.includes("window.CLUBROOM_ADS=")&&srv.includes("GAM_REWARDED_UNIT")&&srv.includes("ADSENSE_SLOT_BANNER"),"ad config from env");
+ok(t.includes("+w.dataset.win94>10&&window.CR_GATES&&!window.CR_GATES.open('reward')"),"Form 20/30 behind reward");
+ok(!r("public/v78/clubroom-v78.js").includes("adGates:{enabled:qs.get('gates')==='1'"),"old v78 placeholder gates replaced");}
+// v100
+{const app=r("public/app.js"),srv=r("server.js");
+ok(app.includes("function srcChip100(kind)")&&app.includes("srcChip100(m.sample==='matches'?'ea'")&&app.includes('const CAREER100=new Set(["games","goals","assists","ga","motm"])'),"every Squad Board / Compare stat shows its source (EA career vs Clubroom archive)");
+ok(srv.includes("const adsOn=()=>")&&srv.includes('name="google-adsense-account"'),"ADSENSE_CLIENT alone = AdSense site verification without gates");}

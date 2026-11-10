@@ -18,8 +18,8 @@ check('honours endpoint exists and is cached',server.includes('/api/club-honours
 check('pass status endpoint is server-side, checkout gated by config',server.includes('/api/pass/status')&&server.includes('PASS_ACTIVE_CLUBS')&&server.includes('checkoutEnabled:activeCheckout().enabled'));
 check('nav says Clubroom Pass, no Club+ label',html.includes('<span>Clubroom Pass</span>')&&!html.includes('♛ Club+')&&!/<h3>Club\+/.test(html));
 check('homepage Pass strip with price, results above it',html.includes('passStrip78')&&html.includes('4 €')&&html.indexOf('id="results"')<html.indexOf('passStrip78'));
-check('/pass page route',server.includes('"removal","pass"')&&fs.existsSync(`${root}/public/pass.html`));
-check('ad gates off by default and skipped with Pass',/enabled:qs\.get\('gates'\)==='1'/.test(js)&&js.includes('Pass.active())return true'));
+check('/pass page route + legal page',server.includes('for(const route of ["pass"])')&&fs.existsSync(`${root}/public/pass.html`)&&fs.existsSync(`${root}/public/legal.html`));
+check('ad gates off by default and skipped with Pass (v98 gates.js)',js.includes('adGates:{enabled:false')&&fs.readFileSync(`${root}/public/v98/gates.js`,'utf8').includes('const REWARD_ON=()=>ADS.on||TEST'));
 check('premium shimmer respects reduced motion',css.includes('prefers-reduced-motion:reduce'));
 check('Creativity is an Analytics tab',html.includes('data-analytics-tab="creativity"')&&html.includes('data-analytics-pane="creativity"'));
 check('player card has code-drawn stats panel',card.includes('data-stats-panel')&&card.includes('.statsPanel{'));

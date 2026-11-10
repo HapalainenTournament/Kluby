@@ -1,0 +1,24 @@
+/* CLUBROOM v98 · gates + ad slots */
+.gated98{position:relative!important;min-height:320px;max-height:640px;overflow:hidden}
+.gated98>:not(.gate98){filter:blur(7px) saturate(.6);opacity:.55;pointer-events:none;user-select:none}
+.gate98{position:absolute;inset:0;z-index:5;display:flex;justify-content:center;align-items:flex-start;padding:48px 16px 18px;background:linear-gradient(180deg,rgba(10,17,32,.35),rgba(10,17,32,.85))}
+.gateCard98{max-width:400px;width:100%;text-align:center;padding:22px 20px;border-radius:20px;background:#0d1826;border:1px solid #24405a;box-shadow:0 24px 50px -20px #000;color:#eaf2fa}
+.gateCard98 svg{color:#5eead4}
+.gateCard98.pass{border-color:rgba(248,215,120,.55)}
+.gateCard98.pass svg{color:#f8d778}
+.gateTag98{display:block;margin-top:6px;font-size:11px;font-weight:900;letter-spacing:.14em;color:#f8d778}
+.gateCard98 h4{margin:8px 0 6px;font-size:20px}
+.gateCard98 p{margin:0 0 14px;color:#9fb2c8;font-size:14px;line-height:1.5}
+.gateCard98 small{display:block;margin-top:10px;color:#5d7390;font-size:11px}
+.gateBtns98{display:grid;gap:8px}
+.gateAd98{padding:13px;border:0;border-radius:14px;background:#2dd4bf;color:#042a26;font:inherit;font-size:15px;font-weight:900;cursor:pointer}
+.gateAd98:disabled{opacity:.7;cursor:wait}
+.gatePass98{padding:10px;border-radius:14px;border:1px solid rgba(248,215,120,.45);color:#f8d778;text-decoration:none;font-weight:800;font-size:14px}
+.gateModal98{display:none;position:fixed;inset:0;z-index:240;background:rgba(3,8,15,.6);backdrop-filter:blur(4px);place-items:center;padding:16px}
+.gateModal98.open{display:grid}
+.gateModal98>div{position:relative;width:100%;max-width:420px}
+.gateClose98{position:absolute;top:8px;right:10px;width:32px;height:32px;border:0;border-radius:50%;background:#13283c;color:#eaf2fa;font-size:20px;cursor:pointer}
+.unlockState98{display:inline-flex;align-items:center;gap:6px;padding:4px 10px;border-radius:99px;background:rgba(45,212,191,.12);color:#5eead4;font-size:12px;font-weight:800}
+.adSlot98{margin:18px 0 0;padding:10px;border-radius:16px;border:1px dashed #1f3247;min-height:110px}
+.adSlot98>span{display:block;font-size:10px;letter-spacing:.12em;text-transform:uppercase;color:#5d7390;margin-bottom:6px}
+@media (prefers-reduced-motion:no-preference){.gateCard98{animation:gateIn98 .35s cubic-bezier(.2,.8,.2,1)}@keyframes gateIn98{from{opacity:0;transform:translateY(8px) scale(.98)}to{opacity:1;transform:none}}}

@@ -1,5 +1,6 @@
 import express from "express";
 import path from "node:path";
+import fs from "node:fs";
 import { fileURLToPath } from "node:url";
 import {migrate,enabled as dbEnabled,query} from "./db.js";
 import {persistClubPayload,history,analytics,buildSessions} from "./storage.js";
@@ -7,6 +8,8 @@ import {isPremium,planOf,pruneAllFreeClubs,FREE_ARCHIVE_LIMIT} from "./entitleme
 import {dueClubs,rescheduleClub} from "./collector.js";
 import {checkoutConfig,verifySignature,handleEvent} from "./paddle.js";
 import {benchmarks} from "./benchmarks.js";
+import {clubCardSvg,toPng,sessionSummary,sessionCardSvg} from "./og.js";
+import {addWebhook,listWebhooks,removeWebhook,runDiscordJob,sessionImage} from "./discord.js";
 import {stripeConfig,verifyStripeSignature,handleStripeEvent,createCheckout} from "./stripe.js";
 // Which payment provider sells Clubroom Pass: PAYMENT_PROVIDER=stripe|paddle (default stripe when STRIPE_SECRET_KEY is set).
 const PROVIDER=()=>String(process.env.PAYMENT_PROVIDER||(process.env.STRIPE_SECRET_KEY?"stripe":"paddle")).toLowerCase()==="paddle"?"paddle":"stripe";
@@ -124,7 +127,31 @@ app.post("/api/pass/checkout",async(req,res)=>{
 });
 
 
-app.use(express.static(path.join(DIR, "public"),{extensions:["html"]}));
+// v95: one Legal page. Old legal URLs redirect to its sections (before static, so the old files are never served).
+const LEGAL_REDIRECTS={terms:"terms",privacy:"privacy",cookies:"cookies",removal:"removal",refund:"refunds",about:"about"};
+for(const [from,anchor] of Object.entries(LEGAL_REDIRECTS))app.get(["/"+from,"/"+from+".html"],(_,res)=>res.redirect(301,`/legal#${anchor}`));
+const legalEsc=s=>String(s).replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
+const OPERATOR=()=>({name:process.env.OPERATOR_NAME||"[OPERATOR_NAME not set]",ico:process.env.OPERATOR_ICO||"",address:process.env.OPERATOR_ADDRESS||"",email:process.env.CONTACT_EMAIL||"[CONTACT_EMAIL not set]",effective:process.env.LEGAL_EFFECTIVE_DATE||"10 November 2026"});
+if(!process.env.OPERATOR_NAME||!process.env.CONTACT_EMAIL)console.warn("[LEGAL] Set OPERATOR_NAME and CONTACT_EMAIL (and OPERATOR_ICO / OPERATOR_ADDRESS once you have a trade licence) – required on /legal.");
+app.get(["/legal","/legal.html"],(_,res)=>{const o=OPERATOR();const details=[o.ico&&`IČO ${o.ico}`,o.address].filter(Boolean).map(x=>`<br>${legalEsc(x)}`).join("");
+ let html=fs.readFileSync(path.join(DIR,"public","legal.html"),"utf8").replaceAll("{{OPERATOR_NAME}}",legalEsc(o.name)).replaceAll("{{OPERATOR_DETAILS}}",details).replaceAll("{{CONTACT_EMAIL}}",legalEsc(o.email)).replaceAll("{{EFFECTIVE_DATE}}",legalEsc(o.effective));
+ res.type("html").send(adsInject(html))});
+// v95: ads are OFF until ADS=on and ADSENSE_CLIENT=ca-pub-… are set. Consent is handled by Google's certified CMP
+// (AdSense → Privacy & messaging → European regulations message), which the AdSense loader shows automatically.
+// ADSENSE_CLIENT alone = site verification for AdSense review (loader + ads.txt, no ad slots, no gates).
+// ADS=on additionally turns on banners, rewarded unlocks and the gates.
+const adsClient=()=>{const c=String(process.env.ADSENSE_CLIENT||"").trim();return /^ca-pub-\d{10,20}$/.test(c)?c:null};
+const adsOn=()=>!!adsClient()&&String(process.env.ADS||"off").toLowerCase()==="on";
+function adsInject(html){const c=adsClient();
+ if(!c)return html.replace("</head>",`<script>window.CLUBROOM_ADS={on:false}</script></head>`);
+ if(!adsOn())return html.replace("</head>",`<script>window.CLUBROOM_ADS={on:false}</script><meta name="google-adsense-account" content="${c}"><script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=${c}" crossorigin="anonymous"></script></head>`);
+ const banner=String(process.env.ADSENSE_SLOT_BANNER||"").replace(/[^\d]/g,"")||null,rewarded=/^\/\d+\/[\w./-]+$/.test(String(process.env.GAM_REWARDED_UNIT||""))?process.env.GAM_REWARDED_UNIT:null;
+ const cfg=JSON.stringify({on:true,client:c,banner,rewarded});
+ return html.replace("</head>",`<script>window.CLUBROOM_ADS=${cfg}</script><meta name="google-adsense-account" content="${c}"><script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=${c}" crossorigin="anonymous"></script>${rewarded?'<script async src="https://securepubads.g.doubleclick.net/tag/js/gpt.js"></script><script>window.googletag=window.googletag||{cmd:[]}</script>':""}<meta name="clubroom-ads" content="on"></head>`)}
+app.get("/ads.txt",(_,res)=>{const c=adsClient();res.type("text/plain").send(c?`google.com, ${c.replace("ca-","")}, DIRECT, f08c47fec0942fa0\n`:"# no ads configured\n")});
+const sendIndex=async(req,res)=>{let html=fs.readFileSync(path.join(DIR,"public","index.html"),"utf8");try{const tags=await previewTags(req);if(tags)html=html.replace(/<meta (?:property="og:[^"]*"|name="twitter:[^"]*")[^>]*>/g,"").replace(/<meta name="description"[^>]*>/,"").replace("</head>",tags+"</head>")}catch{}res.type("html").send(adsInject(html))};
+app.get(["/","/index.html"],sendIndex);
+app.use(express.static(path.join(DIR, "public"),{extensions:["html"],index:false}));
 
 const validPlatform = p => ["common-gen5","common-gen4","nx"].includes(p) ? p : "common-gen5";
 
@@ -273,7 +300,7 @@ app.get("/api/db-export", async (req,res)=>{
     }
     const payload={
       format:"clubroom-postgres-json-backup",
-      version:"94.0.0",
+      version:"100.0.0",
       exportedAt:new Date().toISOString(),
       counts,
       data
@@ -292,21 +319,67 @@ app.get("/api/db-export", async (req,res)=>{
 app.get("/api/history/:id",async(req,res)=>{try{res.json(await scopedJson(await history(String(req.params.id).replace(/[^\d]/g,"")),String(req.params.id).replace(/[^\d]/g,""),validPlatform(req.query.platform)))}catch(e){res.status(500).json({error:e.message})}});
 app.get("/api/analytics/:id",async(req,res)=>{try{res.json(await scopedJson(await analytics(String(req.params.id).replace(/[^\d]/g,"")),String(req.params.id).replace(/[^\d]/g,""),validPlatform(req.query.platform)))}catch(e){res.status(500).json({error:e.message})}});
 app.get("/api/sessions/:id",async(req,res)=>{try{const id=String(req.params.id).replace(/[^\d]/g,"");const gap=Math.max(30,Math.min(240,Number(req.query.gap||90)));res.json(await scopedJson(await buildSessions(id,{gapMinutes:gap,activeMinutes:45}),id,validPlatform(req.query.platform)))}catch(e){res.status(500).json({error:e.message})}});
-app.get("/api/health",(_,res)=>res.json({ok:true,version:"94.0.0",database:dbEnabled,collectorEnabled:dbEnabled && process.env.COLLECTOR_ENABLED!=="false",collectorIntervalMs:Number(process.env.COLLECTOR_INTERVAL_MS||300000),collectorBatch:Number(process.env.COLLECTOR_BATCH||20),time:new Date().toISOString()}));
+app.get("/api/health",(_,res)=>res.json({ok:true,version:"100.0.0",database:dbEnabled,collectorEnabled:dbEnabled && process.env.COLLECTOR_ENABLED!=="false",collectorIntervalMs:Number(process.env.COLLECTOR_INTERVAL_MS||300000),collectorBatch:Number(process.env.COLLECTOR_BATCH||20),time:new Date().toISOString()}));
 
-for(const route of ["about","terms","privacy","cookies","removal","pass","refund"]){
+for(const route of ["pass"]){
  app.get('/'+route,(_,res)=>res.sendFile(path.join(DIR,'public',route+'.html')));
 }
-app.get("/pass/checkout",(_,res)=>res.sendFile(path.join(DIR,"public","pass","checkout.html")));
+app.get("/pass/checkout",(_,res)=>res.type("html").send(adsInject(fs.readFileSync(path.join(DIR,"public","pass","checkout.html"),"utf8"))));
 app.get("/fun",(_,res)=>res.redirect(302,"/misc"));
 app.get("/club/:id/fun",(req,res)=>res.redirect(302,`/club/${req.params.id}/misc`));
-app.get("/{*splat}",(_,res)=>res.sendFile(path.join(DIR,"public","index.html")));
+
+// ---------- v96: share images, link previews, Discord ----------
+const PUBLIC_URL=()=>String(process.env.PUBLIC_URL||"https://kluby.onrender.com").replace(/\/$/,"");
+const crestUrlOf=id=>id?`https://eafc24.content.easports.com/fifa/fltOnlineAssets/24B23FDE-7835-41C2-87A2-F453DFDB2E82/2024/fcweb/crests/256x256/l${id}.png`:null;
+const crestCache=new Map();
+async function crestData(crestId){if(!crestId)return null;const k=String(crestId),hit=crestCache.get(k);if(hit&&Date.now()-hit.at<6*3600000)return hit.v;
+ let v=null;try{const ctl=new AbortController();const t=setTimeout(()=>ctl.abort(),2500);const r=await fetch(crestUrlOf(k),{signal:ctl.signal});clearTimeout(t);if(r.ok&&String(r.headers.get("content-type")||"").includes("image"))v=`data:${r.headers.get("content-type")};base64,${Buffer.from(await r.arrayBuffer()).toString("base64")}`}catch{}
+ crestCache.set(k,{v,at:Date.now()});return v}
+const PLATFORM_LABEL={"common-gen5":"PS5 / Xbox Series / PC","common-gen4":"PS4 / Xbox One","nx":"Switch"};
+async function clubSummary(id,platform){
+ const [infoR,statsR,leagueR]=await Promise.allSettled([ea("/clubs/info",{platform,clubIds:id},180000,3500),ea("/clubs/overallStats",{platform,clubIds:id},60000,3500),ea("/clubs/matches",{platform,clubIds:id,matchType:"leagueMatch",maxResultCount:5},60000,3500)]);
+ const info=infoR.status==="fulfilled"?((infoR.value||{})[id]||Object.values(infoR.value||{})[0]||{}):{};
+ const st=statsR.status==="fulfilled"?(Array.isArray(statsR.value)?statsR.value[0]:((statsR.value||{})[id]||statsR.value))||{}:{};
+ const ms=leagueR.status==="fulfilled"&&Array.isArray(leagueR.value)?leagueR.value:[];
+ const form=ms.slice().sort((a,b)=>Number(b.timestamp||0)-Number(a.timestamp||0)).slice(0,5).reverse().map(m=>{const us=m.clubs?.[id],them=Object.entries(m.clubs||{}).find(([k])=>k!==String(id))?.[1];if(!us||!them)return null;const a=Number(us.goals),b=Number(them.goals);return a>b?"W":a<b?"L":"D"}).filter(Boolean);
+ const crestId=info?.customKit?.crestAssetId??info?.crestAssetId??null;
+ return {name:info.name||st.name||null,wins:Number(st.wins||0),ties:Number(st.ties||0),losses:Number(st.losses||0),skill:st.skillRating||null,division:st.currentDivision||info.currentDivision||null,form,crestId,platformLabel:PLATFORM_LABEL[platform]}}
+const ogCache=new Map();
+app.get(["/og/club/:id.png","/og/club/:id"],async(req,res)=>{const id=String(req.params.id).replace(/[^\d]/g,""),p=validPlatform(req.query.platform);if(!id)return res.status(400).end();
+ const k=`${p}:${id}`,hit=ogCache.get(k);if(hit&&Date.now()-hit.at<30*60000){res.set("Cache-Control","public, max-age=1800").type("png");return res.send(hit.png)}
+ try{const c=await clubSummary(id,p);const png=toPng(clubCardSvg({...c,crest:await crestData(c.crestId),pass:await isPremium(id).catch(()=>false),url:PUBLIC_URL().replace(/^https?:\/\//,"")}),1200);ogCache.set(k,{png,at:Date.now()});if(ogCache.size>500)ogCache.delete(ogCache.keys().next().value);res.set("Cache-Control","public, max-age=1800").type("png").send(png)}
+ catch(e){console.warn("og club",id,e.message);res.status(500).end()}});
+// Session report PNG (same image the Discord post uses). ?start=<ms of first match> picks the session, otherwise the latest finished one.
+app.get(["/api/session-card/:id.png","/api/session-card/:id"],async(req,res)=>{const id=String(req.params.id).replace(/[^\d]/g,"");if(!id||!dbEnabled)return res.status(404).json({error:"Session reports need the archive."});
+ try{const {sessions}=await buildSessions(id,{gapMinutes:90,activeMinutes:45});const start=Number(req.query.start)||0;
+  const sess=(start?sessions.find(s=>Math.abs(Date.parse(s.startedAt)-start)<5*60000):null)||sessions.find(s=>!s.active)||sessions[0];if(!sess)return res.status(404).json({error:"No session found."});
+  const p=validPlatform(req.query.platform),c=await clubSummary(id,p).catch(()=>({}));
+  const {png}=sessionImage({sess,clubName:c.name||req.query.name||`Club ${id}`,crest:await crestData(c.crestId)});
+  res.set("Cache-Control","public, max-age=600").set("Content-Disposition",`inline; filename="clubroom-session-${id}-${String(sess.startedAt).slice(0,10)}.png"`).type("png").send(png)}
+ catch(e){console.warn("session card",id,e.message);res.status(500).json({error:"Could not render the session report."})}});
+// Discord webhooks (Clubroom Pass)
+app.get("/api/discord/:id",async(req,res)=>{const id=String(req.params.id).replace(/[^\d]/g,"");try{res.json({premium:await isPremium(id),webhooks:await listWebhooks(id)})}catch(e){res.status(500).json({error:e.message})}});
+app.post("/api/discord/:id",async(req,res)=>{const id=String(req.params.id).replace(/[^\d]/g,"");const p=validPlatform(req.body?.platform);
+ const now=Date.now(),last=discordAddAt.get(id)||0;if(now-last<20000)return res.status(429).json({error:"Wait a few seconds and try again."});discordAddAt.set(id,now);
+ try{const c=await clubSummary(id,p).catch(()=>({}));res.json({ok:true,...await addWebhook({club:id,platform:p,url:req.body?.url,clubName:c.name})})}catch(e){res.status(e.status||500).json({error:e.message})}});
+app.delete("/api/discord/:id/:hook",async(req,res)=>{const id=String(req.params.id).replace(/[^\d]/g,"");try{const ok=await removeWebhook({club:id,id:req.params.hook,key:req.get("x-webhook-key")});res.status(ok?200:403).json({ok,error:ok?undefined:"Wrong key – only the person who connected this channel can remove it."})}catch(e){res.status(500).json({error:e.message})}});
+const discordAddAt=new Map();
+// Link previews: Discord/WhatsApp/… fetch the page HTML – give them a title, description and the club image.
+const BOT_RE=/discordbot|whatsapp|twitterbot|facebookexternalhit|slackbot|telegrambot|linkedinbot|skypeuripreview|redditbot|applebot|embedly|pinterest|vkshare|iframely/i;
+async function previewTags(req){const m=req.path.match(/^\/club\/(\d+)(?:\/([a-z]+))?/);if(!m)return "";const id=m[1],p=validPlatform(req.query.platform),img=`${PUBLIC_URL()}/og/club/${id}.png${p!=="common-gen5"?`?platform=${p}`:""}`;
+ let title="Pro Clubs club · Clubroom",desc="Club stats, sessions, awards and player cards for EA SPORTS FC Pro Clubs.";
+ if(BOT_RE.test(req.get("user-agent")||"")){try{const c=await clubSummary(id,p);if(c.name){title=`${c.name} · Clubroom`;desc=`${c.wins}W · ${c.ties}D · ${c.losses}L${c.form.length?` · Form ${c.form.join("")}`:""}${c.division?` · Division ${c.division}`:""} — club stats, sessions and awards.`}}catch{}}
+ const e=s=>String(s).replace(/[&<>"]/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]));
+ return `<meta name="description" content="${e(desc)}"><meta property="og:type" content="website"><meta property="og:site_name" content="Clubroom"><meta property="og:title" content="${e(title)}"><meta property="og:description" content="${e(desc)}"><meta property="og:url" content="${e(PUBLIC_URL()+req.path)}"><meta property="og:image" content="${e(img)}"><meta property="og:image:width" content="1200"><meta property="og:image:height" content="630"><meta name="twitter:card" content="summary_large_image"><meta name="theme-color" content="#2dd4bf">`}
+app.get("/{*splat}",sendIndex);
 await migrate();
 // Background archive: clubs are discovered by real searches/visits, then refreshed in batches.
 // This scales better than trying to enumerate every EA club on Earth, which would be both expensive and rather optimistic.
 if(dbEnabled && process.env.COLLECTOR_ENABLED!=="false"){
  const runCollector=async()=>{try{for(const c of await dueClubs(Number(process.env.COLLECTOR_BATCH||20))){try{const d=await loadClubFull(String(c.club_id),validPlatform(c.platform));const saved=await persistClubPayload(String(c.club_id),validPlatform(c.platform),d);await rescheduleClub(String(c.club_id),validPlatform(c.platform),Number(saved?.newMatches||0));}catch(e){console.warn("collector",c.club_id,e.message)}}}catch(e){console.warn("collector batch",e.message)}};
- setTimeout(runCollector,15000);setInterval(runCollector,Number(process.env.COLLECTOR_INTERVAL_MS||300000));
+ setTimeout(runCollector,15000);
+ const discordJob=()=>runDiscordJob({clubName:async(id,p)=>(await clubSummary(id,p).catch(()=>({}))).name,crest:async(id,p)=>crestData((await clubSummary(id,p).catch(()=>({}))).crestId),refresh:(id,p)=>archiveInBackground(id,validPlatform(p))}).then(r=>r.sent&&console.log(`[DISCORD] sent ${r.sent} session reports`)).catch(e=>console.warn("[DISCORD] job",e.message));
+ setTimeout(discordJob,60000);setInterval(discordJob,Number(process.env.DISCORD_JOB_MS||300000));setInterval(runCollector,Number(process.env.COLLECTOR_INTERVAL_MS||300000));
  if(process.env.ARCHIVE_PRUNE&&process.env.ARCHIVE_PRUNE!=="off"){setTimeout(()=>pruneAllFreeClubs().then(n=>console.log(`[ARCHIVE] startup prune (${process.env.ARCHIVE_PRUNE}) removed ${n} matches`)),30000);setInterval(pruneAllFreeClubs,6*3600000)}
 }
 app.listen(PORT,()=>console.log(`CLUBROOM running on ${PORT} · DB ${dbEnabled?"ON":"OFF"}`));

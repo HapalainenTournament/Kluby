@@ -138,3 +138,33 @@ Toto je audit zdrojového ZIPu, **ne** test živého provozu. U bodů s ✅ je d
 ## V94 · Analytics player form + match-by-match
 - [x] Form tab: "Rating run" – player chips with trend arrows, window 5/10/20/30, rating columns coloured by result, avg line, tap for match, last-N avg vs career, trend (regression slope), best/worst, squad pulse cards with sparklines.
 - [x] Match-by-Match tab: 13 stats (incl. EA event stats) shown for the whole squad as small multiples with result-coloured dots, avg line, best/worst, top performer; old table under "All matches".
+
+## V95 · One Legal page + ads readiness
+- [x] /legal: Who runs Clubroom, Terms, Clubroom Pass (Stripe/Link MoR), Refunds, Privacy (GDPR table: data/source/purpose/basis/retention, processors, rights, ÚOOÚ), Cookies & ads, Remove a player (form). Operator details from env OPERATOR_NAME, OPERATOR_ICO, OPERATOR_ADDRESS, CONTACT_EMAIL, LEGAL_EFFECTIVE_DATE.
+- [x] Old /terms /privacy /cookies /removal /refund /about → 301 to /legal sections; footer = Legal · Clubroom Pass (+ Privacy choices once ads are on).
+- [x] Ads off by default; ADS=on + ADSENSE_CLIENT=ca-pub-… injects AdSense loader on all pages and serves /ads.txt. Consent via Google Privacy & messaging (certified CMP); "Privacy choices" opens it.
+- [ ] Before ads: AdSense → Privacy & messaging → EU regulations message (3 choices incl. "Do not consent"); Blocking controls → block gambling, dating, alcohol etc.
+
+## V96 · Link previews, session report image, Discord reports
+- [x] og.js: server-side SVG→PNG (resvg + bundled Inter TTF): club preview 1200×630 (crest, name, W/D/L, form, division, PASS) and session report (results, record, awards).
+- [x] /og/club/:id.png (30 min cache); club pages get og:/twitter: tags; chat bots (Discord, WhatsApp, Telegram, …) get club name + record in title/description.
+- [x] /api/session-card/:id.png?start=… + "Share report" button on finished sessions (native share sheet on phones, download on desktop).
+- [x] Discord webhooks (Pass): Pass tab panel; up to 3 channels per club; test message on connect; removal needs key kept in the browser; job every 5 min posts each finished session once (≥2 matches) with embed + image; dead webhooks auto-disabled.
+- [ ] Set PUBLIC_URL to the final domain after rebrand (used in previews and Discord links).
+
+## V97 · Form tab = Rating run only
+- [x] Old "Recent Form" match strip removed from Analytics → Form; side panel no longer clipped on desktop.
+
+## V98 · Ads + reward unlock + Pass-only radar
+- [x] /v98/gates.js: one rewarded ad unlocks ALL reward features for the club in this browser for 12 h (Pass clubs: all open, no ads). Gates only active when ads are configured (or ?gates=1 test mode with 5 s placeholder).
+- [x] Reward: session awards, Misc (Streaks, Habits, Lucky Charm, Milestones, Awards, Wrapped), Analytics Clutch/Carry/Improvement/Detailed/Match-by-Match, Form 20/30, detailed EA stats (match groups, Squad Board Shooting/Dribbling/Discipline, profile + session detail).
+- [x] Pass-only: player radar (+ archive, Discord, clean cards as before).
+- [x] Rewarded ads via Google Ad Manager GPT (GAM_REWARDED_UNIT); no-fill → user still gets access. Banners via AdSense unit ADSENSE_SLOT_BANNER at the bottom of Overview, Matches, Analytics; never for Pass clubs.
+
+## V99 · Readable rating chart + clear match counts
+- [x] Performance Center rating chart renders at real pixel width (readable axes, round dots, re-render on resize); team average = white dashed line.
+- [x] Compare: "Matches (EA career)" vs "Matches in Clubroom archive" rows; player header shows archive count with label; footnote explains the difference.
+
+## V100 · Stat sources + AdSense verification
+- [x] EA / ARCHIVE chips on every Squad Board column (from metric sample) and every Compare row; profile MATCHES shows its source.
+- [x] ADSENSE_CLIENT without ADS=on → AdSense loader + google-adsense-account meta + ads.txt for site review; no ad slots, no gates. ADS=on turns everything on.

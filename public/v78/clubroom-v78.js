@@ -13,7 +13,7 @@ const CFG={
   minLuckyMatches:5,             // with/without samples for Lucky Charm
   minAwardMatches:{this:2,last:2,season:5},
   sessionGapMinutes:90,
-  adGates:{enabled:qs.get('gates')==='1',tabs:['habits','lucky-charm','awards','wrapped'],hours:24}
+  adGates:{enabled:false/* v98: replaced by /v98/gates.js */,tabs:['habits','lucky-charm','awards','wrapped'],hours:24}
 };
 window.CLUBROOM_MONETIZATION=CFG;
 const LS={get(k,d){try{const v=localStorage.getItem(k);return v==null?d:JSON.parse(v)}catch{return d}},set(k,v){try{localStorage.setItem(k,JSON.stringify(v))}catch{}}};

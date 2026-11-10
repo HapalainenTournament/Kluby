@@ -33,7 +33,7 @@ let pendingClub='';
 async function init(){
   try{cfg=await fetch('/api/pass/config').then(r=>r.json())}catch{cfg={enabled:false}}
   if(!cfg.enabled){btn.textContent='Checkout is not open yet';say('Clubroom Pass purchases open soon.');if(pre)showClub();return}
-  if(cfg.consentText)$('coConsentText85').innerHTML=esc(cfg.consentText).replace('Terms of Service','<a href="/terms" target="_blank">Terms of Service</a>');
+  if(cfg.consentText)$('coConsentText85').innerHTML=esc(cfg.consentText).replace('Terms of Service','<a href="/legal#terms" target="_blank">Terms of Service</a>');
   $('coEnv85').hidden=!(cfg.env==='sandbox'||cfg.env==='test');$('coEnv85').textContent=cfg.env==='test'?'TEST MODE':'SANDBOX';
   const by=$('coBy92');if(by)by.textContent=stripe()?'Payments are processed by Stripe and sold through Link, our merchant of record.':'Payments are processed by Paddle.com, our merchant of record.';
   // Returning from Stripe Checkout

@@ -97,10 +97,10 @@ function mbmHtml(){const wd=windowData();if(!wd)return '<div class="msg">Match-b
    <div class="legend94"><span><i style="background:${RES.W}"></i>Win</span><span><i style="background:${RES.D}"></i>Draw</span><span><i style="background:${RES.L}"></i>Loss</span><span class="muted94">Dashed line = player's average in these matches${m[4]?'':' · lower is better'}</span></div>`}
 
 /* ---------- mount ---------- */
-function render(){const f=document.getElementById('formTrend94');if(f)f.innerHTML=formHtml();const b=document.getElementById('mbm94');if(b)b.innerHTML=mbmHtml();try{registerAvatarRoster?.()}catch{}}
+function render(){if(win>10&&window.CR_GATES&&!window.CR_GATES.open('reward'))win=10;const f=document.getElementById('formTrend94');if(f)f.innerHTML=formHtml();const b=document.getElementById('mbm94');if(b)b.innerHTML=mbmHtml();try{registerAvatarRoster?.()}catch{}}
 window.v94RenderTrends=render;
 document.addEventListener('click',e=>{
-  const w=e.target.closest('[data-win94]');if(w){win=+w.dataset.win94;LS.set('clubroom94:win',win);render();return}
+  const w=e.target.closest('[data-win94]');if(w){if(+w.dataset.win94>10&&window.CR_GATES&&!window.CR_GATES.open('reward')){window.CR_GATES.prompt();return}win=+w.dataset.win94;LS.set('clubroom94:win',win);render();return}
   const p=e.target.closest('[data-p94]');if(p){sel=p.dataset.p94;LS.set('clubroom94:player',sel);const f=document.getElementById('formTrend94');if(f){f.innerHTML=formHtml();try{registerAvatarRoster?.()}catch{}}return}
   const m=e.target.closest('[data-met94]');if(m){metric=m.dataset.met94;LS.set('clubroom94:metric',metric);const b=document.getElementById('mbm94');if(b){const sc=b.querySelector('.met94')?.scrollLeft||0;b.innerHTML=mbmHtml();const n=b.querySelector('.met94');if(n)n.scrollLeft=sc;try{registerAvatarRoster?.()}catch{}}return}
   const c=e.target.closest('[data-col94]');if(c){const host=c.closest('#formTrend94'),info=host?.querySelector('[data-colinfo94]');host?.querySelectorAll('.col94.on').forEach(x=>x.classList.remove('on'));c.classList.add('on');if(info)info.textContent=c.getAttribute('aria-label');return}

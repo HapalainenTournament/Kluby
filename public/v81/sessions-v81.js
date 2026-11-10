@@ -123,7 +123,7 @@ function detailHtml(s){const x=sessionStats(s),full=D().sessions.find(q=>q.start
     ${lbCarousel(x)}
    </div>
    <section class="v78Panel"><div class="v78PanelHead">${icon('wave',16)}<span class="label">RATINGS THROUGH THE SESSION</span><small>top 6 players · dashed = team average</small></div>${chart(s,x)}</section>
-   <div class="v78Two"><section class="v78Panel"><div class="v78PanelHead">${icon('crown',16)}<span class="label">SESSION AWARDS</span><small>min. ${CFG.minSessionPlayerMatches} matches</small></div><div class="sAwards81">${awardsHtml(s,x,lv)}</div></section>${window.v90SessionCard?window.v90SessionCard(s):''}
+   <div class="v78Two"><section class="v78Panel"><div class="v78PanelHead">${icon('crown',16)}<span class="label">SESSION AWARDS</span><small>min. ${CFG.minSessionPlayerMatches} matches</small>${!lv?`<button type="button" class="shareSession96" data-share-session96="${s.start.getTime()}">${icon('share',14)} Share report</button>`:''}</div><div class="sAwards81">${awardsHtml(s,x,lv)}</div></section>${window.v90SessionCard?window.v90SessionCard(s):''}
    <section class="v78Panel"><div class="v78PanelHead">${icon('clock',16)}<span class="label">FATIGUE CHECK</span><small>win rate by match order</small></div>${fatigue(s)}</section></div>
    ${V.watermark()}</article>`}
 

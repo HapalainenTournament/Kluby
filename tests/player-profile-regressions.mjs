@@ -15,7 +15,7 @@ test('popstate restores scroll',app.includes("window.scrollTo({top:Number(e.stat
 test('hero uses existing player-card component',html.includes('id="playerHeroCardMount69"')&&app.includes("cardOnly69(p)"));
 test('hero has Share without obsolete Change character',html.includes('id="playerShare69"')&&!html.includes('id="playerCharacter69"'));
 test('role badges reuse Key Threats metric definitions',app.includes("TOP SCORER")&&app.includes("CLINICAL")&&app.includes("CREATOR")&&app.includes("DEFENSIVE"));
-test('hero has five requested metrics',app.includes("['MATCHES',a.matches]")&&app.includes("['G+A',a.ga]")&&app.includes("['AVG RATING'")&&app.includes("['MOTM',a.motm]")&&app.includes("['PASS %'"));
+test('hero has five requested metrics',app.includes("['MATCHES '+srcChip100(rows.length?'ar':'ea'),a.matches]")&&app.includes("['G+A',a.ga]")&&app.includes("['AVG RATING'")&&app.includes("['MOTM',a.motm]")&&app.includes("['PASS %'"));
 test('last-five form is archive result data',app.includes("rows.slice(0,5)")&&app.includes("playerForm69"));
 
 test('radar config has six axes',(['attack','creation','passing','defense','discipline','rating'].every(x=>cfg.includes(`id:'${x}'`))));

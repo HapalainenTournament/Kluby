@@ -33,6 +33,8 @@ export async function migrate(){
    active_until TIMESTAMPTZ,created_at TIMESTAMPTZ NOT NULL DEFAULT now(),updated_at TIMESTAMPTZ NOT NULL DEFAULT now(),
    PRIMARY KEY(club_id,platform)
  );
+ CREATE TABLE IF NOT EXISTS club_webhooks(id SERIAL PRIMARY KEY,club_id TEXT NOT NULL,platform TEXT NOT NULL DEFAULT 'common-gen5',url TEXT NOT NULL,key_hash TEXT NOT NULL,active BOOLEAN NOT NULL DEFAULT true,created_at TIMESTAMPTZ NOT NULL DEFAULT now(),last_session_start TIMESTAMPTZ,last_sent_at TIMESTAMPTZ,fail_count INT NOT NULL DEFAULT 0);
+ CREATE INDEX IF NOT EXISTS club_webhooks_club ON club_webhooks(club_id) WHERE active;
  CREATE TABLE IF NOT EXISTS billing_events(provider TEXT NOT NULL,event_id TEXT NOT NULL,event_type TEXT NOT NULL,occurred_at TIMESTAMPTZ,received_at TIMESTAMPTZ NOT NULL DEFAULT now(),PRIMARY KEY(provider,event_id));
  CREATE TABLE IF NOT EXISTS paddle_events(event_id TEXT PRIMARY KEY,event_type TEXT NOT NULL,occurred_at TIMESTAMPTZ,received_at TIMESTAMPTZ NOT NULL DEFAULT now());
  ALTER TABLE club_entitlements ADD COLUMN IF NOT EXISTS provider_customer_id TEXT;
