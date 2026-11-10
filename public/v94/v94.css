@@ -104,3 +104,14 @@
 .src100.ea{background:rgba(96,165,250,.16);color:#93c5fd}
 .src100.ar{background:rgba(45,212,191,.14);color:#5eead4}
 .squadSortBtn70 .src100{margin-left:4px;font-size:8px;padding:0 4px}
+/* v101: match-by-match polish */
+#mbm94{padding:20px 22px 22px}
+.mbmCard94{display:flex;flex-direction:column;gap:6px}
+.mbmSvg94{height:96px!important;flex:0 0 auto}
+.mbmCard94 footer{display:flex!important;align-items:center;gap:14px;margin-top:2px;padding-top:8px;border-top:1px solid #13243a}
+.mbmCard94 footer span{display:inline-flex!important;align-items:baseline;gap:4px;white-space:nowrap}
+.mbmCard94 footer b{font-size:14px}
+@media (max-width:760px){#mbm94{padding:14px 12px}}
+.mbmGrid94{align-items:start}
+.mbmCard94 footer{justify-content:flex-start!important;text-align:left}
+.mbmCard94 footer span:last-child{margin-left:auto}

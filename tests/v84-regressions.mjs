@@ -50,7 +50,7 @@ ok(html.includes('id="formTrend94"')&&html.includes('id="mbm94"')&&html.includes
 ok(t.includes("const WINDOWS=[5,10,20,30]")&&t.includes("function trendOf(ys)"),"window 5/10/20/30 and trend label from regression slope");
 ok(t.includes("class=\"col94")&&t.includes("RES[res]"),"form uses rating columns coloured by result");
 ok(t.includes("mbmGrid94")&&t.includes("['beaten','Opponents beaten'"),"match-by-match shows whole squad per stat incl. EA event stats");
-ok(html.includes('<details class="mbmList94"><summary>All matches</summary><div id="analyticsMatchByMatch">'),"old match table kept under All matches");}
+ok(html.includes('<div id="mbm94"></div>'),"Match-by-Match small multiples host");}
 // v95
 {const srv=r("server.js"),legal=r("public/legal.html"),fsx=await import("node:fs");
 ok(["terms","privacy","cookies","removal","refund","about"].every(f=>!fsx.existsSync(new URL(`../public/${f}.html`,import.meta.url))),"old legal pages merged into /legal");
@@ -78,3 +78,10 @@ ok(!r("public/v78/clubroom-v78.js").includes("adGates:{enabled:qs.get('gates')==
 {const app=r("public/app.js"),srv=r("server.js");
 ok(app.includes("function srcChip100(kind)")&&app.includes("srcChip100(m.sample==='matches'?'ea'")&&app.includes('const CAREER100=new Set(["games","goals","assists","ga","motm"])'),"every Squad Board / Compare stat shows its source (EA career vs Clubroom archive)");
 ok(srv.includes("const adsOn=()=>")&&srv.includes('name="google-adsense-account"'),"ADSENSE_CLIENT alone = AdSense site verification without gates");}
+// v101
+{const c=r("public/v101/compare.js"),html=r("public/index.html"),v78=r("public/v78/clubroom-v78.js");
+ok(c.includes("const MAX=()=>pass()?4:2")&&c.includes("Compare up to 4 players"),"Compare: 2 players free, up to 4 with Pass");
+ok(c.includes("cmpExplain101")&&c.includes("CAREER_ROWS")&&c.includes("ARCH_ROWS"),"Compare explains EA career vs Clubroom archive in two separate tables");
+ok(c.includes("x.shots>=10?pc(x.goals,x.shots)"),"shot conversion needs 10+ shots");
+ok(!html.includes("All matches")&&html.includes('<div id="analyticsMatchByMatch" hidden>'),"Match-by-Match: All matches list removed");
+ok(v78.includes("typeTag101"),"hat-tricks show match type breakdown");}

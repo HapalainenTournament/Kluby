@@ -168,3 +168,9 @@ Toto je audit zdrojového ZIPu, **ne** test živého provozu. U bodů s ✅ je d
 ## V100 · Stat sources + AdSense verification
 - [x] EA / ARCHIVE chips on every Squad Board column (from metric sample) and every Compare row; profile MATCHES shows its source.
 - [x] ADSENSE_CLIENT without ADS=on → AdSense loader + google-adsense-account meta + ads.txt for site review; no ad slots, no gates. ADS=on turns everything on.
+
+## v101
+- Compare: separate EA career table vs Clubroom archive per-match table, explainer + coverage bar per player; up to 4 players with Pass (locked card for free).
+- Match-by-Match: "All matches" list removed, card padding/footer fixed.
+- Hat-tricks: breakdown League / Playoff / Friendly + type tag per row (archive only).
+- NEXT (proposal sent): redesign Clutch / Carry / Improvement.
