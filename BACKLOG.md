@@ -190,3 +190,11 @@ Toto je audit zdrojového ZIPu, **ne** test živého provozu. U bodů s ✅ je d
 
 ## v102.0.3
 - Compare: swap button removed.
+
+## v102.0.4
+- Match detail: when EA omits event data, show basic stats (shots, goals, passes, tackles, red) instead of dashes.
+
+## v103
+- Player profile hero: card + Highlights (EA career per match) + last-10 rating bars + Precision (EA % or exact archive ratio, labelled) + Totals; screenshot-friendly on PC and mobile.
+- Share button renders a 1080x1350 PNG (system share sheet on phones, download on PC).
+- Pass table: reward ad unlock text 24 h -> 12 h.

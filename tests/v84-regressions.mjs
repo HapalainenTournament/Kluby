@@ -97,3 +97,8 @@ ok(html.includes("<b>POSTGAME</b>")&&r("server.js").includes('"admin@postgame.gg
 {const s=r("public/index.html");const a=s.indexOf('data-pane="analytics"'),b=s.indexOf('data-pane="misc"');const seg=s.slice(a,b);
 ok(seg.split("<section").length===seg.split("</section>").length&&seg.split("<div").length===seg.split("</div>").length,"Analytics markup is balanced, Misc is not swallowed");}
 ok(!r("public/v101/compare.js").includes("data-compare-swap62"),"Compare: no swap button");
+ok(r("public/v90/stats-ext.js").includes("baseRaw(p)"),"match tables fall back to basic EA stats");
+// v103
+{const h=r("public/v103/profile-hero.js");ok(h.includes("pgHeroCard103")&&h.includes("data-pg-share103")&&h.includes("cv.width=W;cv.height=H"),"profile hero + share PNG");
+ok(h.includes("if(ea!=null)return")&&!/estimate/i.test(h.replace(/Nothing is estimated/,'')),"precision uses EA % or exact archive ratio, never estimates");
+ok(r("public/index.html").includes("One short ad unlocks 12 h"),"Pass table says 12 h");}

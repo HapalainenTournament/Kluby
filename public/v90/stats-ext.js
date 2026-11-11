@@ -48,13 +48,18 @@ function rawFor(pools,p){const id=String(p.id??p.player_id??''),name=p.name||p.p
 
 /* ---------- match detail ---------- */
 let group='general';
-function table(rows,key){const g=G[key];return `<div class="matchPlayerTableWrap73"><table class="matchPlayerTable73 ext90"><thead><tr><th>Player</th>${g.cols.map(c=>`<th${c[2]?` title="${esc(c[2])}"`:''}>${esc(c[0])}</th>`).join('')}</tr></thead><tbody>${rows.map(({p,v})=>`<tr><td><b>${esc(p.name||p.player_name||'Player')}</b></td>${g.cols.map(c=>`<td>${v?esc(c[1](v)):'–'}</td>`).join('')}</tr>`).join('')}</tbody></table></div>`}
+// v102.0.4: basic numbers EA always sends (shots, passes, tackles…) are shown even when the detailed event data is missing.
+const BASE=new Set(['Shots','Goals','Conversion','Passes','Pass %','Tackles','Tackle %','Red']);
+const cell=(c,v)=>!v?'–':(!v.hasEvents&&!BASE.has(c[0]))?'–':c[1](v);
+function baseRaw(p){if(!p)return null;const g=(...ks)=>{for(const k of ks)if(p[k]!=null)return p[k];return null};if(g('shots','goals','passes','passes_made')==null)return null;
+  return {goals:g('goals'),shots:g('shots'),passesmade:g('passes','passes_made','passesmade'),passattempts:g('passAttempts','pass_attempts','passattempts'),tacklesmade:g('tackles','tackles_made','tacklesmade'),tackleattempts:g('tackleAttempts','tackle_attempts','tackleattempts'),redcards:g('reds','red_cards','redcards')}}
+function table(rows,key){const g=G[key];return `<div class="matchPlayerTableWrap73"><table class="matchPlayerTable73 ext90"><thead><tr><th>Player</th>${g.cols.map(c=>`<th${c[2]?` title="${esc(c[2])}"`:''}>${esc(c[0])}</th>`).join('')}</tr></thead><tbody>${rows.map(({p,v})=>`<tr><td><b>${esc(p.name||p.player_name||'Player')}</b></td>${g.cols.map(c=>`<td>${esc(cell(c,v))}</td>`).join('')}</tr>`).join('')}</tbody></table></div>`}
 function seg(){return `<div class="extSeg90" role="tablist">${[['general','General'],...ORDER.map(k=>[k,G[k].label])].map(([k,l])=>`<button type="button" data-ext90="${k}" class="${group===k?'active':''}">${l}</button>`).join('')}</div>`}
 window.v90PlayerStats=function(d,generalHtml){
-  const pools=rawPools(d);const mk=list=>(list||[]).map(p=>({p,v:view(ext(rawFor(pools,p)))})).sort((a,b)=>N(b.p.rating)-N(a.p.rating));
+  const pools=rawPools(d);const mk=list=>(list||[]).map(p=>({p,v:view(ext(rawFor(pools,p)||baseRaw(p)))})).sort((a,b)=>N(b.p.rating)-N(a.p.rating));
   const ours=mk(d.ours),opp=mk(d.opp),any=[...ours,...opp].some(x=>x.v?.hasEvents);
   if(group==='general')return seg()+generalHtml;
-  const note=any?'':'<p class="v78Note">EA did not include detailed events for this match.</p>';
+  const note=any?'':'<p class="v78Note">EA sent only basic stats for this match (shots, goals, passes, tackles). The detailed breakdown (on target, in box, pass types, dribbles…) is missing – shown as –.</p>';
   return `${seg()}${note}<div class="matchSectionHead73"><span class="label">${esc(G[group].label.toUpperCase())}</span><h3>${esc(window.S?.club?.name||(typeof S!=='undefined'&&S?.club?.name)||'Our club')}</h3></div>${table(ours,group)}<div class="matchSectionHead73 opponent"><h3>${esc(d.opponent||'Opponent')}</h3></div>${table(opp,group)}`};
 document.addEventListener('click',e=>{const b=e.target.closest('[data-ext90]');if(!b)return;group=b.dataset.ext90;try{window.v90Rerender?.()}catch{}});
 
